@@ -187,4 +187,13 @@ export class ShiftsService {
       },
     });
   }
+  async updateProfile(userId: string, data: { name?: string; phoneNumber?: string }) {
+    return this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        name: data.name,
+        phoneNumber: data.phoneNumber,
+      },
+    });
+  }
 }

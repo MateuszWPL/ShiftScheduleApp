@@ -41,4 +41,8 @@ export class ShiftsController {
   getTeamMembers(@Query('userId') userId: string) {
     return this.shiftsService.getTeamMembers(userId);
   }
+  @Patch('users/me')
+  updateProfile(@Body('userId') userId: string, @Body('name') name: string, @Body('phoneNumber') phoneNumber: string) {
+    return this.shiftsService.updateProfile(userId, { name, phoneNumber });
+  }
 }

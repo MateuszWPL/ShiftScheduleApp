@@ -8,11 +8,13 @@ import { TeamList } from "@/components/dashboard/TeamList"; // <--- NOWY IMPORT
 import { useSession, signIn, signOut } from "next-auth/react";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { EditProfileDialog } from "@/components/dashboard/EditProfileDialog";
 
 export default function Home() {
   const { data: session } = useSession();
   const queryClient = useQueryClient();
   const [dbUser, setDbUser] = useState<any>(null);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
 
   // 1. Sync User
   useEffect(() => {
@@ -80,7 +82,10 @@ export default function Home() {
           <div className="bg-white p-4 rounded-lg shadow-sm border">
             <h2 className="font-bold text-lg">{dbUser?.name}</h2>
             <p className="text-sm text-blue-600 font-bold uppercase">{dbUser?.role}</p>
-
+            <Button variant="ghost" size="icon" onClick={() => setIsProfileOpen(true)}>
+              {/* Ikona ołówka lub tekst */}
+              ✏️
+            </Button>
             {dbUser?.role === 'OWNER' && dbUser?.team?.inviteCode && (
               <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded text-center">
                 <p className="text-xs text-blue-600 font-bold">KOD ZESPOŁU:</p>
@@ -155,6 +160,13 @@ export default function Home() {
           </div>
         </div>
       </div>
+      {dbUser && (
+        <EditProfileDialog
+          user={dbUser}
+          isOpen={isProfileOpen}
+          onClose={() => setIsProfileOpen(false)}
+        />
+      )}
     </main>
   );
 }

@@ -20,20 +20,24 @@ enum ShiftStatus {
 }
 
 model User {
-  id    String @id @default(uuid())
-  email String @unique
-  name  String
-  role  Role   @default(EMPLOYEE)
-
-  // Nowe pola dla Auth
-  avatarUrl String? // Zdjęcie z Google
-  provider  String? @default("google") // Skąd przyszedł user
-
+  id        String   @id @default(uuid())
+  email     String   @unique
+  name      String   // Full name z Google
+  
+  // NOWE POLA
+  phoneNumber String? // Opcjonalny, bo z Google nie zawsze przychodzi
+  skills      String[] // Tablica stringów (Postgres to potrafi!), np. ["Barista", "Driver"]
+  
+  role      Role     @default(EMPLOYEE)
+  avatarUrl String?  
+  provider  String?  @default("google")
+  
   createdAt DateTime @default(now())
-
-  shifts Shift[]
-  teamId String?
-  team   Team?   @relation(fields: [teamId], references: [id])
+  
+  shifts    Shift[]
+  
+  teamId    String?
+  team      Team?    @relation(fields: [teamId], references: [id])
 }
 
 model Team {

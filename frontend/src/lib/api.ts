@@ -51,6 +51,7 @@ export interface User {
   name: string;
   email: string;
   role: "OWNER" | "MANAGER" | "EMPLOYEE";
+  phoneNumber?: string | null;
 }
 
 export async function getUsers(): Promise<User[]> {
@@ -83,5 +84,15 @@ export async function joinTeam(userId: string, code: string) {
 export async function getTeamMembers(userId: string): Promise<User[]> {
   const res = await fetch(`${API_URL}/shifts/team/members?userId=${userId}`);
   if (!res.ok) throw new Error("Błąd pobierania zespołu");
+  return res.json();
+}
+
+export async function updateUserProfile(userId: string, name: string, phoneNumber: string) {
+  const res = await fetch(`${API_URL}/shifts/users/me`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ userId, name, phoneNumber }),
+  });
+  if (!res.ok) throw new Error("Błąd aktualizacji profilu");
   return res.json();
 }
