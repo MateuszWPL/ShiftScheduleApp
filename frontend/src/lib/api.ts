@@ -29,3 +29,17 @@ export async function claimShift(shiftId: string, userId: string): Promise<Shift
   }
   return res.json();
 }
+
+export async function releaseShift(shiftId: string, userId: string): Promise<Shift> {
+  const res = await fetch(`${API_URL}/shifts/${shiftId}/release`, {
+    method: "PATCH", // Używamy PATCH, bo to częściowa zmiana
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ userId }),
+  });
+
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.message || "Błąd oddawania zmiany");
+  }
+  return res.json();
+}

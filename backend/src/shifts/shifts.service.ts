@@ -60,4 +60,26 @@ export class ShiftsService {
       throw new InternalServerErrorException(error.message);
     }
   }
+  async releaseShift(shiftId: string, userId: string) {
+    const shift = await this.prisma.shift.findUnique({
+      where: { id: shiftId },
+    });
+
+    if (!shift) {
+      throw new NotFoundException('Zmiana nie istnieje.');
+    }
+
+    // Walidacja: Czy to Twoja zmiana?
+    if (shift.userId !== userId) {
+      throw new BadRequestException('Nie możesz oddać cudzej zmiany!');
+    }
+
+    return this.prisma.shift.update({
+      where: { id: shiftId },
+      data: {
+        isUpForGrabs: true, // Wystawiamy flagę
+        // UWAGA: Nie zerujemy userId. Nadal jesteś właścicielem, dopóki ktoś nie weźmie.
+      },
+    });
+  }
 }
