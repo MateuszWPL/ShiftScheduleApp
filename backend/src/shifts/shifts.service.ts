@@ -139,6 +139,7 @@ export class ShiftsService {
           teamId: team.id,
           role: 'OWNER', // Pierwszy user jest szefem
         },
+        include: { team: true }, // Include team relation so frontend can access inviteCode
       });
 
       return { team, user: updatedUser };
@@ -160,6 +161,29 @@ export class ShiftsService {
       data: {
         teamId: team.id,
         role: 'EMPLOYEE', // Domyślnie pracownik
+      },
+      include: { team: true }, // Include team relation for consistency
+    });
+  }
+  async getTeamMembers(userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      include: { team: true },
+    });
+
+    if (!user || !user.teamId) {
+      throw new BadRequestException('Nie należysz do żadnego zespołu.');
+    }
+
+    // Pobierz wszystkich z tym samym teamId
+    return this.prisma.user.findMany({
+      where: { teamId: user.teamId },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        // Nie pobieramy haseł ani innych wrażliwych danych!
       },
     });
   }

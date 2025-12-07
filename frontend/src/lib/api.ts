@@ -49,6 +49,7 @@ export async function releaseShift(shiftId: string, userId: string): Promise<Shi
 export interface User {
   id: string;
   name: string;
+  email: string;
   role: "OWNER" | "MANAGER" | "EMPLOYEE";
 }
 
@@ -76,5 +77,11 @@ export async function joinTeam(userId: string, code: string) {
     body: JSON.stringify({ userId, code }),
   });
   if (!res.ok) throw new Error("Błąd dołączania (sprawdź kod)");
+  return res.json();
+}
+
+export async function getTeamMembers(userId: string): Promise<User[]> {
+  const res = await fetch(`${API_URL}/shifts/team/members?userId=${userId}`);
+  if (!res.ok) throw new Error("Błąd pobierania zespołu");
   return res.json();
 }

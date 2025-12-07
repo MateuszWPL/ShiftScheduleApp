@@ -37,4 +37,8 @@ export class ShiftsController {
   joinTeam(@Body('userId') userId: string, @Body('code') code: string) {
     return this.shiftsService.joinTeam(userId, code);
   }
+  @Get('team/members')
+  getTeamMembers(@Query('userId') userId: string) {
+    return this.shiftsService.getTeamMembers(userId);
+  }
 }
