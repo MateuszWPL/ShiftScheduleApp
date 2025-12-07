@@ -1,0 +1,65 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  OWNER
+  MANAGER
+  EMPLOYEE
+}
+
+enum ShiftStatus {
+  DRAFT
+  PUBLISHED
+  COMPLETED
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  name      String
+  role      Role     @default(EMPLOYEE)
+  createdAt DateTime @default(now())
+  
+  // Relacje
+  shifts    Shift[]  // Zmiany przypisane do usera
+  teamId    String?
+  team      Team?    @relation(fields: [teamId], references: [id])
+}
+
+model Team {
+  id        String   @id @default(uuid())
+  name      String
+  createdAt DateTime @default(now())
+  
+  users     User[]
+  shifts    Shift[]
+}
+
+model Shift {
+  id          String      @id @default(uuid())
+  startTime   DateTime
+  endTime     DateTime
+  roleName    String      // np. "Kelner" - string, bo role mogą być dynamiczne
+  status      ShiftStatus @default(DRAFT)
+  
+  // LOGIKA GIEŁDY
+  isUpForGrabs Boolean    @default(false) // Czy zmiana jest na giełdzie?
+  
+  // Relacje
+  userId      String?     // Może być NULL (zmiana nieobsadzona)
+  user        User?       @relation(fields: [userId], references: [id])
+  
+  teamId      String
+  team        Team        @relation(fields: [teamId], references: [id])
+
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  @@index([teamId, startTime]) // Indeks do szybkiego pobierania grafiku
+}
