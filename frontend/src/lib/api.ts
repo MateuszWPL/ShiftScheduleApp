@@ -43,3 +43,15 @@ export async function releaseShift(shiftId: string, userId: string): Promise<Shi
   }
   return res.json();
 }
+
+export interface User {
+  id: string;
+  name: string;
+  role: "OWNER" | "MANAGER" | "EMPLOYEE";
+}
+
+export async function getUsers(): Promise<User[]> {
+  const res = await fetch(`${API_URL}/shifts/users/all`);
+  if (!res.ok) throw new Error("Błąd pobierania userów");
+  return res.json();
+}

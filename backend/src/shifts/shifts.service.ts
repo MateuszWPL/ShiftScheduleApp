@@ -12,6 +12,11 @@ export class ShiftsService {
     });
   }
 
+  getAllUsers() {
+    return this.prisma.user.findMany();
+  }
+  
+
   async claimShift(shiftId: string, userId: string) {
     try {
       return await this.prisma.$transaction(async (tx) => {

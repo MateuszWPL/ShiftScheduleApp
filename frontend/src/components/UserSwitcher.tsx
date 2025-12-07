@@ -1,0 +1,35 @@
+"use client";
+
+import { useQuery } from "@tanstack/react-query";
+import { getUsers, User } from "@/lib/api";
+
+interface Props {
+  currentUserId: string;
+  onUserChange: (userId: string) => void;
+}
+
+export function UserSwitcher({ currentUserId, onUserChange }: Props) {
+  const { data: users } = useQuery({
+    queryKey: ["users"],
+    queryFn: getUsers
+  });
+
+  if (!users) return <div>Ładowanie userów...</div>;
+
+  return (
+    <div className="flex items-center gap-2 bg-white p-2 rounded shadow-sm border">
+      <span className="text-sm font-medium text-gray-500">Grasz jako:</span>
+      <select
+        className="p-1 border rounded text-sm font-bold"
+        value={currentUserId}
+        onChange={(e) => onUserChange(e.target.value)}
+      >
+        {users.map((u: User) => (
+          <option key={u.id} value={u.id}>
+            {u.name} ({u.role})
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+}

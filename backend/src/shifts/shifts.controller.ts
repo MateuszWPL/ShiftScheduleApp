@@ -18,4 +18,8 @@ export class ShiftsController {
   release(@Param('id') id: string, @Body('userId') userId: string) {
     return this.shiftsService.releaseShift(id, userId);
   }
+  @Get('users/all')
+  getAllUsers() {
+    return this.shiftsService.getAllUsers();
+  }
 }

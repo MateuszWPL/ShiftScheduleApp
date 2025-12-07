@@ -1,17 +1,24 @@
 "use client";
 
+import { useState, useEffect } from "react"; // Dodaj useEffect
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { getShifts, claimShift, releaseShift, Shift } from "@/lib/api";
 import { ShiftCard } from "@/components/ShiftCard";
-import { Badge } from "@/components/ui/badge";
-
-// SYMULACJA: Jesteś Januszem (tym samym, który ma przypisaną zmianę w bazie)
-const CURRENT_USER_ID = "e8ee0d69-e52b-40b1-87b0-5d8e310f57b1";
+import { UserSwitcher } from "@/components/UserSwitcher"; // Import
 
 export default function Home() {
   const queryClient = useQueryClient();
 
-  // 1. Pobieranie
+  // DOMYŚLNY USER (Janusz) - w prawdziwej apce to przyjdzie z Auth
+  // Możesz zostawić tu pusty string na start, ale lepiej dać ID Janusza na sztywno jako default
+  const [currentUserId, setCurrentUserId] = useState("e8ee0d69-e52b-40b1-87b0-5d8e310f57b1");
+
+  // Resetujemy widok po zmianie usera
+  const handleUserChange = (newId: string) => {
+    setCurrentUserId(newId);
+    queryClient.invalidateQueries({ queryKey: ["shifts"] });
+  };
+
   const { data: shifts, isLoading, error } = useQuery({
     queryKey: ["shifts"],
     queryFn: getShifts,
@@ -19,17 +26,17 @@ export default function Home() {
 
   // 2. Mutacja: BIORĘ (Claim)
   const claimMutation = useMutation({
-    mutationFn: (shiftId: string) => claimShift(shiftId, CURRENT_USER_ID),
+    mutationFn: (shiftId: string) => claimShift(shiftId, currentUserId), // <--- TUTAJ ZMIANA
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["shifts"] });
-      alert("Sukces! Zmiana przejęta.");
+      // alert("Sukces! Zmiana przejęta."); // Opcjonalnie wyłącz alerty, są wkurzające
     },
     onError: (err) => alert(`Błąd: ${err.message}`),
   });
 
   // 3. Mutacja: ODDAJĘ (Release)
   const releaseMutation = useMutation({
-    mutationFn: (shiftId: string) => releaseShift(shiftId, CURRENT_USER_ID),
+    mutationFn: (shiftId: string) => releaseShift(shiftId, currentUserId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["shifts"] });
       alert("Zmiana wystawiona na giełdę!");
@@ -45,12 +52,12 @@ export default function Home() {
       <div className="max-w-xl mx-auto space-y-6">
         <div className="flex justify-between items-center">
           <h1 className="text-3xl font-bold text-slate-900">Giełda Zmian</h1>
-          <Badge variant="outline">Zalogowany jako: Janusz (Manager)</Badge>
+          <UserSwitcher currentUserId={currentUserId} onUserChange={handleUserChange} />
         </div>
 
         <div className="grid gap-4">
           {shifts?.map((shift: Shift) => {
-            const isMyShift = shift.userId === CURRENT_USER_ID;
+            const isMyShift = shift.userId === currentUserId;
             const isAvailable = shift.isUpForGrabs;
 
             // Logika wyświetlania
