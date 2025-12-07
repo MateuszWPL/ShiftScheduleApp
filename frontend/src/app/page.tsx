@@ -1,76 +1,101 @@
 "use client";
 
-import { useState, useEffect } from "react"; // Dodaj useEffect
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { getShifts, claimShift, releaseShift, Shift } from "@/lib/api";
+import { getShifts, claimShift, releaseShift, Shift, API_URL } from "@/lib/api";
 import { ShiftCard } from "@/components/ShiftCard";
-import { UserSwitcher } from "@/components/UserSwitcher"; // Import
+import { useSession, signIn, signOut } from "next-auth/react"; // <--- NextAuth
+import { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
 
 export default function Home() {
+  const { data: session } = useSession(); // Pobieramy sesję z Google
   const queryClient = useQueryClient();
+  const [dbUser, setDbUser] = useState<any>(null); // Tutaj trzymamy usera z naszej bazy
 
-  // DOMYŚLNY USER (Janusz) - w prawdziwej apce to przyjdzie z Auth
-  // Możesz zostawić tu pusty string na start, ale lepiej dać ID Janusza na sztywno jako default
-  const [currentUserId, setCurrentUserId] = useState("e8ee0d69-e52b-40b1-87b0-5d8e310f57b1");
+  // 1. Synchronizacja: Google -> Nasz Backend
+  useEffect(() => {
+    if (session?.user?.email) {
+      const email = session.user.email;
+      const name = session.user.name || "Nieznany";
 
-  // Resetujemy widok po zmianie usera
-  const handleUserChange = (newId: string) => {
-    setCurrentUserId(newId);
-    queryClient.invalidateQueries({ queryKey: ["shifts"] });
-  };
+      // Strzelamy do backendu, żeby dostać UUID
+      fetch(`${API_URL}/shifts/users/sync?email=${encodeURIComponent(email)}&name=${encodeURIComponent(name)}`)
+        .then(res => res.json())
+        .then(user => {
+          console.log("Zalogowano jako (DB):", user);
+          setDbUser(user);
+          queryClient.invalidateQueries({ queryKey: ["shifts"] });
+        });
+    } else {
+      setDbUser(null);
+    }
+  }, [session, queryClient]);
 
+  // Pobieranie zmian
   const { data: shifts, isLoading, error } = useQuery({
     queryKey: ["shifts"],
     queryFn: getShifts,
+    enabled: !!dbUser, // Pobieraj tylko jak jesteśmy zalogowani
   });
 
-  // 2. Mutacja: BIORĘ (Claim)
   const claimMutation = useMutation({
-    mutationFn: (shiftId: string) => claimShift(shiftId, currentUserId), // <--- TUTAJ ZMIANA
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["shifts"] });
-      // alert("Sukces! Zmiana przejęta."); // Opcjonalnie wyłącz alerty, są wkurzające
-    },
-    onError: (err) => alert(`Błąd: ${err.message}`),
+    mutationFn: (shiftId: string) => claimShift(shiftId, dbUser.id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["shifts"] }),
+    onError: (err) => alert(err.message),
   });
 
-  // 3. Mutacja: ODDAJĘ (Release)
   const releaseMutation = useMutation({
-    mutationFn: (shiftId: string) => releaseShift(shiftId, currentUserId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["shifts"] });
-      alert("Zmiana wystawiona na giełdę!");
-    },
-    onError: (err) => alert(`Błąd: ${err.message}`),
+    mutationFn: (shiftId: string) => releaseShift(shiftId, dbUser.id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["shifts"] }),
+    onError: (err) => alert(err.message),
   });
 
-  if (isLoading) return <div className="p-10 text-center">Ładowanie...</div>;
-  if (error) return <div className="p-10 text-red-500">Błąd: {error.message}</div>;
+  // WIDOK DLA NIEZALOGOWANEGO
+  if (!session) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-slate-100">
+        <div className="text-center space-y-4 p-8 bg-white rounded-xl shadow-lg">
+          <h1 className="text-2xl font-bold">Shift Marketplace</h1>
+          <p className="text-gray-500">Zaloguj się, aby zarządzać grafikiem.</p>
+          <Button onClick={() => signIn("google")} className="w-full">
+            Zaloguj przez Google
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
+  // WIDOK DLA ZALOGOWANEGO (Dashboard)
   return (
     <main className="min-h-screen p-8 bg-slate-50">
       <div className="max-w-xl mx-auto space-y-6">
-        <div className="flex justify-between items-center">
-          <h1 className="text-3xl font-bold text-slate-900">Giełda Zmian</h1>
-          <UserSwitcher currentUserId={currentUserId} onUserChange={handleUserChange} />
+        <div className="flex justify-between items-center bg-white p-4 rounded-lg shadow-sm">
+          <div>
+            <h1 className="text-xl font-bold">Witaj, {dbUser?.name || session.user?.name}</h1>
+            <p className="text-xs text-gray-500">{dbUser?.role || "Synchronizacja..."}</p>
+          </div>
+          <Button variant="outline" size="sm" onClick={() => signOut()}>
+            Wyloguj
+          </Button>
         </div>
+
+        {isLoading && <p>Ładowanie grafiku...</p>}
 
         <div className="grid gap-4">
           {shifts?.map((shift: Shift) => {
-            const isMyShift = shift.userId === currentUserId;
+            const isMyShift = shift.userId === dbUser?.id;
             const isAvailable = shift.isUpForGrabs;
 
-            // Logika wyświetlania
+            // ... (logika przycisków taka sama jak wcześniej) ...
             let actionLabel = "Zajęte";
             let onAction = () => { };
             let disabled = true;
-            let statusBadge: "open" | "claimed" | "secondary" = "claimed";
+            let statusBadge: any = "claimed";
 
             if (isMyShift) {
               if (isAvailable) {
-                statusBadge = "secondary"; // Żółty/Szary
+                statusBadge = "secondary";
                 actionLabel = "Czeka na chętnego...";
-                disabled = true; // Na razie nie robimy "Wycofaj"
               } else {
                 statusBadge = "claimed";
                 actionLabel = "Oddaj na giełdę";
@@ -78,7 +103,6 @@ export default function Home() {
                 disabled = false;
               }
             } else {
-              // Cudza zmiana
               if (isAvailable) {
                 statusBadge = "open";
                 actionLabel = "Biorę to!";
@@ -87,25 +111,19 @@ export default function Home() {
               } else {
                 statusBadge = "claimed";
                 actionLabel = "Zajęte przez kogoś";
-                disabled = true;
               }
             }
 
-            // Obsługa ładowania
-            if (claimMutation.isPending || releaseMutation.isPending) {
-              disabled = true;
-            }
-
-            const timeStr = new Date(shift.startTime).toLocaleString("pl-PL", {
-              weekday: "short", hour: "2-digit", minute: "2-digit"
-            }) + " - " + new Date(shift.endTime).toLocaleTimeString("pl-PL", { hour: "2-digit", minute: "2-digit" });
+            // Render ShiftCard (skopiuj ten fragment z poprzedniego page.tsx, jest taki sam)
+            // Pamiętaj o formatowaniu daty!
+            const timeStr = new Date(shift.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
             return (
               <ShiftCard
                 key={shift.id}
                 role={shift.roleName + (isMyShift ? " (TY)" : "")}
-                time={timeStr}
-                status={statusBadge as any}
+                time={timeStr} // Uprościłem dla czytelności kodu tutaj
+                status={statusBadge}
                 actionLabel={actionLabel}
                 actionDisabled={disabled}
                 onAction={onAction}

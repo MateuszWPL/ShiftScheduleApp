@@ -24,10 +24,14 @@ model User {
   email     String   @unique
   name      String
   role      Role     @default(EMPLOYEE)
+  
+  // Nowe pola dla Auth
+  avatarUrl String?  // Zdjęcie z Google
+  provider  String?  @default("google") // Skąd przyszedł user
+  
   createdAt DateTime @default(now())
   
-  // Relacje
-  shifts    Shift[]  // Zmiany przypisane do usera
+  shifts    Shift[]
   teamId    String?
   team      Team?    @relation(fields: [teamId], references: [id])
 }

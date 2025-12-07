@@ -87,4 +87,24 @@ export class ShiftsService {
       },
     });
   }
+  // Backend: src/shifts/shifts.service.ts
+
+  async syncUserByEmail(email: string, name: string) {
+    let user = await this.prisma.user.findUnique({
+      where: { email },
+    });
+
+    if (!user) {
+      console.log(`[AUTH] Tworzę nowego usera dla: ${email}`);
+      user = await this.prisma.user.create({
+        data: {
+          email,
+          name,
+          role: 'EMPLOYEE', // Domyślna rola
+          // teamId: ... (tutaj w przyszłości przypiszemy do teamu)
+        },
+      });
+    }
+    return user;
+  }
 }
