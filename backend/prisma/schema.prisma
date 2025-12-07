@@ -20,50 +20,51 @@ enum ShiftStatus {
 }
 
 model User {
-  id        String   @id @default(uuid())
-  email     String   @unique
-  name      String
-  role      Role     @default(EMPLOYEE)
-  
+  id    String @id @default(uuid())
+  email String @unique
+  name  String
+  role  Role   @default(EMPLOYEE)
+
   // Nowe pola dla Auth
-  avatarUrl String?  // Zdjęcie z Google
-  provider  String?  @default("google") // Skąd przyszedł user
-  
+  avatarUrl String? // Zdjęcie z Google
+  provider  String? @default("google") // Skąd przyszedł user
+
   createdAt DateTime @default(now())
-  
-  shifts    Shift[]
-  teamId    String?
-  team      Team?    @relation(fields: [teamId], references: [id])
+
+  shifts Shift[]
+  teamId String?
+  team   Team?   @relation(fields: [teamId], references: [id])
 }
 
 model Team {
-  id        String   @id @default(uuid())
-  name      String
-  createdAt DateTime @default(now())
-  
-  users     User[]
-  shifts    Shift[]
+  id         String   @id @default(uuid())
+  name       String
+  inviteCode String   @unique @default(cuid()) // Unikalny kod (na start losowy)
+  createdAt  DateTime @default(now())
+
+  users  User[]
+  shifts Shift[]
 }
 
 model Shift {
-  id          String      @id @default(uuid())
-  startTime   DateTime
-  endTime     DateTime
-  roleName    String      // np. "Kelner" - string, bo role mogą być dynamiczne
-  status      ShiftStatus @default(DRAFT)
-  
-  // LOGIKA GIEŁDY
-  isUpForGrabs Boolean    @default(false) // Czy zmiana jest na giełdzie?
-  
-  // Relacje
-  userId      String?     // Może być NULL (zmiana nieobsadzona)
-  user        User?       @relation(fields: [userId], references: [id])
-  
-  teamId      String
-  team        Team        @relation(fields: [teamId], references: [id])
+  id        String      @id @default(uuid())
+  startTime DateTime
+  endTime   DateTime
+  roleName  String // np. "Kelner" - string, bo role mogą być dynamiczne
+  status    ShiftStatus @default(DRAFT)
 
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
+  // LOGIKA GIEŁDY
+  isUpForGrabs Boolean @default(false) // Czy zmiana jest na giełdzie?
+
+  // Relacje
+  userId String? // Może być NULL (zmiana nieobsadzona)
+  user   User?   @relation(fields: [userId], references: [id])
+
+  teamId String
+  team   Team   @relation(fields: [teamId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([teamId, startTime]) // Indeks do szybkiego pobierania grafiku
 }

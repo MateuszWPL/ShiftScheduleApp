@@ -68,3 +68,13 @@ export async function createTeam(userId: string, name: string) {
   if (!res.ok) throw new Error("Błąd tworzenia firmy");
   return res.json();
 }
+
+export async function joinTeam(userId: string, code: string) {
+  const res = await fetch(`${API_URL}/shifts/teams/join`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ userId, code }),
+  });
+  if (!res.ok) throw new Error("Błąd dołączania (sprawdź kod)");
+  return res.json();
+}

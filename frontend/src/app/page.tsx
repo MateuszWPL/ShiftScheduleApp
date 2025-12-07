@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { getShifts, claimShift, releaseShift, createTeam, Shift, API_URL } from "@/lib/api"; // Dodaj createTeam
+import { getShifts, claimShift, releaseShift, createTeam, Shift, API_URL, joinTeam } from "@/lib/api"; // Dodaj createTeam
 import { ShiftCard } from "@/components/ShiftCard";
 import { useSession, signIn, signOut } from "next-auth/react";
 import { useEffect, useState } from "react";
@@ -13,7 +13,7 @@ export default function Home() {
   const queryClient = useQueryClient();
   const [dbUser, setDbUser] = useState<any>(null);
   const [teamName, setTeamName] = useState(""); // Stan formularza
-
+  const [inviteCode, setInviteCode] = useState("");
   // 1. Synchronizacja Usera
   useEffect(() => {
     if (session?.user?.email) {
@@ -59,6 +59,14 @@ export default function Home() {
     },
     onError: (err) => alert(err.message),
   });
+  const joinTeamMutation = useMutation({
+    mutationFn: () => joinTeam(dbUser.id, inviteCode),
+    onSuccess: (updatedUser) => {
+      setDbUser(updatedUser);
+      alert("Dołączono do zespołu!");
+    },
+    onError: (err) => alert(err.message),
+  });
   // --- WIDOKI ---
 
   // A. Niezalogowany
@@ -73,39 +81,66 @@ export default function Home() {
     );
   }
 
-  // B. Zalogowany, ale BEZ FIRMY (Onboarding)
+  // B. Zalogowany, ale BEZ FIRMY
   if (dbUser && !dbUser.teamId) {
     return (
       <div className="flex h-screen items-center justify-center bg-slate-100">
-        <div className="max-w-md w-full p-8 bg-white rounded-xl shadow-lg space-y-6">
+        <div className="max-w-md w-full p-8 bg-white rounded-xl shadow-lg space-y-8">
           <div className="text-center">
             <h1 className="text-2xl font-bold">Witaj, {dbUser.name}!</h1>
-            <p className="text-gray-500">Nie należysz jeszcze do żadnej firmy.</p>
+            <p className="text-gray-500">Wybierz swoją ścieżkę.</p>
           </div>
 
+          {/* OPCJA 1: DOŁĄCZ */}
           <div className="space-y-4 pt-4 border-t">
-            <h2 className="font-semibold">Załóż nowy Workspace</h2>
+            <h2 className="font-semibold text-blue-600">Jestem pracownikiem</h2>
             <div className="flex gap-2">
               <input
                 type="text"
-                placeholder="Nazwa Twojej firmy (np. Pizzeria)"
+                placeholder="Wpisz Kod Zespołu"
+                className="flex-1 p-2 border rounded bg-slate-50"
+                value={inviteCode}
+                onChange={(e) => setInviteCode(e.target.value)}
+              />
+              <Button
+                onClick={() => joinTeamMutation.mutate()}
+                disabled={!inviteCode || joinTeamMutation.isPending}
+              >
+                Dołącz
+              </Button>
+            </div>
+            <p className="text-xs text-gray-400">Poproś Managera o kod dostępu.</p>
+          </div>
+
+          <div className="relative flex py-2 items-center">
+            <div className="flex-grow border-t border-gray-200"></div>
+            <span className="flex-shrink mx-4 text-gray-400 text-sm">LUB</span>
+            <div className="flex-grow border-t border-gray-200"></div>
+          </div>
+
+          {/* OPCJA 2: ZAŁÓŻ (Tu przenieś kod createTeamMutation z poprzedniej wersji) */}
+          <div className="space-y-4">
+            <h2 className="font-semibold text-slate-900">Jestem Managerem/Szefem</h2>
+            {/* ... input name i button Załóż ... */}
+            <div className="flex gap-2">
+              <input
+                type="text"
+                placeholder="Nazwa Nowej Firmy"
                 className="flex-1 p-2 border rounded"
                 value={teamName}
                 onChange={(e) => setTeamName(e.target.value)}
               />
               <Button
+                variant="outline"
                 onClick={() => createTeamMutation.mutate()}
                 disabled={!teamName || createTeamMutation.isPending}
               >
-                {createTeamMutation.isPending ? "Tworzę..." : "Załóż"}
+                Załóż Firmę
               </Button>
             </div>
           </div>
 
-          <div className="text-center text-xs text-gray-400 pt-4">
-            Jeśli chcesz dołączyć do istniejącej firmy, poproś Managera o dodanie.
-          </div>
-          <Button variant="ghost" className="w-full" onClick={() => signOut()}>Wyloguj</Button>
+          <Button variant="ghost" className="w-full mt-4" onClick={() => signOut()}>Wyloguj</Button>
         </div>
       </div>
     );
@@ -115,16 +150,25 @@ export default function Home() {
   return (
     <main className="min-h-screen p-8 bg-slate-50">
       <div className="max-w-xl mx-auto space-y-6">
-        <div className="flex justify-between items-center bg-white p-4 rounded-lg shadow-sm">
-          <div>
+        {/* HEADER */}
+        <div className="bg-white p-4 rounded-lg shadow-sm space-y-2">
+          <div className="flex justify-between items-center">
             <h1 className="text-xl font-bold">{dbUser?.name}</h1>
-            {/* Wyświetlamy nazwę teamu, jeśli mamy ją w obiekcie usera (trzeba by dodać include w syncUser), 
-                ale na razie wystarczy rola */}
-            <p className="text-xs text-blue-600 font-bold uppercase">{dbUser?.role}</p>
+            <Button variant="ghost" size="sm" onClick={() => signOut()}>Wyloguj</Button>
           </div>
-          <Button variant="outline" size="sm" onClick={() => signOut()}>
-            Wyloguj
-          </Button>
+
+          {/* Wyświetlanie KODU tylko jeśli jesteś w Teamie (pobierz go przy syncUser w backendzie!) 
+              UWAGA: Żeby to zadziałało, musisz w 'shifts.service.ts' w metodzie syncUser 
+              dołączyć dane o teamie: include: { team: true } 
+          */}
+          {dbUser?.role === 'OWNER' && dbUser?.team?.inviteCode && (
+            <div className="p-3 bg-blue-50 border border-blue-200 rounded text-center">
+              <p className="text-xs text-blue-600 uppercase font-bold">Kod zaproszenia dla pracowników:</p>
+              <p className="text-2xl font-mono tracking-widest text-blue-900 select-all cursor-pointer">
+                {dbUser.team.inviteCode}
+              </p>
+            </div>
+          )}
         </div>
 
         <div className="grid gap-4">

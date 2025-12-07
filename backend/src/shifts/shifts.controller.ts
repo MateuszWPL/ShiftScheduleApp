@@ -33,4 +33,8 @@ export class ShiftsController {
   createTeam(@Body('userId') userId: string, @Body('name') name: string) {
     return this.shiftsService.createTeam(userId, name);
   }
+  @Post('teams/join')
+  joinTeam(@Body('userId') userId: string, @Body('code') code: string) {
+    return this.shiftsService.joinTeam(userId, code);
+  }
 }

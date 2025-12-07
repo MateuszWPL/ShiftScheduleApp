@@ -107,6 +107,7 @@ export class ShiftsService {
   async syncUserByEmail(email: string, name: string) {
     let user = await this.prisma.user.findUnique({
       where: { email },
+      include: { team: true },
     });
 
     if (!user) {
@@ -118,10 +119,12 @@ export class ShiftsService {
           role: 'EMPLOYEE', // Domyślna rola
           // teamId: ... (tutaj w przyszłości przypiszemy do teamu)
         },
+        include: { team: true },
       });
     }
     return user;
   }
+
   async createTeam(userId: string, teamName: string) {
     return this.prisma.$transaction(async (tx) => {
       // 1. Stwórz Team
@@ -139,6 +142,25 @@ export class ShiftsService {
       });
 
       return { team, user: updatedUser };
+    });
+  }
+  async joinTeam(userId: string, code: string) {
+    // 1. Znajdź team po kodzie
+    const team = await this.prisma.team.findUnique({
+      where: { inviteCode: code },
+    });
+
+    if (!team) {
+      throw new BadRequestException('Nieprawidłowy kod zespołu.');
+    }
+
+    // 2. Przypisz usera do teamu
+    return this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        teamId: team.id,
+        role: 'EMPLOYEE', // Domyślnie pracownik
+      },
     });
   }
 }
