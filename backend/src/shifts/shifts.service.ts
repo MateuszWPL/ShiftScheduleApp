@@ -6,9 +6,24 @@ import { Shift } from '@prisma/client';
 export class ShiftsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  findAll() {
+  async findAll(userId: string) {
+    // 1. Pobierz usera, żeby sprawdzić jego Team
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user || !user.teamId) {
+      // Jeśli user nie ma teamu, nie widzi żadnych zmian (bezpieczny default)
+      return [];
+    }
+
+    // 2. Pobierz zmiany TYLKO dla tego teamu
     return this.prisma.shift.findMany({
+      where: {
+        teamId: user.teamId, // <--- KLUCZOWA LINIA (Multi-tenancy)
+      },
       include: { user: true },
+      orderBy: { startTime: 'asc' }, // Przy okazji posortujmy
     });
   }
 
@@ -106,5 +121,24 @@ export class ShiftsService {
       });
     }
     return user;
+  }
+  async createTeam(userId: string, teamName: string) {
+    return this.prisma.$transaction(async (tx) => {
+      // 1. Stwórz Team
+      const team = await tx.team.create({
+        data: { name: teamName },
+      });
+
+      // 2. Zaktualizuj Usera (przypisz do teamu i daj władzę)
+      const updatedUser = await tx.user.update({
+        where: { id: userId },
+        data: {
+          teamId: team.id,
+          role: 'OWNER', // Pierwszy user jest szefem
+        },
+      });
+
+      return { team, user: updatedUser };
+    });
   }
 }

@@ -10,8 +10,10 @@ export interface Shift {
   userId: string | null;
 }
 
-export async function getShifts(): Promise<Shift[]> {
-  const res = await fetch(`${API_URL}/shifts`);
+export async function getShifts(userId: string): Promise<Shift[]> {
+  if (!userId) return [];
+  // Przekazujemy userId w query stringu
+  const res = await fetch(`${API_URL}/shifts?userId=${userId}`);
   if (!res.ok) throw new Error("Błąd pobierania zmian");
   return res.json();
 }
@@ -53,5 +55,16 @@ export interface User {
 export async function getUsers(): Promise<User[]> {
   const res = await fetch(`${API_URL}/shifts/users/all`);
   if (!res.ok) throw new Error("Błąd pobierania userów");
+  return res.json();
+}
+
+export async function createTeam(userId: string, name: string) {
+  const res = await fetch(`${API_URL}/shifts/teams`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ userId, name }),
+  });
+  
+  if (!res.ok) throw new Error("Błąd tworzenia firmy");
   return res.json();
 }

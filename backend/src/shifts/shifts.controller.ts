@@ -6,10 +6,13 @@ export class ShiftsController {
   constructor(private readonly shiftsService: ShiftsService) {}
 
   @Get()
-  findAll() {
-    return this.shiftsService.findAll();
+  findAll(@Query('userId') userId: string) {
+    if (!userId) {
+      // Proste zabezpieczenie
+      return []; 
+    }
+    return this.shiftsService.findAll(userId);
   }
-
   @Post(':id/claim')
   claim(@Param('id') id: string, @Body('userId') userId: string) {
     return this.shiftsService.claimShift(id, userId);
@@ -25,5 +28,9 @@ export class ShiftsController {
   @Get('users/sync')
   async syncUser(@Query('email') email: string, @Query('name') name: string) {
     return this.shiftsService.syncUserByEmail(email, name);
+  }
+  @Post('teams')
+  createTeam(@Body('userId') userId: string, @Body('name') name: string) {
+    return this.shiftsService.createTeam(userId, name);
   }
 }
