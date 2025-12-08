@@ -10,6 +10,7 @@ import { useSession, signIn, signOut } from "next-auth/react";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { EditProfileDialog } from "@/components/dashboard/EditProfileDialog";
+import { Chrome } from "lucide-react";
 
 export default function Home() {
   const { data: session } = useSession();
@@ -55,7 +56,13 @@ export default function Home() {
       <div className="flex h-screen items-center justify-center bg-slate-100">
         <div className="p-8 bg-white rounded-xl shadow-lg text-center space-y-4">
           <h1 className="text-2xl font-bold">Shift Marketplace</h1>
-          <Button onClick={() => signIn("google")}>Zaloguj przez Google</Button>
+          <Button 
+            onClick={() => signIn("google", { callbackUrl: "/" })}
+            className="bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 flex items-center gap-2"
+          >
+            <Chrome className="w-5 h-5" />
+            Zaloguj przez Google
+          </Button>
         </div>
       </div>
     );

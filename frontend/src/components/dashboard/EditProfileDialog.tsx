@@ -19,11 +19,8 @@ export function EditProfileDialog({ user, isOpen, onClose }: Props) {
   const mutation = useMutation({
     mutationFn: () => updateUserProfile(user.id, name, phone),
     onSuccess: () => {
-      // Musimy odświeżyć dane, żeby w Dashboardzie pojawiło się nowe imię
-      // Uwaga: To zależy jak pobierasz usera w page.tsx (przez syncUser). 
-      // Najlepiej byłoby zrobić reload strony lub inwalidację.
       alert("Profil zaktualizowany!");
-      window.location.reload(); // Brutalne, ale skuteczne w MVP przy syncUser
+      window.location.reload();
     },
     onError: (err) => alert(err.message),
   });

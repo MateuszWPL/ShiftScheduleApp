@@ -1,6 +1,7 @@
 import { BadRequestException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { Shift } from '@prisma/client';
+import { nanoid } from 'nanoid';
 
 @Injectable()
 export class ShiftsService {
@@ -127,9 +128,13 @@ export class ShiftsService {
 
   async createTeam(userId: string, teamName: string) {
     return this.prisma.$transaction(async (tx) => {
-      // 1. Stwórz Team
+      // 1. Stwórz Team z 12-znakowym kodem nanoid
+      const inviteCode = nanoid(12);
       const team = await tx.team.create({
-        data: { name: teamName },
+        data: { 
+          name: teamName,
+          inviteCode: inviteCode,
+        },
       });
 
       // 2. Zaktualizuj Usera (przypisz do teamu i daj władzę)
