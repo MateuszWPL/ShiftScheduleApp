@@ -1,0 +1,9 @@
+Lokalne komendy (nie commitować)
+--------------------------------
+Front dev:        cd frontend && npm run dev
+Back dev:         cd backend && npm run start:dev
+Migracja lokalna: cd backend && npx prisma migrate dev && npx prisma db seed
+Migracja na Neon: cd backend && set DATABASE_URL=postgresql://neondb_owner:npg_NYcgBlTs8XI5@ep-billowing-heart-agcsbzgq-pooler.c-2.eu-central-1.aws.neon.tech/neondb?sslmode=require^&channel_binding=require && npx prisma migrate deploy
+Build backend:    cd backend && npm run build && npm run start:prod
+Push na master:   git checkout master && git pull && git status && git add . && git commit -m "..." && git push origin master
+

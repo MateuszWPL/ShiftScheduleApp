@@ -52,6 +52,7 @@ export interface User {
   email: string;
   role: "OWNER" | "MANAGER" | "EMPLOYEE";
   phoneNumber?: string | null;
+  skills: string[]; // <--- Postgres zwraca to jako tablicę
 }
 
 export async function getUsers(): Promise<User[]> {
@@ -94,5 +95,15 @@ export async function updateUserProfile(userId: string, name: string, phoneNumbe
     body: JSON.stringify({ userId, name, phoneNumber }),
   });
   if (!res.ok) throw new Error("Błąd aktualizacji profilu");
+  return res.json();
+}
+
+export async function updateEmployeeSkills(requesterId: string, targetId: string, skills: string[]) {
+  const res = await fetch(`${API_URL}/shifts/teams/members/${targetId}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ requesterId, skills }),
+  });
+  if (!res.ok) throw new Error("Błąd edycji pracownika");
   return res.json();
 }

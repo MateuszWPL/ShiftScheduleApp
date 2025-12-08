@@ -183,6 +183,8 @@ export class ShiftsService {
         name: true,
         email: true,
         role: true,
+        phoneNumber: true,
+        skills: true,
         // Nie pobieramy haseł ani innych wrażliwych danych!
       },
     });
@@ -193,6 +195,31 @@ export class ShiftsService {
       data: {
         name: data.name,
         phoneNumber: data.phoneNumber,
+      },
+    });
+  }
+  async updateEmployee(requesterId: string, targetUserId: string, data: { skills?: string[] }) {
+    // 1. Sprawdź kim jest ten, kto prosi (Requester)
+    const requester = await this.prisma.user.findUnique({ where: { id: requesterId } });
+    
+    // 2. Sprawdź kim jest ofiara edycji (Target)
+    const target = await this.prisma.user.findUnique({ where: { id: targetUserId } });
+
+    if (!requester || !target) throw new BadRequestException("Nie znaleziono użytkownika");
+
+    // 3. Walidacja B2B (Security)
+    if (requester.teamId !== target.teamId) {
+      throw new BadRequestException("Nie możesz edytować kogoś z innej firmy!");
+    }
+    if (requester.role !== 'OWNER' && requester.role !== 'MANAGER') {
+      throw new BadRequestException("Brak uprawnień. Tylko Owner/Manager może to robić.");
+    }
+
+    // 4. Update
+    return this.prisma.user.update({
+      where: { id: targetUserId },
+      data: {
+        skills: data.skills, // Nadpisujemy tablicę umiejętności
       },
     });
   }

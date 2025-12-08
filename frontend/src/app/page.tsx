@@ -3,8 +3,9 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { getShifts, claimShift, releaseShift, Shift, API_URL } from "@/lib/api";
 import { ShiftCard } from "@/components/ShiftCard";
-import { OnboardingView } from "@/components/onboarding/OnboardingView"; // <--- NOWY IMPORT
-import { TeamList } from "@/components/dashboard/TeamList"; // <--- NOWY IMPORT
+import { OnboardingView } from "@/components/onboarding/OnboardingView";
+import { TeamList } from "@/components/dashboard/TeamList";
+import { DashboardLayout } from "@/components/layout/DashboardLayout"; // NOWY LAYOUT
 import { useSession, signIn, signOut } from "next-auth/react";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -16,7 +17,7 @@ export default function Home() {
   const [dbUser, setDbUser] = useState<any>(null);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
 
-  // 1. Sync User
+  // Sync User
   useEffect(() => {
     if (session?.user?.email) {
       const { email, name } = session.user;
@@ -29,7 +30,7 @@ export default function Home() {
     }
   }, [session, queryClient]);
 
-  // 2. Pobieranie zmian
+  // Pobieranie zmian
   const { data: shifts, isLoading } = useQuery({
     queryKey: ["shifts", dbUser?.id],
     queryFn: () => getShifts(dbUser.id),
@@ -47,7 +48,7 @@ export default function Home() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["shifts"] }),
   });
 
-  // --- RENDERING ---
+  // --- WIDOKI ---
 
   if (!session) {
     return (
@@ -60,7 +61,6 @@ export default function Home() {
     );
   }
 
-  // Używamy nowego komponentu OnboardingView
   if (dbUser && !dbUser.teamId) {
     return (
       <OnboardingView
@@ -72,52 +72,60 @@ export default function Home() {
     );
   }
 
-  // Dashboard Właściwy
+  // --- NOWY DASHBOARD Z SIDEBAREM ---
   return (
-    <main className="min-h-screen p-4 md:p-8 bg-slate-50">
-      <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6">
+    <DashboardLayout userRole={dbUser?.role} onLogout={() => signOut()}>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
-        {/* KOLUMNA LEWA: Info + Zespół */}
+        {/* KOLUMNA LEWA: KOD + ZESPÓŁ */}
         <div className="space-y-6">
-          <div className="bg-white p-4 rounded-lg shadow-sm border">
-            <h2 className="font-bold text-lg">{dbUser?.name}</h2>
-            <p className="text-sm text-blue-600 font-bold uppercase">{dbUser?.role}</p>
-            <Button variant="ghost" size="icon" onClick={() => setIsProfileOpen(true)}>
-              {/* Ikona ołówka lub tekst */}
-              ✏️
-            </Button>
+
+          {/* Karta: Mój Profil */}
+          <div className="bg-white p-5 rounded-lg shadow-sm border">
+            <div className="flex justify-between items-start mb-4">
+              <div>
+                <h2 className="font-bold text-xl text-slate-900">{dbUser?.name}</h2>
+                <p className="text-sm text-gray-500">{dbUser?.phoneNumber || "Dodaj telefon..."}</p>
+                {/* Moje skille */}
+                <div className="flex flex-wrap gap-1 mt-2">
+                  {dbUser?.skills?.map((s: string) => (
+                    <span key={s} className="text-xs bg-gray-100 px-2 py-1 rounded">{s}</span>
+                  ))}
+                </div>
+              </div>
+              <Button variant="ghost" size="sm" onClick={() => setIsProfileOpen(true)}>Edytuj</Button>
+            </div>
+
             {dbUser?.role === 'OWNER' && dbUser?.team?.inviteCode && (
-              <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded text-center">
-                <p className="text-xs text-blue-600 font-bold">KOD ZESPOŁU:</p>
-                <p className="text-xl font-mono tracking-widest cursor-pointer select-all">
+              <div className="p-4 bg-blue-50 border border-blue-100 rounded-lg text-center">
+                <p className="text-[10px] text-blue-600 font-bold uppercase tracking-wider mb-1">Kod Zespołu</p>
+                <p className="text-2xl font-mono tracking-widest text-blue-900 select-all cursor-pointer">
                   {dbUser.team.inviteCode}
                 </p>
               </div>
             )}
-
-            <Button variant="outline" size="sm" className="w-full mt-4" onClick={() => signOut()}>
-              Wyloguj
-            </Button>
           </div>
 
-          {/* NOWY FEATURE: Lista Zespołu */}
-          <TeamList userId={dbUser?.id} />
+          {/* Lista Zespołu (z nową funkcją edycji) */}
+          <TeamList currentUserId={dbUser?.id} currentUserRole={dbUser?.role} />
         </div>
 
-        {/* KOLUMNA PRAWA: Grafik (2/3 szerokości) */}
-        <div className="md:col-span-2 space-y-4">
-          <h2 className="text-2xl font-bold text-slate-800">Grafik Zmian</h2>
+        {/* KOLUMNA PRAWA: GRAFIK (Szersza) */}
+        <div className="lg:col-span-2 space-y-6">
+          <div className="flex justify-between items-center">
+            <h2 className="text-2xl font-bold text-slate-800">Aktualny Grafik</h2>
+            {/* Tu kiedyś damy przycisk "Dodaj Zmianę" */}
+            {dbUser?.role === 'OWNER' && <Button>+ Dodaj Zmianę</Button>}
+          </div>
 
-          {isLoading && <p>Ładowanie...</p>}
-          {shifts?.length === 0 && <p className="text-gray-500">Brak zmian w grafiku.</p>}
-
-          <div className="grid gap-4">
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            {isLoading && <p>Ładowanie...</p>}
             {shifts?.map((shift: Shift) => {
+              // LOGIKA UI KARTY (Bez zmian)
               const isMyShift = shift.userId === dbUser?.id;
               const isAvailable = shift.isUpForGrabs;
               const timeStr = new Date(shift.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-              // Logika UI
               let actionLabel = "Zajęte";
               let onAction = () => { };
               let disabled = true;
@@ -129,14 +137,14 @@ export default function Home() {
                   actionLabel = "Czeka na chętnego...";
                 } else {
                   statusBadge = "claimed";
-                  actionLabel = "Oddaj na giełdę";
+                  actionLabel = "Oddaj";
                   onAction = () => releaseMutation.mutate(shift.id);
                   disabled = false;
                 }
               } else {
                 if (isAvailable) {
                   statusBadge = "open";
-                  actionLabel = "Biorę to!";
+                  actionLabel = "Biorę!";
                   onAction = () => claimMutation.mutate(shift.id);
                   disabled = false;
                 } else {
@@ -148,7 +156,7 @@ export default function Home() {
               return (
                 <ShiftCard
                   key={shift.id}
-                  role={shift.roleName + (isMyShift ? " (TY)" : "")}
+                  role={shift.roleName} // Tu można dodać (TY) w UI ShiftCard
                   time={timeStr}
                   status={statusBadge}
                   actionLabel={actionLabel}
@@ -160,6 +168,8 @@ export default function Home() {
           </div>
         </div>
       </div>
+
+      {/* MODALE */}
       {dbUser && (
         <EditProfileDialog
           user={dbUser}
@@ -167,6 +177,6 @@ export default function Home() {
           onClose={() => setIsProfileOpen(false)}
         />
       )}
-    </main>
+    </DashboardLayout>
   );
 }

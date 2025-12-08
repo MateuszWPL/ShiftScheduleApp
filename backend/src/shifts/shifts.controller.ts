@@ -45,4 +45,12 @@ export class ShiftsController {
   updateProfile(@Body('userId') userId: string, @Body('name') name: string, @Body('phoneNumber') phoneNumber: string) {
     return this.shiftsService.updateProfile(userId, { name, phoneNumber });
   }
+  @Patch('teams/members/:targetId')
+  updateEmployee(
+    @Param('targetId') targetId: string, 
+    @Body('requesterId') requesterId: string,
+    @Body('skills') skills: string[]
+  ) {
+    return this.shiftsService.updateEmployee(requesterId, targetId, { skills });
+  }
 }
