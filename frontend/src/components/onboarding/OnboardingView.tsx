@@ -17,7 +17,7 @@ export function OnboardingView({ userId, userName, onSuccess, onLogout }: Props)
   const [teamName, setTeamName] = useState("");
 
   const createTeamMutation = useMutation({
-    mutationFn: () => createTeam(userId, teamName),
+    mutationFn: () => createTeam(teamName), // userId jest teraz z tokena - BEZPIECZNIE
     onSuccess: (data) => {
       alert("Firma założona!");
       onSuccess(data.user);
@@ -26,7 +26,7 @@ export function OnboardingView({ userId, userName, onSuccess, onLogout }: Props)
   });
 
   const joinTeamMutation = useMutation({
-    mutationFn: () => joinTeam(userId, inviteCode),
+    mutationFn: () => joinTeam(inviteCode), // userId jest teraz z tokena - BEZPIECZNIE
     onSuccess: (updatedUser) => {
       alert("Dołączono do zespołu!");
       onSuccess(updatedUser);

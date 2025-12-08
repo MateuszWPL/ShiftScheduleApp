@@ -34,18 +34,18 @@ export default function Home() {
   // Pobieranie zmian
   const { data: shifts, isLoading } = useQuery({
     queryKey: ["shifts", dbUser?.id],
-    queryFn: () => getShifts(dbUser.id),
+    queryFn: () => getShifts(), // userId jest teraz z tokena - BEZPIECZNIE
     enabled: !!dbUser?.teamId,
   });
 
   // Mutacje
   const claimMutation = useMutation({
-    mutationFn: (shiftId: string) => claimShift(shiftId, dbUser.id),
+    mutationFn: (shiftId: string) => claimShift(shiftId), // userId jest teraz z tokena - BEZPIECZNIE
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["shifts"] }),
   });
 
   const releaseMutation = useMutation({
-    mutationFn: (shiftId: string) => releaseShift(shiftId, dbUser.id),
+    mutationFn: (shiftId: string) => releaseShift(shiftId), // userId jest teraz z tokena - BEZPIECZNIE
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["shifts"] }),
   });
 

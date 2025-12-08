@@ -16,7 +16,7 @@ interface Props {
 export function TeamList({ currentUserId, currentUserRole }: Props) {
   const { data: members, isLoading } = useQuery({
     queryKey: ["team-members", currentUserId],
-    queryFn: () => getTeamMembers(currentUserId),
+    queryFn: () => getTeamMembers(), // userId jest teraz z tokena - BEZPIECZNIE
     enabled: !!currentUserId,
   });
 

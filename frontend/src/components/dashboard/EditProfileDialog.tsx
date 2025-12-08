@@ -17,7 +17,7 @@ export function EditProfileDialog({ user, isOpen, onClose }: Props) {
   const [phone, setPhone] = useState(user.phoneNumber || "");
 
   const mutation = useMutation({
-    mutationFn: () => updateUserProfile(user.id, name, phone),
+    mutationFn: () => updateUserProfile(name, phone), // userId jest teraz z tokena - BEZPIECZNIE
     onSuccess: () => {
       alert("Profil zaktualizowany!");
       window.location.reload();
