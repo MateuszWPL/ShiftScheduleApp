@@ -200,3 +200,22 @@ export async function updateEmployeeSkills(targetId: string, skills: string[]) {
   }
   return res.json();
 }
+
+export interface CreateShiftInput {
+  startTime: string; // ISO string
+  endTime: string; // ISO string
+  roleName: string;
+  status?: "DRAFT" | "PUBLISHED" | "COMPLETED";
+}
+
+export async function createShift(data: CreateShiftInput): Promise<Shift> {
+  const res = await authenticatedFetch(`${API_URL}/shifts`, {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.message || "Błąd tworzenia zmiany");
+  }
+  return res.json();
+}

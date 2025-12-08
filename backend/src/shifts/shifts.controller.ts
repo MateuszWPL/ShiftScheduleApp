@@ -3,6 +3,13 @@ import { ShiftsService } from './shifts.service';
 import { JwtAuthGuard } from '../auth/auth.guard';
 import { CurrentUser, CurrentUser as User } from '../auth/decorators/user.decorator';
 import { Public } from '../auth/decorators/public.decorator';
+import { CreateShiftDto } from './dto/create-shift.dto';
+import { CreateTeamDto } from './dto/create-team.dto';
+import { JoinTeamDto } from './dto/join-team.dto';
+import { UpdateProfileDto } from './dto/update-profile.dto';
+import { UpdateEmployeeDto } from './dto/update-employee.dto';
+import { SyncUserDto } from './dto/sync-user.dto';
+import { ShiftIdParamDto, TargetIdParamDto } from './dto/params.dto';
 
 @Controller('shifts')
 @UseGuards(JwtAuthGuard) // Wszystkie endpointy wymagają autentykacji
@@ -15,16 +22,29 @@ export class ShiftsController {
     return this.shiftsService.findAll(user.userId);
   }
 
+  @Post()
+  create(@Body() createShiftDto: CreateShiftDto, @CurrentUser() user: User) {
+    // userId i teamId z tokena - BEZPIECZNIE
+    return this.shiftsService.create(user.userId, {
+      startTime: new Date(createShiftDto.startTime),
+      endTime: new Date(createShiftDto.endTime),
+      roleName: createShiftDto.roleName,
+      status: createShiftDto.status,
+    });
+  }
+
   @Post(':id/claim')
-  claim(@Param('id') id: string, @CurrentUser() user: User) {
+  claim(@Param() params: ShiftIdParamDto, @CurrentUser() user: User) {
     // userId z tokena, nie z body - BEZPIECZNIE
-    return this.shiftsService.claimShift(id, user.userId);
+    // UUID walidowany przez DTO
+    return this.shiftsService.claimShift(params.id, user.userId);
   }
 
   @Patch(':id/release')
-  release(@Param('id') id: string, @CurrentUser() user: User) {
+  release(@Param() params: ShiftIdParamDto, @CurrentUser() user: User) {
     // userId z tokena, nie z body - BEZPIECZNIE
-    return this.shiftsService.releaseShift(id, user.userId);
+    // UUID walidowany przez DTO
+    return this.shiftsService.releaseShift(params.id, user.userId);
   }
 
   @Get('users/all')
@@ -35,21 +55,24 @@ export class ShiftsController {
 
   @Public() // Publiczny endpoint - używany do pierwszego sync usera przed autentykacją
   @Get('users/sync')
-  async syncUser(@Query('email') email: string, @Query('name') name: string) {
+  async syncUser(@Query() query: SyncUserDto) {
     // UWAGA: Ten endpoint jest publiczny, ale powinien być chroniony przez rate limiting w produkcji
-    return this.shiftsService.syncUserByEmail(email, name);
+    // Walidacja przez DTO (email, name)
+    return this.shiftsService.syncUserByEmail(query.email, query.name || '');
   }
 
   @Post('teams')
-  createTeam(@Body('name') name: string, @CurrentUser() user: User) {
+  createTeam(@Body() createTeamDto: CreateTeamDto, @CurrentUser() user: User) {
     // userId z tokena - BEZPIECZNIE
-    return this.shiftsService.createTeam(user.userId, name);
+    // Nazwa zespołu walidowana przez DTO
+    return this.shiftsService.createTeam(user.userId, createTeamDto.name);
   }
 
   @Post('teams/join')
-  joinTeam(@Body('code') code: string, @CurrentUser() user: User) {
+  joinTeam(@Body() joinTeamDto: JoinTeamDto, @CurrentUser() user: User) {
     // userId z tokena - BEZPIECZNIE
-    return this.shiftsService.joinTeam(user.userId, code);
+    // Kod zespołu walidowany przez DTO (dokładnie 12 znaków)
+    return this.shiftsService.joinTeam(user.userId, joinTeamDto.code);
   }
 
   @Get('team/members')
@@ -59,18 +82,26 @@ export class ShiftsController {
   }
 
   @Patch('users/me')
-  updateProfile(@Body('name') name: string, @Body('phoneNumber') phoneNumber: string, @CurrentUser() user: User) {
+  updateProfile(@Body() updateProfileDto: UpdateProfileDto, @CurrentUser() user: User) {
     // userId z tokena - BEZPIECZNIE
-    return this.shiftsService.updateProfile(user.userId, { name, phoneNumber });
+    // Name i phoneNumber walidowane przez DTO
+    return this.shiftsService.updateProfile(user.userId, {
+      name: updateProfileDto.name,
+      phoneNumber: updateProfileDto.phoneNumber,
+    });
   }
 
   @Patch('teams/members/:targetId')
   updateEmployee(
-    @Param('targetId') targetId: string,
-    @Body('skills') skills: string[],
+    @Param() params: TargetIdParamDto,
+    @Body() updateEmployeeDto: UpdateEmployeeDto,
     @CurrentUser() user: User
   ) {
     // requesterId z tokena - BEZPIECZNIE
-    return this.shiftsService.updateEmployee(user.userId, targetId, { skills });
+    // targetId walidowany jako UUID przez DTO
+    // Skills walidowane przez DTO (tablica stringów, max 20 elementów)
+    return this.shiftsService.updateEmployee(user.userId, params.targetId, {
+      skills: updateEmployeeDto.skills,
+    });
   }
 }

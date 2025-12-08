@@ -28,6 +28,32 @@ export class ShiftsService {
     });
   }
 
+  async create(userId: string, data: { startTime: Date; endTime: Date; roleName: string; status?: string }) {
+    // 1. Pobierz usera, żeby sprawdzić jego Team
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      include: { team: true },
+    });
+
+    if (!user || !user.teamId) {
+      throw new BadRequestException('Musisz należeć do zespołu, żeby tworzyć zmiany.');
+    }
+
+    // 2. Stwórz zmianę dla tego teamu
+    return this.prisma.shift.create({
+      data: {
+        startTime: data.startTime,
+        endTime: data.endTime,
+        roleName: data.roleName,
+        status: (data.status as any) || 'DRAFT',
+        teamId: user.teamId,
+        userId: null, // Zmiana nieobsadzona na start
+        isUpForGrabs: false, // Nie na giełdzie na start
+      },
+      include: { user: true },
+    });
+  }
+
   getAllUsers() {
     return this.prisma.user.findMany();
   }

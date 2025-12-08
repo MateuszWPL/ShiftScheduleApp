@@ -10,6 +10,7 @@ import { useSession, signIn, signOut } from "next-auth/react";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { EditProfileDialog } from "@/components/dashboard/EditProfileDialog";
+import { CreateShiftDialog } from "@/components/dashboard/CreateShiftDialog";
 import { Chrome } from "lucide-react";
 
 export default function Home() {
@@ -17,6 +18,7 @@ export default function Home() {
   const queryClient = useQueryClient();
   const [dbUser, setDbUser] = useState<any>(null);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [isCreateShiftOpen, setIsCreateShiftOpen] = useState(false);
 
   // Sync User
   useEffect(() => {
@@ -121,8 +123,9 @@ export default function Home() {
         <div className="lg:col-span-2 space-y-6">
           <div className="flex justify-between items-center">
             <h2 className="text-2xl font-bold text-slate-800">Aktualny Grafik</h2>
-            {/* Tu kiedyś damy przycisk "Dodaj Zmianę" */}
-            {dbUser?.role === 'OWNER' && <Button>+ Dodaj Zmianę</Button>}
+            {(dbUser?.role === 'OWNER' || dbUser?.role === 'MANAGER') && (
+              <Button onClick={() => setIsCreateShiftOpen(true)}>+ Dodaj Zmianę</Button>
+            )}
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
@@ -178,11 +181,17 @@ export default function Home() {
 
       {/* MODALE */}
       {dbUser && (
-        <EditProfileDialog
-          user={dbUser}
-          isOpen={isProfileOpen}
-          onClose={() => setIsProfileOpen(false)}
-        />
+        <>
+          <EditProfileDialog
+            user={dbUser}
+            isOpen={isProfileOpen}
+            onClose={() => setIsProfileOpen(false)}
+          />
+          <CreateShiftDialog
+            isOpen={isCreateShiftOpen}
+            onClose={() => setIsCreateShiftOpen(false)}
+          />
+        </>
       )}
     </DashboardLayout>
   );
