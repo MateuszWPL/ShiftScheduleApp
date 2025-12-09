@@ -25,7 +25,7 @@ export function ManageEmployeeDialog({ managerId, targetUser, onClose }: Props) 
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["team-members"] });
       toast.success("Zaktualizowano pracownika!", {
-        description: `Umiejętności ${targetUser.name} zostały zaktualizowane.`,
+        description: `Umiejętności ${targetUser?.name || "pracownika"} zostały zaktualizowane.`,
       });
       onClose();
     },
