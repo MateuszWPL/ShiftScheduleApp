@@ -20,6 +20,15 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
       return true;
     }
 
+    const request = context.switchToHttp().getRequest();
+    const authHeader = request.headers.authorization;
+    const route = `${request.method} ${request.url}`;
+    console.log('[AUTH] Guard check - route:', route, 'isPublic:', isPublic, 'authHeader:', authHeader ? 'present' : 'missing');
+    
+    if (!authHeader) {
+      console.error('[AUTH] No Authorization header in request');
+    }
+
     return super.canActivate(context);
   }
 }

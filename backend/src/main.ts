@@ -32,7 +32,9 @@ async function bootstrap() {
   // 2. Włączamy CORS (żeby Frontend z portu 3000 mógł pytać Backend na 3001)
   app.enableCors({
     origin: '*', // NA START: Pozwalamy wszystkim. Na produkcji zmienimy to na domenę frontendu.
-    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true,
   });
 
   // 3. ZMIANA PORTU NA 3001

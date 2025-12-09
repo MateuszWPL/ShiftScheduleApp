@@ -35,6 +35,9 @@ export async function GET() {
     // Generuj JWT token w formacie który NestJS może zweryfikować
     const secret = process.env.JWT_SECRET || process.env.NEXTAUTH_SECRET || "your-secret-key-change-in-production";
     
+    console.log('[TOKEN] Generating JWT with secret source:', process.env.JWT_SECRET ? 'JWT_SECRET' : process.env.NEXTAUTH_SECRET ? 'NEXTAUTH_SECRET' : 'DEFAULT');
+    console.log('[TOKEN] Secret length:', secret?.length || 0);
+    
     const token = jwt.sign(
       {
         sub: dbUser.id, // userId - standard JWT claim
@@ -45,6 +48,8 @@ export async function GET() {
         expiresIn: "7d", // Token ważny 7 dni
       }
     );
+    
+    console.log('[TOKEN] Token generated for user:', dbUser.email);
 
     return NextResponse.json({ token });
   } catch (error) {
