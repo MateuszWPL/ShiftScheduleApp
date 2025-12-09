@@ -15,7 +15,12 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized - no session" }, { status: 401 });
     }
 
-    // Pobierz userId z backendu (sync user)
+    // Jeśli to logowanie przez Credentials (email+hasło), mamy już token w session
+    if ((session as any).accessToken) {
+      return NextResponse.json({ token: (session as any).accessToken });
+    }
+
+    // Dla Google OAuth - pobierz userId z backendu (sync user)
     const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
     const syncResponse = await fetch(
       `${API_URL}/shifts/users/sync?email=${encodeURIComponent(session.user.email)}&name=${encodeURIComponent(session.user.name || "")}`

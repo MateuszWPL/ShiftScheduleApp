@@ -15,6 +15,8 @@ import { Chrome } from "lucide-react";
 import { PendingList } from "@/components/dashboard/PendingList";
 import { PendingView } from "@/components/onboarding/PendingView";
 import { getMyMembershipStatus } from "@/lib/api";
+import { LoginPage } from "@/components/auth/LoginPage";
+import { UnverifiedView } from "@/components/auth/UnverifiedView";
 
 export default function Home() {
   const { data: session } = useSession();
@@ -70,19 +72,17 @@ export default function Home() {
   // --- WIDOKI ---
 
   if (!session) {
+    return <LoginPage />;
+  }
+
+  // Sprawdź czy użytkownik jest zweryfikowany (tylko dla email+hasło)
+  // Google OAuth użytkownicy są automatycznie zweryfikowani
+  if (dbUser && dbUser.provider === "email" && !dbUser.emailVerified) {
     return (
-      <div className="flex h-screen items-center justify-center bg-slate-100">
-        <div className="p-8 bg-white rounded-xl shadow-lg text-center space-y-4">
-          <h1 className="text-2xl font-bold">Shift Marketplace</h1>
-          <Button
-            onClick={() => signIn("google", { callbackUrl: "/" })}
-            className="bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 flex items-center gap-2"
-          >
-            <Chrome className="w-5 h-5" />
-            Zaloguj przez Google
-          </Button>
-        </div>
-      </div>
+      <UnverifiedView
+        email={dbUser.email}
+        userName={dbUser.name || "Użytkownik"}
+      />
     );
   }
 

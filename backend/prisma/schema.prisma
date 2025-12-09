@@ -39,6 +39,11 @@ model User {
   avatarUrl String?  
   provider  String?  @default("google")
   
+  // Email + Hasło Authentication
+  password  String?  // Hashed password (nullable - Google users nie mają hasła)
+  emailVerified Boolean @default(false) // Weryfikacja emaila (dla email+hasło)
+  emailVerificationToken String? // Token do weryfikacji emaila
+  
   createdAt DateTime @default(now())
   
   shifts       Shift[]

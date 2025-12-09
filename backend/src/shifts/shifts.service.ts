@@ -136,15 +136,28 @@ export class ShiftsService {
 
     if (!user) {
       console.log(`[AUTH] Tworzę nowego usera dla: ${email}`);
+      // Tylko dla Google OAuth - użytkownicy email+hasło są tworzeni przez /auth/register
       user = await this.prisma.user.create({
         data: {
           email,
           name,
           role: 'EMPLOYEE', // Domyślna rola
+          provider: 'google', // Google OAuth
           // teamId: ... (tutaj w przyszłości przypiszemy do teamu)
         },
         include: { team: true },
       });
+    } else {
+      // Aktualizuj tylko name jeśli użytkownik już istnieje (dla Google OAuth)
+      // Nie nadpisujemy hasła ani innych pól dla użytkowników email+hasło
+      if (!user.password && name) {
+        // Tylko dla Google OAuth - aktualizuj name
+        user = await this.prisma.user.update({
+          where: { email },
+          data: { name },
+          include: { team: true },
+        });
+      }
     }
     return user;
   }
