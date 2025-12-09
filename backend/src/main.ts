@@ -30,11 +30,38 @@ async function bootstrap() {
   );
 
   // 2. Włączamy CORS (żeby Frontend z portu 3000 mógł pytać Backend na 3001)
+  const allowedOrigins = [
+    'http://localhost:3000',
+    'http://localhost:3001',
+    process.env.FRONTEND_URL,
+    'https://shift-schedule-app-rho.vercel.app',
+  ].filter(Boolean); // Usuwa undefined/null wartości
+
   app.enableCors({
-    origin: '*', // NA START: Pozwalamy wszystkim. Na produkcji zmienimy to na domenę frontendu.
-    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
-    allowedHeaders: ['Content-Type', 'Authorization'],
+    origin: (origin, callback) => {
+      // Pozwól na requesty bez origin (np. Postman, mobile apps)
+      if (!origin) {
+        return callback(null, true);
+      }
+      
+      // Sprawdź czy origin jest na liście dozwolonych
+      if (allowedOrigins.includes(origin) || process.env.NODE_ENV === 'development') {
+        return callback(null, true);
+      }
+      
+      // Na produkcji, jeśli nie ma FRONTEND_URL, pozwól wszystkim (fallback)
+      if (!process.env.FRONTEND_URL && process.env.NODE_ENV === 'production') {
+        return callback(null, true);
+      }
+      
+      callback(new Error('Not allowed by CORS'));
+    },
+    methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
+    exposedHeaders: ['Content-Type', 'Authorization'],
     credentials: true,
+    preflightContinue: false,
+    optionsSuccessStatus: 204,
   });
 
   // 3. ZMIANA PORTU NA 3001
