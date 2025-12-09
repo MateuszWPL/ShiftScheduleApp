@@ -35,9 +35,23 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
     console.log('[AUTH] Token preview:', tokenPreview + '...');
 
     try {
-      const result = await super.canActivate(context) as Promise<boolean>;
-      console.log('[AUTH] Guard passed');
-      return result;
+      const result = super.canActivate(context);
+      
+      // canActivate może zwrócić boolean, Promise<boolean> lub Observable<boolean>
+      if (result instanceof Promise) {
+        const resolved = await result;
+        console.log('[AUTH] Guard passed (Promise)');
+        return resolved;
+      } else if (typeof result === 'boolean') {
+        console.log('[AUTH] Guard passed (boolean)');
+        return result;
+      } else {
+        // Observable<boolean> - konwertujemy na Promise
+        const { firstValueFrom } = await import('rxjs');
+        const resolved = await firstValueFrom(result);
+        console.log('[AUTH] Guard passed (Observable)');
+        return resolved;
+      }
     } catch (error: any) {
       console.error('[AUTH] Guard failed with error:', error?.message || 'Unknown error');
       console.error('[AUTH] Error name:', error?.name);
