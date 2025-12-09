@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useMutation } from "@tanstack/react-query";
 import { createTeam, joinTeam } from "@/lib/api";
+import { toast } from "sonner";
 
 interface Props {
   userId: string;
@@ -19,20 +20,51 @@ export function OnboardingView({ userId, userName, onSuccess, onLogout }: Props)
   const createTeamMutation = useMutation({
     mutationFn: () => createTeam(teamName), // userId jest teraz z tokena - BEZPIECZNIE
     onSuccess: (data) => {
-      alert("Firma założona!");
+      toast.success("Firma założona!", {
+        description: "Możesz teraz zapraszać pracowników.",
+      });
       onSuccess(data.user);
     },
-    onError: (err) => alert(err.message),
+    onError: (err: Error) => {
+      toast.error("Błąd tworzenia firmy", {
+        description: err.message,
+      });
+    },
   });
 
   const joinTeamMutation = useMutation({
     mutationFn: () => joinTeam(inviteCode), // userId jest teraz z tokena - BEZPIECZNIE
-    onSuccess: (updatedUser) => {
-      alert("Dołączono do zespołu!");
-      onSuccess(updatedUser);
+    onSuccess: (result: any) => {
+      // Backend zwraca { status: "PENDING", team: {...} }
+      if (result?.status === "PENDING") {
+        toast.info("Zgłoszenie wysłane", {
+          description: "Czekaj na akceptację managera. Otrzymasz powiadomienie gdy zostaniesz zaakceptowany.",
+        });
+        // Przekazujemy dane do page.tsx - teamId z team.id, ale membershipStatus PENDING
+        // page.tsx sprawdzi membershipStatus i pokaże PendingView
+        onSuccess({ 
+          id: userId, // Zachowaj ID usera
+          name: userName, // Zachowaj imię
+          email: "", // Będzie zaktualizowane przez sync
+          teamId: result.team?.id || null, // Team ID z odpowiedzi
+          membershipStatus: "PENDING", // Flaga dla page.tsx
+          team: result.team, // Dane teamu
+        });
+      } else {
+        toast.success("Dołączono do zespołu!", {
+          description: "Możesz teraz przeglądać grafik zmian.",
+        });
+        onSuccess(result);
+      }
     },
-    onError: (err) => alert(err.message),
+    onError: (err: Error) => {
+      toast.error("Błąd dołączania do zespołu", {
+        description: err.message,
+      });
+    },
   });
+
+  // Usunięto isPending view - page.tsx obsługuje PENDING status i pokazuje PendingView
 
   return (
     <div className="flex h-screen items-center justify-center bg-slate-100">
@@ -52,12 +84,13 @@ export function OnboardingView({ userId, userName, onSuccess, onLogout }: Props)
               className="flex-1 p-2 border rounded bg-slate-50"
               value={inviteCode}
               onChange={(e) => setInviteCode(e.target.value)}
+              disabled={joinTeamMutation.isPending}
             />
             <Button
               onClick={() => joinTeamMutation.mutate()}
               disabled={!inviteCode || joinTeamMutation.isPending}
             >
-              Dołącz
+              {joinTeamMutation.isPending ? "Wysyłanie..." : "Dołącz"}
             </Button>
           </div>
         </div>

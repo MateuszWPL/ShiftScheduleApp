@@ -219,3 +219,59 @@ export async function createShift(data: CreateShiftInput): Promise<Shift> {
   }
   return res.json();
 }
+
+// Sprawdź status membership użytkownika
+export async function getMyMembershipStatus(): Promise<{ status: string }> {
+  const res = await authenticatedFetch(`${API_URL}/shifts/teams/my-membership`);
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.message || "Błąd pobierania statusu członkostwa");
+  }
+  const data = await res.json();
+  return data; // Backend zwraca { status: "PENDING" | "ACTIVE" | ... }
+}
+
+// --- MEMBERSHIP / PENDING ---
+
+export type MembershipStatus = "PENDING" | "ACTIVE" | "REJECTED" | "LEFT";
+
+export interface PendingMember {
+  id: string;
+  user: {
+    id: string;
+    email: string;
+    name: string | null;
+  };
+  requestedAt: string;
+}
+
+export async function getPendingMembers(): Promise<PendingMember[]> {
+  const res = await authenticatedFetch(`${API_URL}/shifts/teams/pending`);
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.message || "Błąd pobierania oczekujących");
+  }
+  return res.json();
+}
+
+export async function approvePending(membershipId: string) {
+  const res = await authenticatedFetch(`${API_URL}/shifts/teams/pending/${membershipId}/approve`, {
+    method: "POST",
+  });
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.message || "Nie udało się zatwierdzić");
+  }
+  return res.json();
+}
+
+export async function rejectPending(membershipId: string) {
+  const res = await authenticatedFetch(`${API_URL}/shifts/teams/pending/${membershipId}/reject`, {
+    method: "POST",
+  });
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.message || "Nie udało się odrzucić");
+  }
+  return res.json();
+}

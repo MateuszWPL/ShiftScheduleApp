@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google"; // Zakładam domyślne fon
 import "./globals.css";
 import QueryProvider from "@/components/providers/QueryProvider"; // <--- SPRAWDŹ TEN IMPORT
 import AuthProvider from "@/components/providers/AuthProvider";
+import { Toaster } from "sonner";
 
 export const metadata: Metadata = {
   title: "Shift Marketplace",
@@ -20,6 +21,7 @@ export default function RootLayout({
         <AuthProvider>        {/* <--- DODAJEMY */}
           <QueryProvider>
             {children}
+            <Toaster position="top-right" richColors />
           </QueryProvider>
         </AuthProvider>       {/* <--- ZAMYKAMY */}
       </body>

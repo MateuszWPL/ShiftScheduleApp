@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createShift } from "@/lib/api";
+import { toast } from "sonner";
 
 interface Props {
   isOpen: boolean;
@@ -23,7 +24,7 @@ export function CreateShiftDialog({ isOpen, onClose }: Props) {
       // Połącz datę i czas w ISO string
       const startDateTime = new Date(`${startDate}T${startTime}:00`).toISOString();
       const endDateTime = new Date(`${endDate}T${endTime}:00`).toISOString();
-      
+
       return createShift({
         startTime: startDateTime,
         endTime: endDateTime,
@@ -32,7 +33,9 @@ export function CreateShiftDialog({ isOpen, onClose }: Props) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["shifts"] });
-      alert("Zmiana utworzona!");
+      toast.success("Zmiana utworzona!", {
+        description: "Zmiana została dodana do grafiku.",
+      });
       onClose();
       // Reset formularza
       setRoleName("");
@@ -42,7 +45,9 @@ export function CreateShiftDialog({ isOpen, onClose }: Props) {
       setEndTime("");
     },
     onError: (err: Error) => {
-      alert(err.message || "Błąd tworzenia zmiany");
+      toast.error("Błąd tworzenia zmiany", {
+        description: err.message || "Spróbuj ponownie.",
+      });
     },
   });
 

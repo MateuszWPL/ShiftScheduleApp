@@ -10,3 +10,8 @@ export class TargetIdParamDto {
   targetId: string;
 }
 
+export class MembershipIdParamDto {
+  @IsUUID('4', { message: 'ID zgłoszenia musi być prawidłowym UUID' })
+  membershipId: string;
+}
+

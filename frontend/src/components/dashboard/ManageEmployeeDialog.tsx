@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { updateEmployeeSkills, User } from "@/lib/api";
+import { toast } from "sonner";
 
 interface Props {
   managerId: string;
@@ -23,10 +24,16 @@ export function ManageEmployeeDialog({ managerId, targetUser, onClose }: Props) 
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["team-members"] });
-      alert("Zaktualizowano pracownika!");
+      toast.success("Zaktualizowano pracownika!", {
+        description: `Umiejętności ${targetUser.name} zostały zaktualizowane.`,
+      });
       onClose();
     },
-    onError: (err) => alert(err.message),
+    onError: (err: Error) => {
+      toast.error("Błąd aktualizacji pracownika", {
+        description: err.message,
+      });
+    },
   });
 
   if (!targetUser) return null;

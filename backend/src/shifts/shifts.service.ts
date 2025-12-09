@@ -1,6 +1,6 @@
-import { BadRequestException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, InternalServerErrorException, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { Shift } from '@prisma/client';
+import { MembershipStatus, Role, Shift } from '@prisma/client';
 import { nanoid } from 'nanoid';
 
 @Injectable()
@@ -8,47 +8,44 @@ export class ShiftsService {
   constructor(private readonly prisma: PrismaService) {}
 
   async findAll(userId: string) {
-    // 1. Pobierz usera, żeby sprawdzić jego Team
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
+    const activeMembership = await this.prisma.teamMembership.findFirst({
+      where: { userId, status: MembershipStatus.ACTIVE },
+      include: { team: true },
     });
 
-    if (!user || !user.teamId) {
-      // Jeśli user nie ma teamu, nie widzi żadnych zmian (bezpieczny default)
+    if (!activeMembership) {
+      // Brak aktywnego członkostwa => brak danych
       return [];
     }
 
-    // 2. Pobierz zmiany TYLKO dla tego teamu
     return this.prisma.shift.findMany({
       where: {
-        teamId: user.teamId, // <--- KLUCZOWA LINIA (Multi-tenancy)
+        teamId: activeMembership.teamId,
       },
       include: { user: true },
-      orderBy: { startTime: 'asc' }, // Przy okazji posortujmy
+      orderBy: { startTime: 'asc' },
     });
   }
 
   async create(userId: string, data: { startTime: Date; endTime: Date; roleName: string; status?: string }) {
-    // 1. Pobierz usera, żeby sprawdzić jego Team
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
-      include: { team: true },
+    // 1. Sprawdź aktywne członkostwo
+    const membership = await this.prisma.teamMembership.findFirst({
+      where: { userId, status: MembershipStatus.ACTIVE },
     });
 
-    if (!user || !user.teamId) {
-      throw new BadRequestException('Musisz należeć do zespołu, żeby tworzyć zmiany.');
+    if (!membership) {
+      throw new BadRequestException('Musisz należeć do zespołu (ACTIVE), żeby tworzyć zmiany.');
     }
 
-    // 2. Stwórz zmianę dla tego teamu
     return this.prisma.shift.create({
       data: {
         startTime: data.startTime,
         endTime: data.endTime,
         roleName: data.roleName,
         status: (data.status as any) || 'DRAFT',
-        teamId: user.teamId,
-        userId: null, // Zmiana nieobsadzona na start
-        isUpForGrabs: false, // Nie na giełdzie na start
+        teamId: membership.teamId,
+        userId: null,
+        isUpForGrabs: false,
       },
       include: { user: true },
     });
@@ -163,21 +160,32 @@ export class ShiftsService {
         },
       });
 
-      // 2. Zaktualizuj Usera (przypisz do teamu i daj władzę)
+      // 2. Członkostwo OWNER (ACTIVE)
+      await tx.teamMembership.create({
+        data: {
+          userId,
+          teamId: team.id,
+          status: MembershipStatus.ACTIVE,
+          role: Role.OWNER,
+          approvedAt: new Date(),
+          approvedBy: userId,
+        },
+      });
+
+      // 3. Zaktualizuj Usera (przypisz do teamu i roli OWNER)
       const updatedUser = await tx.user.update({
         where: { id: userId },
         data: {
           teamId: team.id,
-          role: 'OWNER', // Pierwszy user jest szefem
+          role: Role.OWNER,
         },
-        include: { team: true }, // Include team relation so frontend can access inviteCode
+        include: { team: true },
       });
 
       return { team, user: updatedUser };
     });
   }
   async joinTeam(userId: string, code: string) {
-    // 1. Znajdź team po kodzie
     const team = await this.prisma.team.findUnique({
       where: { inviteCode: code },
     });
@@ -186,39 +194,93 @@ export class ShiftsService {
       throw new BadRequestException('Nieprawidłowy kod zespołu.');
     }
 
-    // 2. Przypisz usera do teamu
-    return this.prisma.user.update({
-      where: { id: userId },
-      data: {
-        teamId: team.id,
-        role: 'EMPLOYEE', // Domyślnie pracownik
+    // Sprawdź istniejące członkostwo
+    const existing = await this.prisma.teamMembership.findUnique({
+      where: {
+        userId_teamId: { userId, teamId: team.id },
       },
-      include: { team: true }, // Include team relation for consistency
-    });
-  }
-  async getTeamMembers(userId: string) {
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
-      include: { team: true },
     });
 
-    if (!user || !user.teamId) {
+    if (existing?.status === MembershipStatus.ACTIVE) {
+      throw new BadRequestException('Już należysz do tego zespołu.');
+    }
+
+    if (existing?.status === MembershipStatus.PENDING) {
+      return { status: MembershipStatus.PENDING, team };
+    }
+
+    // Jeśli istnieje rekord z statusem REJECTED lub LEFT, zaktualizuj go na PENDING
+    // zamiast tworzyć nowy (unikamy unique constraint error)
+    if (existing) {
+      await this.prisma.teamMembership.update({
+        where: {
+          userId_teamId: { userId, teamId: team.id },
+        },
+        data: {
+          status: MembershipStatus.PENDING,
+          requestedAt: new Date(), // Zaktualizuj datę zgłoszenia
+        },
+      });
+      return { status: MembershipStatus.PENDING, team };
+    }
+
+    // Utwórz nowe zgłoszenie PENDING (tylko jeśli nie ma istniejącego rekordu)
+    await this.prisma.teamMembership.create({
+      data: {
+        userId,
+        teamId: team.id,
+        status: MembershipStatus.PENDING,
+        role: Role.EMPLOYEE,
+      },
+    });
+
+    return { status: MembershipStatus.PENDING, team };
+  }
+  async getMyMembershipStatus(userId: string) {
+    const membership = await this.prisma.teamMembership.findFirst({
+      where: { userId },
+      orderBy: { requestedAt: 'desc' }, // Najnowsze członkostwo
+    });
+
+    if (!membership) {
+      // Jeśli brak membership, sprawdź czy user ma teamId (stare konta)
+      const user = await this.prisma.user.findUnique({
+        where: { id: userId },
+        select: { teamId: true },
+      });
+      // Jeśli ma teamId ale brak membership, zakładamy ACTIVE (stare konta)
+      return { status: user?.teamId ? MembershipStatus.ACTIVE : null };
+    }
+
+    return { status: membership.status };
+  }
+
+  async getTeamMembers(userId: string) {
+    const membership = await this.prisma.teamMembership.findFirst({
+      where: { userId, status: MembershipStatus.ACTIVE },
+    });
+
+    if (!membership) {
       throw new BadRequestException('Nie należysz do żadnego zespołu.');
     }
 
-    // Pobierz wszystkich z tym samym teamId
-    return this.prisma.user.findMany({
-      where: { teamId: user.teamId },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        role: true,
-        phoneNumber: true,
-        skills: true,
-        // Nie pobieramy haseł ani innych wrażliwych danych!
+    const members = await this.prisma.teamMembership.findMany({
+      where: { teamId: membership.teamId, status: MembershipStatus.ACTIVE },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            role: true,
+            phoneNumber: true,
+            skills: true,
+          },
+        },
       },
     });
+
+    return members.map((m) => m.user);
   }
   async updateProfile(userId: string, data: { name?: string; phoneNumber?: string }) {
     return this.prisma.user.update({
@@ -230,27 +292,127 @@ export class ShiftsService {
     });
   }
   async updateEmployee(requesterId: string, targetUserId: string, data: { skills?: string[] }) {
-    // 1. Sprawdź kim jest ten, kto prosi (Requester)
-    const requester = await this.prisma.user.findUnique({ where: { id: requesterId } });
-    
-    // 2. Sprawdź kim jest ofiara edycji (Target)
-    const target = await this.prisma.user.findUnique({ where: { id: targetUserId } });
-
-    if (!requester || !target) throw new BadRequestException("Nie znaleziono użytkownika");
-
-    // 3. Walidacja B2B (Security)
-    if (requester.teamId !== target.teamId) {
-      throw new BadRequestException("Nie możesz edytować kogoś z innej firmy!");
-    }
-    if (requester.role !== 'OWNER' && requester.role !== 'MANAGER') {
-      throw new BadRequestException("Brak uprawnień. Tylko Owner/Manager może to robić.");
+    const requesterMembership = await this.prisma.teamMembership.findFirst({
+      where: { userId: requesterId, status: MembershipStatus.ACTIVE },
+    });
+    if (!requesterMembership) {
+      throw new BadRequestException('Brak aktywnego członkostwa.');
     }
 
-    // 4. Update
+    if (requesterMembership.role !== Role.OWNER && requesterMembership.role !== Role.MANAGER) {
+      throw new ForbiddenException('Brak uprawnień. Tylko Owner/Manager może to robić.');
+    }
+
+    const targetMembership = await this.prisma.teamMembership.findFirst({
+      where: { userId: targetUserId, teamId: requesterMembership.teamId, status: MembershipStatus.ACTIVE },
+    });
+
+    if (!targetMembership) {
+      throw new BadRequestException('Użytkownik nie jest aktywnym członkiem zespołu.');
+    }
+
     return this.prisma.user.update({
       where: { id: targetUserId },
       data: {
-        skills: data.skills, // Nadpisujemy tablicę umiejętności
+        skills: data.skills,
+      },
+    });
+  }
+
+  // ---- PENDING LIST + APPROVAL ----
+  async getPendingMembers(requesterId: string) {
+    const requesterMembership = await this.prisma.teamMembership.findFirst({
+      where: { userId: requesterId, status: MembershipStatus.ACTIVE },
+    });
+    if (!requesterMembership) {
+      throw new BadRequestException('Brak aktywnego członkostwa.');
+    }
+    if (requesterMembership.role !== Role.OWNER && requesterMembership.role !== Role.MANAGER) {
+      throw new ForbiddenException('Brak uprawnień. Tylko Owner/Manager może to robić.');
+    }
+
+    return this.prisma.teamMembership.findMany({
+      where: { teamId: requesterMembership.teamId, status: MembershipStatus.PENDING },
+      include: {
+        user: {
+          select: { id: true, email: true, name: true },
+        },
+      },
+      orderBy: { requestedAt: 'asc' },
+    });
+  }
+
+  async approveMember(requesterId: string, membershipId: string) {
+    const requesterMembership = await this.prisma.teamMembership.findFirst({
+      where: { userId: requesterId, status: MembershipStatus.ACTIVE },
+    });
+    if (!requesterMembership) {
+      throw new BadRequestException('Brak aktywnego członkostwa.');
+    }
+    if (requesterMembership.role !== Role.OWNER && requesterMembership.role !== Role.MANAGER) {
+      throw new ForbiddenException('Brak uprawnień. Tylko Owner/Manager może to robić.');
+    }
+
+    const membership = await this.prisma.teamMembership.findUnique({
+      where: { id: membershipId },
+    });
+    if (!membership || membership.teamId !== requesterMembership.teamId) {
+      throw new BadRequestException('Zgłoszenie nie istnieje lub jest w innym zespole.');
+    }
+    if (membership.status !== MembershipStatus.PENDING) {
+      throw new BadRequestException('To zgłoszenie nie jest w statusie PENDING.');
+    }
+
+    return this.prisma.$transaction(async (tx) => {
+      const updatedMembership = await tx.teamMembership.update({
+        where: { id: membershipId },
+        data: {
+          status: MembershipStatus.ACTIVE,
+          approvedAt: new Date(),
+          approvedBy: requesterId,
+        },
+      });
+
+      // Ustaw teamId na użytkowniku (obecny model zakłada jedno aktywne członkostwo)
+      await tx.user.update({
+        where: { id: membership.userId },
+        data: {
+          teamId: membership.teamId,
+          role: membership.role ?? Role.EMPLOYEE,
+        },
+      });
+
+      return updatedMembership;
+    });
+  }
+
+  async rejectMember(requesterId: string, membershipId: string) {
+    const requesterMembership = await this.prisma.teamMembership.findFirst({
+      where: { userId: requesterId, status: MembershipStatus.ACTIVE },
+    });
+    if (!requesterMembership) {
+      throw new BadRequestException('Brak aktywnego członkostwa.');
+    }
+    if (requesterMembership.role !== Role.OWNER && requesterMembership.role !== Role.MANAGER) {
+      throw new ForbiddenException('Brak uprawnień. Tylko Owner/Manager może to robić.');
+    }
+
+    const membership = await this.prisma.teamMembership.findUnique({
+      where: { id: membershipId },
+    });
+    if (!membership || membership.teamId !== requesterMembership.teamId) {
+      throw new BadRequestException('Zgłoszenie nie istnieje lub jest w innym zespole.');
+    }
+    if (membership.status !== MembershipStatus.PENDING) {
+      throw new BadRequestException('To zgłoszenie nie jest w statusie PENDING.');
+    }
+
+    return this.prisma.teamMembership.update({
+      where: { id: membershipId },
+      data: {
+        status: MembershipStatus.REJECTED,
+        approvedAt: new Date(),
+        approvedBy: requesterId,
       },
     });
   }

@@ -9,7 +9,7 @@ import { JoinTeamDto } from './dto/join-team.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { UpdateEmployeeDto } from './dto/update-employee.dto';
 import { SyncUserDto } from './dto/sync-user.dto';
-import { ShiftIdParamDto, TargetIdParamDto } from './dto/params.dto';
+import { ShiftIdParamDto, TargetIdParamDto, MembershipIdParamDto } from './dto/params.dto';
 
 @Controller('shifts')
 @UseGuards(JwtAuthGuard) // Wszystkie endpointy wymagają autentykacji
@@ -75,10 +75,32 @@ export class ShiftsController {
     return this.shiftsService.joinTeam(user.userId, joinTeamDto.code);
   }
 
+  // Lista oczekujących (PENDING) - tylko dla OWNER/MANAGER
+  @Get('teams/pending')
+  getPending(@CurrentUser() user: User) {
+    return this.shiftsService.getPendingMembers(user.userId);
+  }
+
+  @Post('teams/pending/:membershipId/approve')
+  approvePending(@Param() params: MembershipIdParamDto, @CurrentUser() user: User) {
+    return this.shiftsService.approveMember(user.userId, params.membershipId);
+  }
+
+  @Post('teams/pending/:membershipId/reject')
+  rejectPending(@Param() params: MembershipIdParamDto, @CurrentUser() user: User) {
+    return this.shiftsService.rejectMember(user.userId, params.membershipId);
+  }
+
   @Get('team/members')
   getTeamMembers(@CurrentUser() user: User) {
     // userId z tokena - BEZPIECZNIE
     return this.shiftsService.getTeamMembers(user.userId);
+  }
+
+  @Get('teams/my-membership')
+  getMyMembershipStatus(@CurrentUser() user: User) {
+    // Zwraca status membership użytkownika (PENDING, ACTIVE, etc.)
+    return this.shiftsService.getMyMembershipStatus(user.userId);
   }
 
   @Patch('users/me')

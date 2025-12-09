@@ -12,6 +12,9 @@ import { Button } from "@/components/ui/button";
 import { EditProfileDialog } from "@/components/dashboard/EditProfileDialog";
 import { CreateShiftDialog } from "@/components/dashboard/CreateShiftDialog";
 import { Chrome } from "lucide-react";
+import { PendingList } from "@/components/dashboard/PendingList";
+import { PendingView } from "@/components/onboarding/PendingView";
+import { getMyMembershipStatus } from "@/lib/api";
 
 export default function Home() {
   const { data: session } = useSession();
@@ -19,15 +22,28 @@ export default function Home() {
   const [dbUser, setDbUser] = useState<any>(null);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isCreateShiftOpen, setIsCreateShiftOpen] = useState(false);
+  const [membershipStatus, setMembershipStatus] = useState<string | null>(null);
 
-  // Sync User
+  // Sync User i sprawdź membership status
   useEffect(() => {
     if (session?.user?.email) {
       const { email, name } = session.user;
       fetch(`${API_URL}/shifts/users/sync?email=${encodeURIComponent(email)}&name=${encodeURIComponent(name || "")}`)
         .then(res => res.json())
-        .then(user => {
+        .then(async (user) => {
           setDbUser(user);
+          // Sprawdź membership status jeśli user ma teamId
+          if (user.teamId) {
+            try {
+              const statusData = await getMyMembershipStatus();
+              // Backend zwraca { status: "PENDING" | "ACTIVE" | ... }
+              const status = statusData.status || "ACTIVE";
+              setMembershipStatus(status);
+            } catch (err) {
+              // Jeśli błąd, zakładamy ACTIVE (stary user bez membership = ACTIVE)
+              setMembershipStatus("ACTIVE");
+            }
+          }
           queryClient.invalidateQueries({ queryKey: ["shifts"] });
         });
     }
@@ -58,7 +74,7 @@ export default function Home() {
       <div className="flex h-screen items-center justify-center bg-slate-100">
         <div className="p-8 bg-white rounded-xl shadow-lg text-center space-y-4">
           <h1 className="text-2xl font-bold">Shift Marketplace</h1>
-          <Button 
+          <Button
             onClick={() => signIn("google", { callbackUrl: "/" })}
             className="bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 flex items-center gap-2"
           >
@@ -75,7 +91,26 @@ export default function Home() {
       <OnboardingView
         userId={dbUser.id}
         userName={dbUser.name}
-        onSuccess={setDbUser}
+        onSuccess={(user) => {
+          setDbUser(user);
+          // Jeśli user dołączył i ma status PENDING, ustaw flagę
+          if (user.membershipStatus === "PENDING") {
+            setMembershipStatus("PENDING");
+          }
+        }}
+        onLogout={() => signOut()}
+      />
+    );
+  }
+
+  // Jeśli user ma teamId, ale status PENDING - pokaż ekran oczekiwania
+  // Sprawdzamy zarówno membershipStatus state jak i dbUser.membershipStatus
+  const isPending = membershipStatus === "PENDING" || dbUser?.membershipStatus === "PENDING";
+  
+  if (dbUser && dbUser.teamId && isPending) {
+    return (
+      <PendingView
+        userName={dbUser.name || "Użytkownik"}
         onLogout={() => signOut()}
       />
     );
@@ -117,6 +152,7 @@ export default function Home() {
 
           {/* Lista Zespołu (z nową funkcją edycji) */}
           <TeamList currentUserId={dbUser?.id} currentUserRole={dbUser?.role} />
+          <PendingList currentUserRole={dbUser?.role} />
         </div>
 
         {/* KOLUMNA PRAWA: GRAFIK (Szersza) */}

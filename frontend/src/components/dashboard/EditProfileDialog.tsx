@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { updateUserProfile, User } from "@/lib/api";
+import { toast } from "sonner";
 
 interface Props {
   user: User;
@@ -19,10 +20,19 @@ export function EditProfileDialog({ user, isOpen, onClose }: Props) {
   const mutation = useMutation({
     mutationFn: () => updateUserProfile(name, phone), // userId jest teraz z tokena - BEZPIECZNIE
     onSuccess: () => {
-      alert("Profil zaktualizowany!");
-      window.location.reload();
+      toast.success("Profil zaktualizowany!", {
+        description: "Twoje dane zostały zaktualizowane.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["team-members"] });
+      onClose();
+      // Odśwież stronę żeby zobaczyć zmiany
+      setTimeout(() => window.location.reload(), 500);
     },
-    onError: (err) => alert(err.message),
+    onError: (err: Error) => {
+      toast.error("Błąd aktualizacji profilu", {
+        description: err.message,
+      });
+    },
   });
 
   if (!isOpen) return null;
