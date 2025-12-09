@@ -27,27 +27,38 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   async validate(payload: JwtPayload) {
-    console.log('[JWT] Validating token, payload:', { sub: payload.sub, email: payload.email });
+    console.log('[JWT] validate() called with payload:', { sub: payload.sub, email: payload.email });
     
-    // Weryfikujemy czy user istnieje w bazie
-    const user = await this.prisma.user.findUnique({
-      where: { id: payload.sub },
-    });
-
-    if (!user) {
-      console.error('[JWT] User not found for id:', payload.sub);
-      throw new UnauthorizedException('User not found');
+    if (!payload || !payload.sub) {
+      console.error('[JWT] Invalid payload - missing sub:', payload);
+      throw new UnauthorizedException('Invalid token payload');
     }
+    
+    try {
+      // Weryfikujemy czy user istnieje w bazie
+      const user = await this.prisma.user.findUnique({
+        where: { id: payload.sub },
+      });
 
-    console.log('[JWT] Token validated successfully for user:', user.email);
+      if (!user) {
+        console.error('[JWT] User not found for id:', payload.sub);
+        throw new UnauthorizedException('User not found');
+      }
 
-    // Zwracamy user object, który będzie dostępny w @Request() jako req.user
-    return {
-      userId: user.id,
-      email: user.email,
-      role: user.role,
-      teamId: user.teamId,
-    };
+      console.log('[JWT] Token validated successfully for user:', user.email);
+
+      // Zwracamy user object, który będzie dostępny w @Request() jako req.user
+      return {
+        userId: user.id,
+        email: user.email,
+        role: user.role,
+        teamId: user.teamId,
+      };
+    } catch (error) {
+      console.error('[JWT] Validation error:', error.message);
+      console.error('[JWT] Error stack:', error.stack);
+      throw error;
+    }
   }
 }
 

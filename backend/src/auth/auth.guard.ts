@@ -9,7 +9,7 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
     super();
   }
 
-  canActivate(context: ExecutionContext) {
+  async canActivate(context: ExecutionContext): Promise<boolean> {
     // Sprawdzamy czy endpoint jest publiczny
     const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
       context.getHandler(),
@@ -27,9 +27,26 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
     
     if (!authHeader) {
       console.error('[AUTH] No Authorization header in request');
+      return false;
     }
 
-    return super.canActivate(context);
+    // Log token preview (first 20 chars)
+    const tokenPreview = authHeader.replace('Bearer ', '').substring(0, 20);
+    console.log('[AUTH] Token preview:', tokenPreview + '...');
+
+    try {
+      const result = await super.canActivate(context) as Promise<boolean>;
+      console.log('[AUTH] Guard passed');
+      return result;
+    } catch (error: any) {
+      console.error('[AUTH] Guard failed with error:', error?.message || 'Unknown error');
+      console.error('[AUTH] Error name:', error?.name);
+      console.error('[AUTH] Error code:', error?.code);
+      if (error?.stack) {
+        console.error('[AUTH] Error stack:', error.stack);
+      }
+      throw error;
+    }
   }
 }
 
