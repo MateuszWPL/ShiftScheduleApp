@@ -53,17 +53,16 @@ export class AuthService {
       },
     });
 
-    // Wyślij email weryfikacyjny
-    try {
-      await this.emailService.sendVerificationEmail(
-        registerDto.email,
-        registerDto.name,
-        verificationToken,
-      );
-    } catch (error) {
-      console.error('[AUTH] Błąd wysyłania emaila weryfikacyjnego:', error);
-      // Nie rzucamy błędu - użytkownik może użyć resend-verification
-    }
+    // Wyślij email weryfikacyjny ASYNCHRONICZNIE (fire-and-forget)
+    // Nie czekamy na odpowiedź - rejestracja kończy się natychmiast
+    this.emailService.sendVerificationEmail(
+      registerDto.email,
+      registerDto.name,
+      verificationToken,
+    ).catch((error) => {
+      console.error('[AUTH] Błąd wysyłania emaila weryfikacyjnego (async):', error);
+      // Logujemy błąd, ale nie blokujemy rejestracji
+    });
 
     return {
       user,

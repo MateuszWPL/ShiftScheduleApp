@@ -16,6 +16,12 @@ export class EmailService {
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASS,
       },
+      // Timeout dla połączenia SMTP (5 sekund)
+      connectionTimeout: 5000,
+      // Timeout dla całej operacji (10 sekund)
+      socketTimeout: 10000,
+      // Greeting timeout
+      greetingTimeout: 5000,
     });
   }
 
@@ -58,11 +64,18 @@ export class EmailService {
     };
 
     try {
-      await this.transporter.sendMail(mailOptions);
+      // Używamy Promise.race aby wymusić timeout
+      const sendPromise = this.transporter.sendMail(mailOptions);
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Email sending timeout')), 10000);
+      });
+
+      await Promise.race([sendPromise, timeoutPromise]);
       console.log(`[EMAIL] Weryfikacja wysłana do: ${email}`);
     } catch (error) {
       console.error(`[EMAIL] Błąd wysyłania emaila do ${email}:`, error);
-      throw error;
+      // Nie rzucamy błędu - pozwalamy rejestracji zakończyć się sukcesem
+      // Użytkownik może użyć resend-verification
     }
   }
 }
