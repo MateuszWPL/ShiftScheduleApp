@@ -6,7 +6,7 @@ import AuthProvider from "@/components/providers/AuthProvider";
 import { Toaster } from "sonner";
 
 export const metadata: Metadata = {
-  title: "Shift Marketplace",
+  title: "Staffer.pl",
   description: "Zarządzanie zmianami",
 };
 

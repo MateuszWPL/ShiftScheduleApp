@@ -53,7 +53,7 @@ export function LoginPage() {
   return (
     <div className="flex h-screen items-center justify-center bg-slate-100">
       <div className="max-w-md w-full p-8 bg-white rounded-xl shadow-lg text-center space-y-6">
-        <h1 className="text-2xl font-bold">Shift Marketplace</h1>
+        <h1 className="text-2xl font-bold">Staffer.pl</h1>
         <p className="text-gray-600">Wybierz metodę logowania</p>
 
         <div className="space-y-3">

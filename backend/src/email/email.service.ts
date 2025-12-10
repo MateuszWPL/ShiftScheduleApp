@@ -13,16 +13,16 @@ export class EmailService {
     const verificationUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/verify-email?token=${token}`;
     const from =
       process.env.RESEND_FROM ||
-      'Shift Marketplace <no-reply@shift-marketplace.example>';
+      'Staffer.pl <no-reply@staffer.pl>';
 
     const mailOptions = {
       from,
       to: email,
-      subject: 'Zweryfikuj swój email - Shift Marketplace',
+      subject: 'Zweryfikuj swój email - Staffer.pl',
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
           <h1 style="color: #FF8400;">Witaj ${name}!</h1>
-          <p>Dziękujemy za rejestrację w Shift Marketplace.</p>
+          <p>Dziękujemy za rejestrację w Staffer.pl.</p>
           <p>Aby zakończyć rejestrację, kliknij poniższy link aby zweryfikować swój adres email:</p>
           <p style="text-align: center; margin: 30px 0;">
             <a href="${verificationUrl}" 
@@ -34,19 +34,19 @@ export class EmailService {
           <p>Lub skopiuj i wklej ten link do przeglądarki:</p>
           <p style="word-break: break-all; color: #666;">${verificationUrl}</p>
           <p style="color: #666; font-size: 12px; margin-top: 30px;">
-            Jeśli nie rejestrowałeś się w Shift Marketplace, zignoruj tę wiadomość.
+            Jeśli nie rejestrowałeś się w Staffer.pl, zignoruj tę wiadomość.
           </p>
         </div>
       `,
       text: `
         Witaj ${name}!
         
-        Dziękujemy za rejestrację w Shift Marketplace.
+        Dziękujemy za rejestrację w Staffer.pl.
         
         Aby zakończyć rejestrację, kliknij poniższy link aby zweryfikować swój adres email:
         ${verificationUrl}
         
-        Jeśli nie rejestrowałeś się w Shift Marketplace, zignoruj tę wiadomość.
+        Jeśli nie rejestrowałeś się w Staffer.pl, zignoruj tę wiadomość.
       `,
     };
 
