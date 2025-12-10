@@ -69,8 +69,6 @@ async function authenticatedFetch(url: string, options: RequestInit = {}): Promi
     "Content-Type": "application/json",
     Authorization: `Bearer ${token}`,
   };
-
-  console.log("[API] Making authenticated request to:", url);
   
   const response = await fetch(url, {
     ...options,

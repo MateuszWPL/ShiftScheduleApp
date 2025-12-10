@@ -1,6 +1,12 @@
-import { BadRequestException, Injectable, InternalServerErrorException, NotFoundException, ForbiddenException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { MembershipStatus, Role, Shift } from '@prisma/client';
+import { MembershipStatus, Role, Shift, ShiftStatus } from '@prisma/client';
 import { nanoid } from 'nanoid';
 
 @Injectable()
@@ -27,7 +33,10 @@ export class ShiftsService {
     });
   }
 
-  async create(userId: string, data: { startTime: Date; endTime: Date; roleName: string; status?: string }) {
+  async create(
+    userId: string,
+    data: { startTime: Date; endTime: Date; roleName: string; status?: ShiftStatus },
+  ) {
     // 1. Sprawdź aktywne członkostwo
     const membership = await this.prisma.teamMembership.findFirst({
       where: { userId, status: MembershipStatus.ACTIVE },
@@ -42,7 +51,7 @@ export class ShiftsService {
         startTime: data.startTime,
         endTime: data.endTime,
         roleName: data.roleName,
-        status: (data.status as any) || 'DRAFT',
+        status: data.status ?? ShiftStatus.DRAFT,
         teamId: membership.teamId,
         userId: null,
         isUpForGrabs: false,
@@ -59,71 +68,77 @@ export class ShiftsService {
   async claimShift(shiftId: string, userId: string) {
     try {
       return await this.prisma.$transaction(async (tx) => {
-        console.log(`[DEBUG] Próba zablokowania zmiany: ${shiftId} dla usera: ${userId}`);
+        // Sprawdź aktywne członkostwo w tym samym zespole
+        const membership = await tx.teamMembership.findFirst({
+          where: { userId, status: MembershipStatus.ACTIVE },
+        });
 
-        // KROK A: SELECT FOR UPDATE
-        // POPRAWKA: Usunięto "::uuid". Porównujemy String do Stringa.
-        const rawShifts = await tx.$queryRaw<any[]>`
-          SELECT * FROM "Shift" 
-          WHERE "id" = ${shiftId} 
+        if (!membership) {
+          throw new ForbiddenException('Brak aktywnego członkostwa w zespole.');
+        }
+
+        // Blokada rekordu zmiany – SELECT FOR UPDATE
+        const rawShifts = await tx.$queryRaw<Shift[]>`
+          SELECT * FROM "Shift"
+          WHERE "id" = ${shiftId}
           FOR UPDATE
         `;
-
-        console.log('[DEBUG] Wynik zapytania RAW:', rawShifts[0]);
 
         const shift = rawShifts[0];
 
         if (!shift) {
-          throw new NotFoundException('Zmiana nie istnieje (RAW query zwróciło pusto).');
+          throw new NotFoundException('Zmiana nie istnieje.');
         }
 
-        // Obsługa różnej wielkości liter w wynikach Postgresa
-        const isAvailable = shift.isUpForGrabs ?? shift.isupforgrabs;
+        if (shift.teamId !== membership.teamId) {
+          throw new ForbiddenException('Nie możesz przejąć zmiany z innego zespołu.');
+        }
+
+        const isAvailable = (shift as any).isUpForGrabs ?? (shift as any).isupforgrabs;
 
         if (!isAvailable) {
-           throw new BadRequestException('Ta zmiana nie jest dostępna na giełdzie.');
+          throw new BadRequestException('Ta zmiana nie jest dostępna na giełdzie.');
         }
 
-        // KROK C: Aktualizacja
-        const updatedShift = await tx.shift.update({
+        return tx.shift.update({
           where: { id: shiftId },
           data: {
             isUpForGrabs: false,
-            userId: userId,
+            userId,
           },
         });
-
-        console.log('[DEBUG] Sukces!');
-        return updatedShift;
       });
     } catch (error) {
-      console.error('[CRITICAL ERROR] Wystąpił błąd w transakcji:', error);
-      if (error instanceof BadRequestException || error instanceof NotFoundException) {
+      if (error instanceof BadRequestException || error instanceof NotFoundException || error instanceof ForbiddenException) {
         throw error;
       }
       throw new InternalServerErrorException(error.message);
     }
   }
   async releaseShift(shiftId: string, userId: string) {
-    const shift = await this.prisma.shift.findUnique({
-      where: { id: shiftId },
-    });
+    return this.prisma.$transaction(async (tx) => {
+      const rawShifts = await tx.$queryRaw<Shift[]>`
+        SELECT * FROM "Shift"
+        WHERE "id" = ${shiftId}
+        FOR UPDATE
+      `;
 
-    if (!shift) {
-      throw new NotFoundException('Zmiana nie istnieje.');
-    }
+      const shift = rawShifts[0];
 
-    // Walidacja: Czy to Twoja zmiana?
-    if (shift.userId !== userId) {
-      throw new BadRequestException('Nie możesz oddać cudzej zmiany!');
-    }
+      if (!shift) {
+        throw new NotFoundException('Zmiana nie istnieje.');
+      }
 
-    return this.prisma.shift.update({
-      where: { id: shiftId },
-      data: {
-        isUpForGrabs: true, // Wystawiamy flagę
-        // UWAGA: Nie zerujemy userId. Nadal jesteś właścicielem, dopóki ktoś nie weźmie.
-      },
+      if (shift.userId !== userId) {
+        throw new BadRequestException('Nie możesz oddać cudzej zmiany!');
+      }
+
+      return tx.shift.update({
+        where: { id: shiftId },
+        data: {
+          isUpForGrabs: true, // Flaga giełdy, userId zostaje do czasu przejęcia
+        },
+      });
     });
   }
   // Backend: src/shifts/shifts.service.ts
@@ -135,7 +150,6 @@ export class ShiftsService {
     });
 
     if (!user) {
-      console.log(`[AUTH] Tworzę nowego usera dla: ${email}`);
       // Tylko dla Google OAuth - użytkownicy email+hasło są tworzeni przez /auth/register
       user = await this.prisma.user.create({
         data: {

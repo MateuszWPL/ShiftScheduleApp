@@ -1,15 +1,21 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { Resend } from 'resend';
 
 @Injectable()
 export class EmailService {
   private resend: Resend;
+  private readonly logger = new Logger(EmailService.name);
 
   constructor() {
     this.resend = new Resend(process.env.RESEND_API_KEY);
   }
 
   async sendVerificationEmail(email: string, name: string, token: string) {
+    if (!process.env.RESEND_API_KEY) {
+      this.logger.warn('RESEND_API_KEY is missing. Skipping email send.');
+      return;
+    }
+
     const frontendUrl =
       process.env.FRONTEND_URL ||
       process.env.NEXT_PUBLIC_FRONTEND_URL ||
@@ -80,12 +86,14 @@ export class EmailService {
 
     try {
       const result = await this.resend.emails.send(mailOptions);
-      console.log(
-        `[EMAIL] Weryfikacja wysłana do: ${email}`,
-        result?.data?.id ? `id=${result.data.id}` : '',
-      );
+      const emailId = result?.data?.id;
+      if (emailId) {
+        this.logger.log(`Verification email sent to ${email} (id=${emailId}).`);
+      } else {
+        this.logger.log(`Verification email sent to ${email}.`);
+      }
     } catch (error) {
-      console.error(`[EMAIL] Błąd wysyłania emaila do ${email}:`, error);
+      this.logger.error(`Błąd wysyłania emaila do ${email}: ${error?.message ?? error}`);
       // Nie rzucamy błędu - użytkownik może użyć resend-verification
     }
   }
