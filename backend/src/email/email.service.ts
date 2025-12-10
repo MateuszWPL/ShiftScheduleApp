@@ -1,35 +1,22 @@
 import { Injectable } from '@nestjs/common';
-import * as nodemailer from 'nodemailer';
+import { Resend } from 'resend';
 
 @Injectable()
 export class EmailService {
-  private transporter: nodemailer.Transporter;
+  private resend: Resend;
 
   constructor() {
-    // Konfiguracja SMTP (dla developmentu można użyć Ethereal Email lub Gmail)
-    // W produkcji użyj SendGrid, Resend, lub innego serwisu
-    this.transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST || 'smtp.gmail.com',
-      port: parseInt(process.env.SMTP_PORT || '587'),
-      secure: false, // true dla 465, false dla innych portów
-      auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS,
-      },
-      // Timeout dla połączenia SMTP (5 sekund)
-      connectionTimeout: 5000,
-      // Timeout dla całej operacji (10 sekund)
-      socketTimeout: 10000,
-      // Greeting timeout
-      greetingTimeout: 5000,
-    });
+    this.resend = new Resend(process.env.RESEND_API_KEY);
   }
 
   async sendVerificationEmail(email: string, name: string, token: string) {
     const verificationUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/verify-email?token=${token}`;
+    const from =
+      process.env.RESEND_FROM ||
+      'Shift Marketplace <no-reply@shift-marketplace.example>';
 
     const mailOptions = {
-      from: `"Shift Marketplace" <${process.env.SMTP_FROM || process.env.SMTP_USER}>`,
+      from,
       to: email,
       subject: 'Zweryfikuj swój email - Shift Marketplace',
       html: `
@@ -64,18 +51,14 @@ export class EmailService {
     };
 
     try {
-      // Używamy Promise.race aby wymusić timeout
-      const sendPromise = this.transporter.sendMail(mailOptions);
-      const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error('Email sending timeout')), 10000);
-      });
-
-      await Promise.race([sendPromise, timeoutPromise]);
-      console.log(`[EMAIL] Weryfikacja wysłana do: ${email}`);
+      const result = await this.resend.emails.send(mailOptions);
+      console.log(
+        `[EMAIL] Weryfikacja wysłana do: ${email}`,
+        result?.data?.id ? `id=${result.data.id}` : '',
+      );
     } catch (error) {
       console.error(`[EMAIL] Błąd wysyłania emaila do ${email}:`, error);
-      // Nie rzucamy błędu - pozwalamy rejestracji zakończyć się sukcesem
-      // Użytkownik może użyć resend-verification
+      // Nie rzucamy błędu - użytkownik może użyć resend-verification
     }
   }
 }
