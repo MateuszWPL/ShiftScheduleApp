@@ -22,6 +22,7 @@ export default function Home() {
   const { data: session } = useSession();
   const queryClient = useQueryClient();
   const [dbUser, setDbUser] = useState<any>(null);
+  const [isSyncingUser, setIsSyncingUser] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isCreateShiftOpen, setIsCreateShiftOpen] = useState(false);
   const [membershipStatus, setMembershipStatus] = useState<string | null>(null);
@@ -30,6 +31,7 @@ export default function Home() {
   useEffect(() => {
     if (session?.user?.email) {
       const { email, name } = session.user;
+      setIsSyncingUser(true);
       fetch(`${API_URL}/shifts/users/sync?email=${encodeURIComponent(email)}&name=${encodeURIComponent(name || "")}`)
         .then(res => res.json())
         .then(async (user) => {
@@ -47,7 +49,8 @@ export default function Home() {
             }
           }
           queryClient.invalidateQueries({ queryKey: ["shifts"] });
-        });
+        })
+        .finally(() => setIsSyncingUser(false));
     }
   }, [session, queryClient]);
 
@@ -73,6 +76,18 @@ export default function Home() {
 
   if (!session) {
     return <LoginPage />;
+  }
+
+  // Unikamy mignięcia dashboardu zanim zsynchronizujemy użytkownika
+  if (isSyncingUser || !dbUser) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <div className="text-center space-y-2">
+          <div className="animate-spin h-8 w-8 border-4 border-gray-300 border-t-blue-500 rounded-full mx-auto" />
+          <p className="text-sm text-gray-600">Ładujemy Twoje konto...</p>
+        </div>
+      </div>
+    );
   }
 
   // Sprawdź czy użytkownik jest zweryfikowany (tylko dla email+hasło)
