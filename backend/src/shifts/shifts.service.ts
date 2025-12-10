@@ -6,12 +6,16 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { EmailService } from '../email/email.service';
 import { MembershipStatus, Role, Shift, ShiftStatus } from '@prisma/client';
 import { nanoid } from 'nanoid';
 
 @Injectable()
 export class ShiftsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly emailService: EmailService,
+  ) {}
 
   async findAll(userId: string) {
     const activeMembership = await this.prisma.teamMembership.findFirst({
@@ -221,6 +225,16 @@ export class ShiftsService {
       throw new BadRequestException('Nieprawidłowy kod zespołu.');
     }
 
+    // Pobierz dane użytkownika zgłaszającego się
+    const applicant = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { name: true, email: true },
+    });
+
+    if (!applicant) {
+      throw new NotFoundException('Użytkownik nie istnieje.');
+    }
+
     // Sprawdź istniejące członkostwo
     const existing = await this.prisma.teamMembership.findUnique({
       where: {
@@ -248,17 +262,48 @@ export class ShiftsService {
           requestedAt: new Date(), // Zaktualizuj datę zgłoszenia
         },
       });
-      return { status: MembershipStatus.PENDING, team };
+    } else {
+      // Utwórz nowe zgłoszenie PENDING (tylko jeśli nie ma istniejącego rekordu)
+      await this.prisma.teamMembership.create({
+        data: {
+          userId,
+          teamId: team.id,
+          status: MembershipStatus.PENDING,
+          role: Role.EMPLOYEE,
+        },
+      });
     }
 
-    // Utwórz nowe zgłoszenie PENDING (tylko jeśli nie ma istniejącego rekordu)
-    await this.prisma.teamMembership.create({
-      data: {
-        userId,
+    // Wyślij powiadomienia do wszystkich OWNER i MANAGER w zespole
+    const managers = await this.prisma.teamMembership.findMany({
+      where: {
         teamId: team.id,
-        status: MembershipStatus.PENDING,
-        role: Role.EMPLOYEE,
+        status: MembershipStatus.ACTIVE,
+        role: { in: [Role.OWNER, Role.MANAGER] },
       },
+      include: {
+        user: {
+          select: {
+            email: true,
+            name: true,
+          },
+        },
+      },
+    });
+
+    // Wyślij powiadomienia asynchronicznie (nie blokujemy odpowiedzi)
+    managers.forEach((membership) => {
+      this.emailService
+        .sendJoinRequestNotification(
+          membership.user.email,
+          membership.user.name || 'Menedżerze',
+          applicant.name || 'Użytkownik',
+          applicant.email,
+          team.name,
+        )
+        .catch((error) => {
+          // Logowanie błędów już jest w EmailService
+        });
     });
 
     return { status: MembershipStatus.PENDING, team };
@@ -382,6 +427,19 @@ export class ShiftsService {
 
     const membership = await this.prisma.teamMembership.findUnique({
       where: { id: membershipId },
+      include: {
+        user: {
+          select: {
+            email: true,
+            name: true,
+          },
+        },
+        team: {
+          select: {
+            name: true,
+          },
+        },
+      },
     });
     if (!membership || membership.teamId !== requesterMembership.teamId) {
       throw new BadRequestException('Zgłoszenie nie istnieje lub jest w innym zespole.');
@@ -390,7 +448,7 @@ export class ShiftsService {
       throw new BadRequestException('To zgłoszenie nie jest w statusie PENDING.');
     }
 
-    return this.prisma.$transaction(async (tx) => {
+    const result = await this.prisma.$transaction(async (tx) => {
       const updatedMembership = await tx.teamMembership.update({
         where: { id: membershipId },
         data: {
@@ -411,6 +469,19 @@ export class ShiftsService {
 
       return updatedMembership;
     });
+
+    // Wyślij powiadomienie do zaakceptowanego użytkownika
+    this.emailService
+      .sendMembershipApprovedNotification(
+        membership.user.email,
+        membership.user.name || 'Użytkowniku',
+        membership.team.name,
+      )
+      .catch((error) => {
+        // Logowanie błędów już jest w EmailService
+      });
+
+    return result;
   }
 
   async rejectMember(requesterId: string, membershipId: string) {
@@ -426,6 +497,19 @@ export class ShiftsService {
 
     const membership = await this.prisma.teamMembership.findUnique({
       where: { id: membershipId },
+      include: {
+        user: {
+          select: {
+            email: true,
+            name: true,
+          },
+        },
+        team: {
+          select: {
+            name: true,
+          },
+        },
+      },
     });
     if (!membership || membership.teamId !== requesterMembership.teamId) {
       throw new BadRequestException('Zgłoszenie nie istnieje lub jest w innym zespole.');
@@ -434,7 +518,7 @@ export class ShiftsService {
       throw new BadRequestException('To zgłoszenie nie jest w statusie PENDING.');
     }
 
-    return this.prisma.teamMembership.update({
+    const result = await this.prisma.teamMembership.update({
       where: { id: membershipId },
       data: {
         status: MembershipStatus.REJECTED,
@@ -442,5 +526,18 @@ export class ShiftsService {
         approvedBy: requesterId,
       },
     });
+
+    // Wyślij powiadomienie do odrzuconego użytkownika
+    this.emailService
+      .sendMembershipRejectedNotification(
+        membership.user.email,
+        membership.user.name || 'Użytkowniku',
+        membership.team.name,
+      )
+      .catch((error) => {
+        // Logowanie błędów już jest w EmailService
+      });
+
+    return result;
   }
 }
