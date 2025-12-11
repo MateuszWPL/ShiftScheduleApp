@@ -21,7 +21,7 @@ import { Navbar } from "@/components/layout/Navbar";
 
 export default function Home() {
   const { data: session } = useSession();
-  const [authMode, setAuthMode] = useState<"login" | "register" | "reset" | null>(null);
+  const [authMode, setAuthMode] = useState<"login" | "register" | "reset" | undefined>(undefined);
   const queryClient = useQueryClient();
   const [dbUser, setDbUser] = useState<any>(null);
   const [isSyncingUser, setIsSyncingUser] = useState(false);
