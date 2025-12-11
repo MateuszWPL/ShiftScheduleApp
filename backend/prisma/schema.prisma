@@ -44,6 +44,10 @@ model User {
   emailVerified Boolean @default(false) // Weryfikacja emaila (dla email+hasło)
   emailVerificationToken String? // Token do weryfikacji emaila
   
+  // Password Reset
+  passwordResetToken String? // Token do resetu hasła
+  passwordResetExpires DateTime? // Data wygaśnięcia tokenu resetu hasła
+  
   createdAt DateTime @default(now())
   
   shifts       Shift[]

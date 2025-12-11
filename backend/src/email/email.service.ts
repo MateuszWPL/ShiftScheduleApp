@@ -187,6 +187,96 @@ export class EmailService {
     }
   }
 
+  async sendPasswordResetEmail(email: string, name: string, token: string) {
+    if (!process.env.RESEND_API_KEY) {
+      this.logger.warn('RESEND_API_KEY is missing. Skipping email send.');
+      return;
+    }
+
+    const frontendUrl =
+      process.env.FRONTEND_URL ||
+      process.env.NEXT_PUBLIC_FRONTEND_URL ||
+      'http://localhost:3000';
+    const resetUrl = `${frontendUrl.replace(/\/$/, '')}/reset-password?token=${token}`;
+    const from =
+      process.env.RESEND_FROM ||
+      'Staffer.pl <no-reply@staffer.pl>';
+
+    const mailOptions = {
+      from,
+      to: email,
+      subject: 'Reset hasła - Staffer.pl',
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 640px; margin: 0 auto; background: #f9fafb; padding: 32px; color: #111;">
+          <div style="text-align: center; margin-bottom: 24px;">
+            <img src="https://dummyimage.com/160x48/8FACDB/ffffff&text=Staffer.pl" alt="Staffer.pl" style="max-width: 160px; height: auto;" />
+          </div>
+          <div style="background: #ffffff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 28px;">
+            <h1 style="color: #FF8400; font-size: 22px; margin: 0 0 12px;">Witaj ${name}!</h1>
+            <p style="margin: 0 0 12px; line-height: 1.6;">
+              Otrzymaliśmy prośbę o reset hasła do Twojego konta w Staffer.pl. Jeśli to Ty, kliknij poniższy przycisk, aby ustawić nowe hasło.
+            </p>
+            <p style="text-align: center; margin: 24px 0;">
+              <a href="${resetUrl}"
+                 style="background-color: #FF8400; color: white; padding: 14px 28px;
+                        text-decoration: none; border-radius: 8px; font-weight: 600; display: inline-block;">
+                Zresetuj hasło
+              </a>
+            </p>
+            <p style="margin: 0 0 12px; line-height: 1.6; font-size: 14px; color: #555; text-align: center;">
+              Jeśli przycisk nie działa, skopiuj ten link:
+            </p>
+            <p style="word-break: break-all; color: #444; font-size: 13px; background: #f3f4f6; padding: 10px 12px; border-radius: 8px; border: 1px solid #e5e7eb;">
+              ${resetUrl}
+            </p>
+            <p style="margin: 16px 0 8px; font-size: 14px; color: #dc2626; font-weight: 600;">
+              ⚠️ Ważne informacje:
+            </p>
+            <ul style="margin: 0 0 16px 18px; padding: 0; color: #555; line-height: 1.6; font-size: 14px;">
+              <li>Link jest ważny przez 1 godzinę.</li>
+              <li>Po zresetowaniu hasła, link przestanie działać.</li>
+              <li>Jeśli nie prosiłeś o reset hasła, zignoruj tę wiadomość.</li>
+            </ul>
+            <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 24px 0;" />
+            <p style="margin: 0; font-size: 12px; color: #777;">
+              Jeśli nie prosiłeś o reset hasła, Twoje konto pozostaje bezpieczne. Możesz zignorować tę wiadomość.
+            </p>
+          </div>
+          <p style="text-align: center; color: #9ca3af; font-size: 12px; margin-top: 16px;">
+            Staffer.pl — Bezpieczne zarządzanie zmianami i zespołami.
+          </p>
+        </div>
+      `,
+      text: `
+        Witaj ${name}!
+        
+        Otrzymaliśmy prośbę o reset hasła do Twojego konta w Staffer.pl.
+        
+        Aby zresetować hasło, kliknij poniższy link:
+        ${resetUrl}
+        
+        Link jest ważny przez 1 godzinę.
+        
+        Jeśli nie prosiłeś o reset hasła, zignoruj tę wiadomość. Twoje konto pozostaje bezpieczne.
+        
+        Staffer.pl — Bezpieczne zarządzanie zmianami i zespołami.
+      `,
+    };
+
+    try {
+      const result = await this.resend.emails.send(mailOptions);
+      const emailId = result?.data?.id;
+      if (emailId) {
+        this.logger.log(`Password reset email sent to ${email} (id=${emailId}).`);
+      } else {
+        this.logger.log(`Password reset email sent to ${email}.`);
+      }
+    } catch (error) {
+      this.logger.error(`Błąd wysyłania emaila resetu hasła do ${email}: ${error?.message ?? error}`);
+      throw error; // Rzucamy błąd, bo to ważna operacja
+    }
+  }
+
   async sendMembershipApprovedNotification(
     userEmail: string,
     userName: string,

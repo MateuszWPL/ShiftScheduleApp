@@ -3,6 +3,8 @@ import { PrismaService } from '../prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
+import { RequestResetPasswordDto } from './dto/request-reset-password.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 import { JwtService } from '@nestjs/jwt';
 import { EmailService } from '../email/email.service';
 import { randomBytes } from 'crypto';
@@ -188,6 +190,93 @@ export class AuthService {
 
     return {
       message: 'Email weryfikacyjny został wysłany. Sprawdź skrzynkę pocztową.',
+    };
+  }
+
+  async requestPasswordReset(requestResetDto: RequestResetPasswordDto) {
+    const user = await this.prisma.user.findUnique({
+      where: { email: requestResetDto.email },
+    });
+
+    // Nie ujawniamy czy użytkownik istnieje (security best practice)
+    if (!user) {
+      return {
+        message: 'Jeśli konto istnieje, email z linkiem resetu hasła został wysłany.',
+      };
+    }
+
+    // Sprawdź czy użytkownik ma hasło (nie jest z Google)
+    if (!user.password) {
+      // Nie ujawniamy że to konto Google - po prostu zwracamy sukces
+      return {
+        message: 'Jeśli konto istnieje, email z linkiem resetu hasła został wysłany.',
+      };
+    }
+
+    // Generuj token resetu (32 znaki hex)
+    const resetToken = randomBytes(16).toString('hex');
+    // Token ważny przez 1 godzinę
+    const resetExpires = new Date(Date.now() + 60 * 60 * 1000);
+
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: {
+        passwordResetToken: resetToken,
+        passwordResetExpires: resetExpires,
+      },
+    });
+
+    // Wyślij email asynchronicznie
+    this.emailService.sendPasswordResetEmail(
+      user.email,
+      user.name,
+      resetToken,
+    ).catch((error) => {
+      console.error('[AUTH] Błąd wysyłania emaila resetu hasła (async):', error);
+      // Logujemy błąd, ale nie blokujemy operacji
+    });
+
+    return {
+      message: 'Jeśli konto istnieje, email z linkiem resetu hasła został wysłany.',
+    };
+  }
+
+  async resetPassword(resetPasswordDto: ResetPasswordDto) {
+    // Znajdź użytkownika po tokenie
+    const user = await this.prisma.user.findFirst({
+      where: {
+        passwordResetToken: resetPasswordDto.token,
+        passwordResetExpires: {
+          gt: new Date(), // Token musi być jeszcze ważny
+        },
+      },
+    });
+
+    if (!user) {
+      throw new BadRequestException('Nieprawidłowy lub wygasły token resetu hasła.');
+    }
+
+    // Sprawdź czy użytkownik ma hasło (nie jest z Google)
+    if (!user.password) {
+      throw new BadRequestException('To konto używa logowania przez Google i nie ma hasła do zresetowania.');
+    }
+
+    // Hash nowego hasła
+    const saltRounds = 10;
+    const hashedPassword = await bcrypt.hash(resetPasswordDto.password, saltRounds);
+
+    // Zaktualizuj hasło i usuń token
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: {
+        password: hashedPassword,
+        passwordResetToken: null,
+        passwordResetExpires: null,
+      },
+    });
+
+    return {
+      message: 'Hasło zostało pomyślnie zresetowane. Możesz się teraz zalogować.',
     };
   }
 }
