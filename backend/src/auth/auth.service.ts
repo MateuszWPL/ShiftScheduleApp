@@ -141,6 +141,15 @@ export class AuthService {
       },
     });
 
+    // Wyślij mail powitalny po weryfikacji asynchronicznie
+    this.emailService.sendWelcomeEmailAfterVerification(
+      user.email,
+      user.name,
+    ).catch((error) => {
+      console.error('[AUTH] Błąd wysyłania maila powitalnego (after verification):', error);
+      // Logujemy błąd, ale nie blokujemy weryfikacji
+    });
+
     return {
       message: 'Email został pomyślnie zweryfikowany. Możesz się teraz zalogować.',
     };

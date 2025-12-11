@@ -442,5 +442,273 @@ export class EmailService {
       // Nie rzucamy błędu - powiadomienie nie jest krytyczne
     }
   }
+
+  async sendWelcomeEmailOwner(email: string, name: string, teamName: string) {
+    if (!process.env.RESEND_API_KEY) {
+      this.logger.warn('RESEND_API_KEY is missing. Skipping email send.');
+      return;
+    }
+
+    const frontendUrl =
+      process.env.FRONTEND_URL ||
+      process.env.NEXT_PUBLIC_FRONTEND_URL ||
+      'http://localhost:3000';
+    const dashboardUrl = `${frontendUrl.replace(/\/$/, '')}`;
+    const from =
+      process.env.RESEND_FROM ||
+      'Staffer.pl <no-reply@staffer.pl>';
+
+    const mailOptions = {
+      from,
+      to: email,
+      subject: `Witaj w Staffer.pl! Twój zespół ${teamName} jest gotowy - Staffer.pl`,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 640px; margin: 0 auto; background: #f9fafb; padding: 32px; color: #111;">
+          <div style="text-align: center; margin-bottom: 24px;">
+            <img src="https://dummyimage.com/160x48/8FACDB/ffffff&text=Staffer.pl" alt="Staffer.pl" style="max-width: 160px; height: auto;" />
+          </div>
+          <div style="background: #ffffff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 28px;">
+            <h1 style="color: #10b981; font-size: 22px; margin: 0 0 12px;">Witaj ${name}!</h1>
+            <p style="margin: 0 0 12px; line-height: 1.6;">
+              Gratulujemy! Twój zespół <strong>${teamName}</strong> został utworzony i jest gotowy do pracy.
+            </p>
+            <div style="background: #d1fae5; border-left: 4px solid #10b981; padding: 16px; margin: 20px 0; border-radius: 8px;">
+              <p style="margin: 0; color: #065f46; font-weight: 600;">
+                Jesteś teraz właścicielem zespołu i możesz zarządzać zmianami, dodawać członków i tworzyć grafik.
+              </p>
+            </div>
+            <p style="text-align: center; margin: 24px 0;">
+              <a href="${dashboardUrl}"
+                 style="background-color: #FF8400; color: white; padding: 14px 28px;
+                        text-decoration: none; border-radius: 8px; font-weight: 600; display: inline-block;">
+                Przejdź do panelu zarządzania
+              </a>
+            </p>
+            <p style="margin: 0 0 8px; font-size: 14px; color: #333; font-weight: 600;">Co możesz teraz zrobić?</p>
+            <ul style="margin: 0 0 16px 18px; padding: 0; color: #555; line-height: 1.6; font-size: 14px;">
+              <li>Dodaj zmiany do grafiku i opublikuj je dla swojego zespołu</li>
+              <li>Zaproś członków zespołu używając kodu zaproszenia</li>
+              <li>Zarządzaj profilami pracowników i ich umiejętnościami</li>
+              <li>Akceptuj lub odrzucaj zgłoszenia do zespołu</li>
+            </ul>
+            <p style="margin: 0; font-size: 12px; color: #777;">
+              Jeśli masz pytania, odpowiadając na tę wiadomość skontaktujesz się z nami.
+            </p>
+          </div>
+          <p style="text-align: center; color: #9ca3af; font-size: 12px; margin-top: 16px;">
+            Staffer.pl — Bezpieczne zarządzanie zmianami i zespołami.
+          </p>
+        </div>
+      `,
+      text: `
+        Witaj ${name}!
+        
+        Gratulujemy! Twój zespół ${teamName} został utworzony i jest gotowy do pracy.
+        
+        Jesteś teraz właścicielem zespołu i możesz zarządzać zmianami, dodawać członków i tworzyć grafik.
+        
+        Przejdź do panelu zarządzania: ${dashboardUrl}
+        
+        Co możesz teraz zrobić?
+        - Dodaj zmiany do grafiku i opublikuj je dla swojego zespołu
+        - Zaproś członków zespołu używając kodu zaproszenia
+        - Zarządzaj profilami pracowników i ich umiejętnościami
+        - Akceptuj lub odrzucaj zgłoszenia do zespołu
+        
+        Staffer.pl — Bezpieczne zarządzanie zmianami i zespołami.
+      `,
+    };
+
+    try {
+      const result = await this.resend.emails.send(mailOptions);
+      const emailId = result?.data?.id;
+      if (emailId) {
+        this.logger.log(`Welcome email (owner) sent to ${email} (id=${emailId}).`);
+      } else {
+        this.logger.log(`Welcome email (owner) sent to ${email}.`);
+      }
+    } catch (error) {
+      this.logger.error(`Błąd wysyłania maila powitalnego (owner) do ${email}: ${error?.message ?? error}`);
+      // Nie rzucamy błędu - mail powitalny nie jest krytyczny
+    }
+  }
+
+  async sendWelcomeEmailEmployee(email: string, name: string, teamName: string) {
+    if (!process.env.RESEND_API_KEY) {
+      this.logger.warn('RESEND_API_KEY is missing. Skipping email send.');
+      return;
+    }
+
+    const frontendUrl =
+      process.env.FRONTEND_URL ||
+      process.env.NEXT_PUBLIC_FRONTEND_URL ||
+      'http://localhost:3000';
+    const dashboardUrl = `${frontendUrl.replace(/\/$/, '')}`;
+    const from =
+      process.env.RESEND_FROM ||
+      'Staffer.pl <no-reply@staffer.pl>';
+
+    const mailOptions = {
+      from,
+      to: email,
+      subject: `Witaj w zespole ${teamName}! - Staffer.pl`,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 640px; margin: 0 auto; background: #f9fafb; padding: 32px; color: #111;">
+          <div style="text-align: center; margin-bottom: 24px;">
+            <img src="https://dummyimage.com/160x48/8FACDB/ffffff&text=Staffer.pl" alt="Staffer.pl" style="max-width: 160px; height: auto;" />
+          </div>
+          <div style="background: #ffffff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 28px;">
+            <h1 style="color: #10b981; font-size: 22px; margin: 0 0 12px;">Witaj ${name}!</h1>
+            <p style="margin: 0 0 12px; line-height: 1.6;">
+              Twoje zgłoszenie do zespołu <strong>${teamName}</strong> zostało zaakceptowane! Witamy w zespole!
+            </p>
+            <div style="background: #d1fae5; border-left: 4px solid #10b981; padding: 16px; margin: 20px 0; border-radius: 8px;">
+              <p style="margin: 0; color: #065f46; font-weight: 600;">
+                Jesteś teraz aktywnym członkiem zespołu i możesz przeglądać zmiany, zgłaszać się na nie i zarządzać swoim grafikiem pracy.
+              </p>
+            </div>
+            <p style="text-align: center; margin: 24px 0;">
+              <a href="${dashboardUrl}"
+                 style="background-color: #FF8400; color: white; padding: 14px 28px;
+                        text-decoration: none; border-radius: 8px; font-weight: 600; display: inline-block;">
+                Przejdź do panelu
+              </a>
+            </p>
+            <p style="margin: 0 0 8px; font-size: 14px; color: #333; font-weight: 600;">Co możesz teraz zrobić?</p>
+            <ul style="margin: 0 0 16px 18px; padding: 0; color: #555; line-height: 1.6; font-size: 14px;">
+              <li>Przeglądaj dostępne zmiany w grafiku</li>
+              <li>Zgłaszaj się na zmiany, które Cię interesują</li>
+              <li>Zarządzaj swoim profilem i umiejętnościami</li>
+              <li>Oddawaj swoje zmiany na giełdę, jeśli nie możesz ich wykonać</li>
+            </ul>
+            <p style="margin: 0; font-size: 12px; color: #777;">
+              Jeśli masz pytania, skontaktuj się z menedżerem zespołu lub odpowiadając na tę wiadomość.
+            </p>
+          </div>
+          <p style="text-align: center; color: #9ca3af; font-size: 12px; margin-top: 16px;">
+            Staffer.pl — Bezpieczne zarządzanie zmianami i zespołami.
+          </p>
+        </div>
+      `,
+      text: `
+        Witaj ${name}!
+        
+        Twoje zgłoszenie do zespołu ${teamName} zostało zaakceptowane! Witamy w zespole!
+        
+        Jesteś teraz aktywnym członkiem zespołu i możesz przeglądać zmiany, zgłaszać się na nie i zarządzać swoim grafikiem pracy.
+        
+        Przejdź do panelu: ${dashboardUrl}
+        
+        Co możesz teraz zrobić?
+        - Przeglądaj dostępne zmiany w grafiku
+        - Zgłaszaj się na zmiany, które Cię interesują
+        - Zarządzaj swoim profilem i umiejętnościami
+        - Oddawaj swoje zmiany na giełdę, jeśli nie możesz ich wykonać
+        
+        Staffer.pl — Bezpieczne zarządzanie zmianami i zespołami.
+      `,
+    };
+
+    try {
+      const result = await this.resend.emails.send(mailOptions);
+      const emailId = result?.data?.id;
+      if (emailId) {
+        this.logger.log(`Welcome email (employee) sent to ${email} (id=${emailId}).`);
+      } else {
+        this.logger.log(`Welcome email (employee) sent to ${email}.`);
+      }
+    } catch (error) {
+      this.logger.error(`Błąd wysyłania maila powitalnego (employee) do ${email}: ${error?.message ?? error}`);
+      // Nie rzucamy błędu - mail powitalny nie jest krytyczny
+    }
+  }
+
+  async sendWelcomeEmailAfterVerification(email: string, name: string) {
+    if (!process.env.RESEND_API_KEY) {
+      this.logger.warn('RESEND_API_KEY is missing. Skipping email send.');
+      return;
+    }
+
+    const frontendUrl =
+      process.env.FRONTEND_URL ||
+      process.env.NEXT_PUBLIC_FRONTEND_URL ||
+      'http://localhost:3000';
+    const dashboardUrl = `${frontendUrl.replace(/\/$/, '')}`;
+    const from =
+      process.env.RESEND_FROM ||
+      'Staffer.pl <no-reply@staffer.pl>';
+
+    const mailOptions = {
+      from,
+      to: email,
+      subject: 'Witaj w Staffer.pl! Twój email został zweryfikowany - Staffer.pl',
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 640px; margin: 0 auto; background: #f9fafb; padding: 32px; color: #111;">
+          <div style="text-align: center; margin-bottom: 24px;">
+            <img src="https://dummyimage.com/160x48/8FACDB/ffffff&text=Staffer.pl" alt="Staffer.pl" style="max-width: 160px; height: auto;" />
+          </div>
+          <div style="background: #ffffff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 28px;">
+            <h1 style="color: #10b981; font-size: 22px; margin: 0 0 12px;">Witaj ${name}!</h1>
+            <p style="margin: 0 0 12px; line-height: 1.6;">
+              Twój adres email został pomyślnie zweryfikowany! Twoje konto w Staffer.pl jest teraz w pełni aktywne.
+            </p>
+            <div style="background: #d1fae5; border-left: 4px solid #10b981; padding: 16px; margin: 20px 0; border-radius: 8px;">
+              <p style="margin: 0; color: #065f46; font-weight: 600;">
+                Możesz teraz zalogować się i rozpocząć korzystanie z aplikacji.
+              </p>
+            </div>
+            <p style="text-align: center; margin: 24px 0;">
+              <a href="${dashboardUrl}"
+                 style="background-color: #FF8400; color: white; padding: 14px 28px;
+                        text-decoration: none; border-radius: 8px; font-weight: 600; display: inline-block;">
+                Zaloguj się i rozpocznij
+              </a>
+            </p>
+            <p style="margin: 0 0 8px; font-size: 14px; color: #333; font-weight: 600;">Co dalej?</p>
+            <ul style="margin: 0 0 16px 18px; padding: 0; color: #555; line-height: 1.6; font-size: 14px;">
+              <li>Zaloguj się do aplikacji używając swojego emaila i hasła</li>
+              <li>Utwórz swój zespół lub dołącz do istniejącego używając kodu zaproszenia</li>
+              <li>Zarządzaj zmianami i grafikiem pracy</li>
+            </ul>
+            <p style="margin: 0; font-size: 12px; color: #777;">
+              Jeśli masz pytania, odpowiadając na tę wiadomość skontaktujesz się z nami.
+            </p>
+          </div>
+          <p style="text-align: center; color: #9ca3af; font-size: 12px; margin-top: 16px;">
+            Staffer.pl — Bezpieczne zarządzanie zmianami i zespołami.
+          </p>
+        </div>
+      `,
+      text: `
+        Witaj ${name}!
+        
+        Twój adres email został pomyślnie zweryfikowany! Twoje konto w Staffer.pl jest teraz w pełni aktywne.
+        
+        Możesz teraz zalogować się i rozpocząć korzystanie z aplikacji.
+        
+        Zaloguj się i rozpocznij: ${dashboardUrl}
+        
+        Co dalej?
+        - Zaloguj się do aplikacji używając swojego emaila i hasła
+        - Utwórz swój zespół lub dołącz do istniejącego używając kodu zaproszenia
+        - Zarządzaj zmianami i grafikiem pracy
+        
+        Staffer.pl — Bezpieczne zarządzanie zmianami i zespołami.
+      `,
+    };
+
+    try {
+      const result = await this.resend.emails.send(mailOptions);
+      const emailId = result?.data?.id;
+      if (emailId) {
+        this.logger.log(`Welcome email (after verification) sent to ${email} (id=${emailId}).`);
+      } else {
+        this.logger.log(`Welcome email (after verification) sent to ${email}.`);
+      }
+    } catch (error) {
+      this.logger.error(`Błąd wysyłania maila powitalnego (after verification) do ${email}: ${error?.message ?? error}`);
+      // Nie rzucamy błędu - mail powitalny nie jest krytyczny
+    }
+  }
 }
 

@@ -1,4 +1,5 @@
 import { Controller, Post, Body, Param, HttpCode, HttpStatus, Get } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
@@ -12,6 +13,7 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Public() // Endpoint publiczny - nie wymaga JWT
+  @Throttle({ default: { limit: 3, ttl: 60000 } }) // 3 rejestracje na minutę
   @Post('register')
   @HttpCode(HttpStatus.CREATED)
   async register(@Body() registerDto: RegisterDto) {
@@ -19,6 +21,7 @@ export class AuthController {
   }
 
   @Public() // Endpoint publiczny - nie wymaga JWT
+  @Throttle({ default: { limit: 5, ttl: 60000 } }) // 5 prób logowania na minutę
   @Post('login')
   @HttpCode(HttpStatus.OK)
   async login(@Body() loginDto: LoginDto) {
@@ -33,6 +36,7 @@ export class AuthController {
   }
 
   @Public() // Endpoint publiczny - nie wymaga JWT
+  @Throttle({ default: { limit: 2, ttl: 60000 } }) // 2 maile weryfikacyjne na minutę
   @Post('resend-verification')
   @HttpCode(HttpStatus.OK)
   async resendVerification(@Body() resendDto: ResendVerificationDto) {
@@ -40,6 +44,7 @@ export class AuthController {
   }
 
   @Public() // Endpoint publiczny - nie wymaga JWT
+  @Throttle({ default: { limit: 2, ttl: 60000 } }) // 2 prośby o reset hasła na minutę
   @Post('request-reset')
   @HttpCode(HttpStatus.OK)
   async requestPasswordReset(@Body() requestResetDto: RequestResetPasswordDto) {
@@ -47,6 +52,7 @@ export class AuthController {
   }
 
   @Public() // Endpoint publiczny - nie wymaga JWT
+  @Throttle({ default: { limit: 5, ttl: 60000 } }) // 5 prób resetu hasła na minutę
   @Post('reset-password')
   @HttpCode(HttpStatus.OK)
   async resetPassword(@Body() resetPasswordDto: ResetPasswordDto) {

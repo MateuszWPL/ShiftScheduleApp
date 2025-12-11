@@ -214,6 +214,18 @@ export class ShiftsService {
       });
 
       return { team, user: updatedUser };
+    }).then((result) => {
+      // Wyślij mail powitalny dla OWNER asynchronicznie
+      this.emailService
+        .sendWelcomeEmailOwner(
+          result.user.email,
+          result.user.name || 'Właścicielu',
+          result.team.name,
+        )
+        .catch((error) => {
+          // Logowanie błędów już jest w EmailService
+        });
+      return result;
     });
   }
   async joinTeam(userId: string, code: string) {
@@ -470,9 +482,20 @@ export class ShiftsService {
       return updatedMembership;
     });
 
-    // Wyślij powiadomienie do zaakceptowanego użytkownika
+    // Wyślij powiadomienie i mail powitalny do zaakceptowanego użytkownika
     this.emailService
       .sendMembershipApprovedNotification(
+        membership.user.email,
+        membership.user.name || 'Użytkowniku',
+        membership.team.name,
+      )
+      .catch((error) => {
+        // Logowanie błędów już jest w EmailService
+      });
+    
+    // Wyślij dodatkowy mail powitalny dla pracownika
+    this.emailService
+      .sendWelcomeEmailEmployee(
         membership.user.email,
         membership.user.name || 'Użytkowniku',
         membership.team.name,
