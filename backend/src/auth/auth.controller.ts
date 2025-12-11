@@ -3,6 +3,8 @@ import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { ResendVerificationDto } from './dto/resend-verification.dto';
+import { RequestResetPasswordDto } from './dto/request-reset-password.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 import { Public } from './decorators/public.decorator';
 
 @Controller('auth')
@@ -35,6 +37,20 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   async resendVerification(@Body() resendDto: ResendVerificationDto) {
     return this.authService.resendVerificationEmail(resendDto.email);
+  }
+
+  @Public() // Endpoint publiczny - nie wymaga JWT
+  @Post('request-reset')
+  @HttpCode(HttpStatus.OK)
+  async requestPasswordReset(@Body() requestResetDto: RequestResetPasswordDto) {
+    return this.authService.requestPasswordReset(requestResetDto);
+  }
+
+  @Public() // Endpoint publiczny - nie wymaga JWT
+  @Post('reset-password')
+  @HttpCode(HttpStatus.OK)
+  async resetPassword(@Body() resetPasswordDto: ResetPasswordDto) {
+    return this.authService.resetPassword(resetPasswordDto);
   }
 }
 

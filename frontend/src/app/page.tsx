@@ -17,9 +17,11 @@ import { PendingView } from "@/components/onboarding/PendingView";
 import { getMyMembershipStatus } from "@/lib/api";
 import { LoginPage } from "@/components/auth/LoginPage";
 import { UnverifiedView } from "@/components/auth/UnverifiedView";
+import { Navbar } from "@/components/layout/Navbar";
 
 export default function Home() {
   const { data: session } = useSession();
+  const [authMode, setAuthMode] = useState<"login" | "register" | "reset" | null>(null);
   const queryClient = useQueryClient();
   const [dbUser, setDbUser] = useState<any>(null);
   const [isSyncingUser, setIsSyncingUser] = useState(false);
@@ -75,7 +77,18 @@ export default function Home() {
   // --- WIDOKI ---
 
   if (!session) {
-    return <LoginPage />;
+    return (
+      <div className="min-h-screen bg-slate-100">
+        <Navbar
+          onLoginClick={() => setAuthMode("login")}
+          onRegisterClick={() => setAuthMode("register")}
+        />
+        <LoginPage 
+          initialMode={authMode}
+          onModeChange={setAuthMode}
+        />
+      </div>
+    );
   }
 
   // Unikamy mignięcia dashboardu zanim zsynchronizujemy użytkownika
