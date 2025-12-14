@@ -26,35 +26,45 @@ enum MembershipStatus {
   LEFT
 }
 
-model User {
-  id        String   @id @default(uuid())
-  email     String   @unique
-  name      String   // Full name z Google
-  
-  // NOWE POLA
-  phoneNumber String? // Opcjonalny, bo z Google nie zawsze przychodzi
-  skills      String[] // Tablica stringów (Postgres to potrafi!), np. ["Barista", "Driver"]
-  
-  role      Role     @default(EMPLOYEE)
-  avatarUrl String?  
-  provider  String?  @default("google")
-  
-  // Email + Hasło Authentication
-  password  String?  // Hashed password (nullable - Google users nie mają hasła)
-  emailVerified Boolean @default(false) // Weryfikacja emaila (dla email+hasło)
-  emailVerificationToken String? // Token do weryfikacji emaila
-  
-  // Password Reset
-  passwordResetToken String? // Token do resetu hasła
-  passwordResetExpires DateTime? // Data wygaśnięcia tokenu resetu hasła
-  
-  createdAt DateTime @default(now())
-  
-  shifts       Shift[]
-  memberships  TeamMembership[]
+enum UserStatus {
+  ACTIVE
+  UNCLAIMED
+}
 
-  teamId    String?
-  team      Team?    @relation(fields: [teamId], references: [id])
+model User {
+  id    String @id @default(uuid())
+  email String? @unique // Nullable dla shadow profiles
+  name  String // Full name z Google
+
+  role     Role       @default(EMPLOYEE)
+  status   UserStatus @default(ACTIVE)
+  provider String?    @default("google")
+
+  // Dane prywatne (widoczne dla OWNER/MANAGER)
+  hourlyRate  Decimal? @db.Decimal(10, 2) // Stawka godzinowa
+  phoneNumber String? // Numer telefonu
+  maxHours    Int? // Maksymalna liczba godzin (np. tygodniowo)
+
+  // Dane publiczne (widoczne dla zespołu)
+  skills    String[] @default([]) // Tablica stringów (Postgres to potrafi!), np. ["Barista", "Driver"]
+  avatarUrl String? // URL do avatara użytkownika
+
+  // Email + Hasło Authentication
+  password               String? // Hashed password (nullable - Google users nie mają hasła)
+  emailVerified          Boolean @default(false) // Weryfikacja emaila (dla email+hasło)
+  emailVerificationToken String? // Token do weryfikacji emaila
+
+  // Password Reset
+  passwordResetToken   String? // Token do resetu hasła
+  passwordResetExpires DateTime? // Data wygaśnięcia tokenu resetu hasła
+
+  createdAt DateTime @default(now())
+
+  shifts      Shift[]
+  memberships TeamMembership[]
+
+  teamId String?
+  team   Team?   @relation(fields: [teamId], references: [id])
 }
 
 model Team {
@@ -63,9 +73,9 @@ model Team {
   inviteCode String   @unique // Generowany przez nanoid(12) w kodzie
   createdAt  DateTime @default(now())
 
-  users        User[]
-  shifts       Shift[]
-  memberships  TeamMembership[]
+  users       User[]
+  shifts      Shift[]
+  memberships TeamMembership[]
 }
 
 model Shift {
@@ -92,12 +102,12 @@ model Shift {
 }
 
 model TeamMembership {
-  id          String            @id @default(uuid())
+  id          String           @id @default(uuid())
   userId      String
   teamId      String
-  status      MembershipStatus  @default(PENDING)
-  role        Role              @default(EMPLOYEE)
-  requestedAt DateTime          @default(now())
+  status      MembershipStatus @default(PENDING)
+  role        Role             @default(EMPLOYEE)
+  requestedAt DateTime         @default(now())
   approvedAt  DateTime?
   approvedBy  String?
 

@@ -146,7 +146,12 @@ export default function Home() {
 
   // --- NOWY DASHBOARD Z SIDEBAREM ---
   return (
-    <DashboardLayout userRole={dbUser?.role} onLogout={() => signOut()}>
+    <DashboardLayout 
+      userRole={dbUser?.role} 
+      userName={dbUser?.name}
+      userAvatar={dbUser?.avatarUrl}
+      onLogout={() => signOut()}
+    >
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
         {/* KOLUMNA LEWA: KOD + ZESPÓŁ */}

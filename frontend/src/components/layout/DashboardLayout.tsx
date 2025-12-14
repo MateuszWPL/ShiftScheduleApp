@@ -6,42 +6,81 @@ import {
   Users,
   Calendar,
   Settings,
-  LogOut
-} from "lucide-react"; // Upewnij się, że masz lucide-react (shadcn instaluje domyślnie)
+  LogOut,
+  User
+} from "lucide-react";
+import { Avatar } from "@/components/ui/avatar";
+import Link from "next/link";
 
 interface Props {
   children: React.ReactNode;
   userRole?: string;
+  userName?: string;
+  userAvatar?: string | null;
   onLogout: () => void;
 }
 
-export function DashboardLayout({ children, userRole, onLogout }: Props) {
+export function DashboardLayout({ children, userRole, userName, userAvatar, onLogout }: Props) {
+  const isAdmin = userRole === "OWNER" || userRole === "MANAGER";
+  const roleLabel = userRole === "OWNER" ? "Właściciel" : userRole === "MANAGER" ? "Menedżer" : "Pracownik";
+
   return (
     <div className="flex h-screen bg-slate-50 overflow-hidden">
       {/* SIDEBAR (LEWY PANEL) */}
       <aside className="w-64 bg-slate-900 text-slate-300 flex flex-col hidden md:flex shadow-xl">
         <div className="p-6 border-b border-slate-800">
           <h1 className="text-xl font-bold text-white tracking-wider">ShiftApp <span className="text-blue-500">B2B</span></h1>
-          <p className="text-xs text-slate-500 mt-1 uppercase">{userRole || "Pracownik"}</p>
+          <p className="text-xs text-slate-500 mt-1 uppercase">{roleLabel}</p>
         </div>
 
         <nav className="flex-1 p-4 space-y-2">
-          {/* Przykładowe linki - na razie atrapy */}
-          <Button variant="ghost" className="w-full justify-start text-slate-300 hover:text-white hover:bg-slate-800">
-            <LayoutDashboard className="mr-2 h-4 w-4" /> Pulpit
+          <Button variant="ghost" className="w-full justify-start text-slate-300 hover:text-white hover:bg-slate-800" asChild>
+            <Link href="/">
+              <LayoutDashboard className="mr-2 h-4 w-4" /> Pulpit
+            </Link>
           </Button>
-          <Button variant="ghost" className="w-full justify-start text-slate-300 hover:text-white hover:bg-slate-800">
-            <Calendar className="mr-2 h-4 w-4" /> Grafik
+          <Button variant="ghost" className="w-full justify-start text-slate-300 hover:text-white hover:bg-slate-800" asChild>
+            <Link href="/">
+              <Calendar className="mr-2 h-4 w-4" /> Grafik
+            </Link>
           </Button>
-          <Button variant="ghost" className="w-full justify-start text-slate-300 hover:text-white hover:bg-slate-800">
-            <Users className="mr-2 h-4 w-4" /> Zespół
+          <Button variant="ghost" className="w-full justify-start text-slate-300 hover:text-white hover:bg-slate-800" asChild>
+            <Link href="/">
+              <Users className="mr-2 h-4 w-4" /> Zespół
+            </Link>
           </Button>
+          
+          {/* Elementy administracyjne - tylko dla OWNER/MANAGER */}
+          {isAdmin && (
+            <div className="pt-4 mt-4 border-t border-slate-800 space-y-2">
+              <Button variant="ghost" className="w-full justify-start text-slate-300 hover:text-white hover:bg-slate-800" asChild>
+                <Link href="/settings">
+                  <Settings className="mr-2 h-4 w-4" /> Ustawienia firmy
+                </Link>
+              </Button>
+            </div>
+          )}
+          
+          {/* Profil - dostępny dla wszystkich */}
           <div className="pt-4 mt-4 border-t border-slate-800">
-            <Button variant="ghost" className="w-full justify-start text-slate-300 hover:text-white hover:bg-slate-800">
-              <Settings className="mr-2 h-4 w-4" /> Ustawienia
+            <Button variant="ghost" className="w-full justify-start text-slate-300 hover:text-white hover:bg-slate-800" asChild>
+              <Link href="/profile">
+                <User className="mr-2 h-4 w-4" /> Mój Profil
+              </Link>
             </Button>
           </div>
         </nav>
+
+        {/* User info w stopce */}
+        {userName && (
+          <div className="p-4 border-t border-slate-800 flex items-center gap-3">
+            <Avatar src={userAvatar} name={userName} size="sm" />
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-white truncate">{userName}</p>
+              <p className="text-xs text-slate-500">{roleLabel}</p>
+            </div>
+          </div>
+        )}
 
         <div className="p-4 border-t border-slate-800">
           <Button variant="destructive" className="w-full" onClick={onLogout}>
@@ -52,7 +91,7 @@ export function DashboardLayout({ children, userRole, onLogout }: Props) {
 
       {/* MAIN CONTENT (PRAWA STRONA) */}
       <main className="flex-1 overflow-auto relative flex flex-col">
-        {/* Mobile Header (opcjonalny, na razie prosty pasek) */}
+        {/* Mobile Header */}
         <header className="md:hidden bg-slate-900 text-white p-4 flex justify-between items-center">
           <span className="font-bold">ShiftApp</span>
           <Button size="sm" variant="ghost" onClick={onLogout}><LogOut className="h-4 w-4" /></Button>

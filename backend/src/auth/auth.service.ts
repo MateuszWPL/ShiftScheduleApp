@@ -82,6 +82,11 @@ export class AuthService {
       throw new UnauthorizedException('Nieprawidłowy email lub hasło.');
     }
 
+    // Sprawdź czy konto nie jest shadow profile (UNCLAIMED)
+    if (user.status === 'UNCLAIMED') {
+      throw new UnauthorizedException('To konto nie zostało jeszcze aktywowane.');
+    }
+
     // Sprawdź czy użytkownik ma hasło (nie jest z Google)
     if (!user.password) {
       throw new UnauthorizedException('To konto używa logowania przez Google. Zaloguj się przez Google.');
@@ -142,13 +147,15 @@ export class AuthService {
     });
 
     // Wyślij mail powitalny po weryfikacji asynchronicznie
-    this.emailService.sendWelcomeEmailAfterVerification(
-      user.email,
-      user.name,
-    ).catch((error) => {
-      console.error('[AUTH] Błąd wysyłania maila powitalnego (after verification):', error);
-      // Logujemy błąd, ale nie blokujemy weryfikacji
-    });
+    if (user.email) {
+      this.emailService.sendWelcomeEmailAfterVerification(
+        user.email,
+        user.name,
+      ).catch((error) => {
+        console.error('[AUTH] Błąd wysyłania maila powitalnego (after verification):', error);
+        // Logujemy błąd, ale nie blokujemy weryfikacji
+      });
+    }
 
     return {
       message: 'Email został pomyślnie zweryfikowany. Możesz się teraz zalogować.',
@@ -186,6 +193,9 @@ export class AuthService {
     });
 
     // Wyślij email
+    if (!user.email) {
+      throw new BadRequestException('Użytkownik nie ma przypisanego emaila.');
+    }
     try {
       await this.emailService.sendVerificationEmail(
         user.email,
@@ -236,14 +246,16 @@ export class AuthService {
     });
 
     // Wyślij email asynchronicznie
-    this.emailService.sendPasswordResetEmail(
-      user.email,
-      user.name,
-      resetToken,
-    ).catch((error) => {
-      console.error('[AUTH] Błąd wysyłania emaila resetu hasła (async):', error);
-      // Logujemy błąd, ale nie blokujemy operacji
-    });
+    if (user.email) {
+      this.emailService.sendPasswordResetEmail(
+        user.email,
+        user.name,
+        resetToken,
+      ).catch((error) => {
+        console.error('[AUTH] Błąd wysyłania emaila resetu hasła (async):', error);
+        // Logujemy błąd, ale nie blokujemy operacji
+      });
+    }
 
     return {
       message: 'Jeśli konto istnieje, email z linkiem resetu hasła został wysłany.',

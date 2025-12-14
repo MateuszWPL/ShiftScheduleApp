@@ -148,6 +148,7 @@ export class ShiftsService {
   // Backend: src/shifts/shifts.service.ts
 
   async syncUserByEmail(email: string, name: string) {
+    // Znajdź użytkownika po emailu (email jest unique, więc może być tylko jeden)
     let user = await this.prisma.user.findUnique({
       where: { email },
       include: { team: true },
@@ -161,18 +162,34 @@ export class ShiftsService {
           name,
           role: 'EMPLOYEE', // Domyślna rola
           provider: 'google', // Google OAuth
+          status: 'ACTIVE', // Google OAuth użytkownicy są automatycznie aktywni
           // teamId: ... (tutaj w przyszłości przypiszemy do teamu)
         },
         include: { team: true },
       });
     } else {
-      // Aktualizuj tylko name jeśli użytkownik już istnieje (dla Google OAuth)
-      // Nie nadpisujemy hasła ani innych pól dla użytkowników email+hasło
-      if (!user.password && name) {
-        // Tylko dla Google OAuth - aktualizuj name
+      // Użytkownik już istnieje - aktualizuj dane
+      // Jeśli użytkownik ma hasło (email+hasło), to nie zmieniamy providera
+      // Ale aktualizujemy name jeśli się zmieniło
+      const updateData: any = {};
+      
+      if (name && name !== user.name) {
+        updateData.name = name;
+      }
+      
+      // Jeśli użytkownik nie ma hasła i provider nie jest "google", ustaw provider na "google"
+      // (może być sytuacja gdzie użytkownik był stworzony inaczej)
+      if (!user.password && user.provider !== 'google') {
+        updateData.provider = 'google';
+      }
+      
+      // Jeśli użytkownik ma hasło, ale loguje się przez Google - to jest OK, 
+      // używamy istniejącego konta (nie zmieniamy providera na "google")
+      
+      if (Object.keys(updateData).length > 0) {
         user = await this.prisma.user.update({
           where: { email },
-          data: { name },
+          data: updateData,
           include: { team: true },
         });
       }
@@ -216,15 +233,17 @@ export class ShiftsService {
       return { team, user: updatedUser };
     }).then((result) => {
       // Wyślij mail powitalny dla OWNER asynchronicznie
-      this.emailService
-        .sendWelcomeEmailOwner(
-          result.user.email,
-          result.user.name || 'Właścicielu',
-          result.team.name,
-        )
-        .catch((error) => {
-          // Logowanie błędów już jest w EmailService
-        });
+      if (result.user.email) {
+        this.emailService
+          .sendWelcomeEmailOwner(
+            result.user.email,
+            result.user.name || 'Właścicielu',
+            result.team.name,
+          )
+          .catch((error) => {
+            // Logowanie błędów już jest w EmailService
+          });
+      }
       return result;
     });
   }
@@ -305,17 +324,19 @@ export class ShiftsService {
 
     // Wyślij powiadomienia asynchronicznie (nie blokujemy odpowiedzi)
     managers.forEach((membership) => {
-      this.emailService
-        .sendJoinRequestNotification(
-          membership.user.email,
-          membership.user.name || 'Menedżerze',
-          applicant.name || 'Użytkownik',
-          applicant.email,
-          team.name,
-        )
-        .catch((error) => {
-          // Logowanie błędów już jest w EmailService
-        });
+      if (membership.user.email && applicant.email) {
+        this.emailService
+          .sendJoinRequestNotification(
+            membership.user.email,
+            membership.user.name || 'Menedżerze',
+            applicant.name || 'Użytkownik',
+            applicant.email,
+            team.name,
+          )
+          .catch((error) => {
+            // Logowanie błędów już jest w EmailService
+          });
+      }
     });
 
     return { status: MembershipStatus.PENDING, team };
@@ -483,26 +504,28 @@ export class ShiftsService {
     });
 
     // Wyślij powiadomienie i mail powitalny do zaakceptowanego użytkownika
-    this.emailService
-      .sendMembershipApprovedNotification(
-        membership.user.email,
-        membership.user.name || 'Użytkowniku',
-        membership.team.name,
-      )
-      .catch((error) => {
-        // Logowanie błędów już jest w EmailService
-      });
-    
-    // Wyślij dodatkowy mail powitalny dla pracownika
-    this.emailService
-      .sendWelcomeEmailEmployee(
-        membership.user.email,
-        membership.user.name || 'Użytkowniku',
-        membership.team.name,
-      )
-      .catch((error) => {
-        // Logowanie błędów już jest w EmailService
-      });
+    if (membership.user.email) {
+      this.emailService
+        .sendMembershipApprovedNotification(
+          membership.user.email,
+          membership.user.name || 'Użytkowniku',
+          membership.team.name,
+        )
+        .catch((error) => {
+          // Logowanie błędów już jest w EmailService
+        });
+      
+      // Wyślij dodatkowy mail powitalny dla pracownika
+      this.emailService
+        .sendWelcomeEmailEmployee(
+          membership.user.email,
+          membership.user.name || 'Użytkowniku',
+          membership.team.name,
+        )
+        .catch((error) => {
+          // Logowanie błędów już jest w EmailService
+        });
+    }
 
     return result;
   }
@@ -551,15 +574,17 @@ export class ShiftsService {
     });
 
     // Wyślij powiadomienie do odrzuconego użytkownika
-    this.emailService
-      .sendMembershipRejectedNotification(
-        membership.user.email,
-        membership.user.name || 'Użytkowniku',
-        membership.team.name,
-      )
-      .catch((error) => {
-        // Logowanie błędów już jest w EmailService
-      });
+    if (membership.user.email) {
+      this.emailService
+        .sendMembershipRejectedNotification(
+          membership.user.email,
+          membership.user.name || 'Użytkowniku',
+          membership.team.name,
+        )
+        .catch((error) => {
+          // Logowanie błędów już jest w EmailService
+        });
+    }
 
     return result;
   }

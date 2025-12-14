@@ -13,6 +13,11 @@ export interface Shift {
 // Cache tokena (żeby nie pobierać za każdym razem)
 let tokenCache: { token: string; expiresAt: number } | null = null;
 
+// Funkcja do czyszczenia cache tokena (np. podczas wylogowania)
+export function clearAuthTokenCache() {
+  tokenCache = null;
+}
+
 // Helper function do pobierania JWT tokena
 async function getAuthToken(): Promise<string | null> {
   // Sprawdź cache (token ważny 7 dni, ale odświeżamy co 6 dni)
@@ -26,13 +31,17 @@ async function getAuthToken(): Promise<string | null> {
     });
     
     if (!res.ok) {
+      // Jeśli 401, to znaczy że nie ma sesji - użytkownik nie jest zalogowany
+      // Nie logujemy tego jako błąd, bo to normalna sytuacja podczas wylogowania
+      if (res.status === 401) {
+        // Wyczyść cache tokena
+        tokenCache = null;
+        return null;
+      }
+      
+      // Dla innych błędów logujemy
       const errorData = await res.json().catch(() => ({}));
       console.error("[AUTH] Error fetching token:", res.status, errorData);
-      
-      // Jeśli 401, to znaczy że nie ma sesji - użytkownik nie jest zalogowany
-      if (res.status === 401) {
-        console.warn("[AUTH] No session found - user not logged in");
-      }
       
       return null;
     }
@@ -60,8 +69,16 @@ async function authenticatedFetch(url: string, options: RequestInit = {}): Promi
   const token = await getAuthToken();
   
   if (!token) {
-    console.error("[API] No token available, request will fail");
-    throw new Error("Brak autoryzacji. Zaloguj się ponownie.");
+    // Zwróć odpowiedź z błędem zamiast rzucać wyjątek
+    // To pozwala komponentom obsłużyć błąd 401 gracefully
+    return new Response(
+      JSON.stringify({ message: "Brak autoryzacji. Zaloguj się ponownie." }),
+      {
+        status: 401,
+        statusText: "Unauthorized",
+        headers: { "Content-Type": "application/json" },
+      }
+    );
   }
 
   const headers = {
@@ -75,8 +92,10 @@ async function authenticatedFetch(url: string, options: RequestInit = {}): Promi
     headers,
   });
 
+  // Nie logujemy 401 jako błąd - to normalne podczas wylogowania
   if (!response.ok && response.status === 401) {
-    console.error("[API] 401 Unauthorized - token may be invalid or expired");
+    // Wyczyść cache tokena przy 401
+    tokenCache = null;
   }
 
   return response;
@@ -121,19 +140,30 @@ export async function releaseShift(shiftId: string): Promise<Shift> {
 export interface User {
   id: string;
   name: string;
-  email: string;
+  email: string | null;
   role: "OWNER" | "MANAGER" | "EMPLOYEE";
   phoneNumber?: string | null;
-  skills: string[]; // <--- Postgres zwraca to jako tablicę
+  skills: string[];
+  avatarUrl?: string | null;
+  status?: "ACTIVE" | "UNCLAIMED";
+  hourlyRate?: number | null;
+  maxHours?: number | null;
 }
 
-export async function getUsers(): Promise<User[]> {
-  const res = await authenticatedFetch(`${API_URL}/shifts/users/all`);
-  if (!res.ok) {
-    const error = await res.json();
-    throw new Error(error.message || "Błąd pobierania userów");
-  }
-  return res.json();
+export interface PublicUser {
+  id: string;
+  name: string;
+  role: "OWNER" | "MANAGER" | "EMPLOYEE";
+  skills: string[];
+  avatarUrl?: string | null;
+  status?: "ACTIVE" | "UNCLAIMED";
+}
+
+export interface PrivateUser extends PublicUser {
+  email: string | null;
+  hourlyRate: number | null;
+  phoneNumber: string | null;
+  maxHours: number | null;
 }
 
 export async function createTeam(name: string) {
@@ -182,6 +212,67 @@ export async function updateUserProfile(name: string, phoneNumber: string) {
   if (!res.ok) {
     const error = await res.json();
     throw new Error(error.message || "Błąd aktualizacji profilu");
+  }
+  return res.json();
+}
+
+export async function updateUserAvatar(avatarUrl: string) {
+  const res = await authenticatedFetch(`${API_URL}/users/me`, {
+    method: "PATCH",
+    body: JSON.stringify({ avatarUrl }),
+  });
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.message || "Błąd aktualizacji avatara");
+  }
+  return res.json();
+}
+
+export async function updateMyProfile(phoneNumber?: string, avatarUrl?: string) {
+  const res = await authenticatedFetch(`${API_URL}/users/me`, {
+    method: "PATCH",
+    body: JSON.stringify({ phoneNumber, avatarUrl }),
+  });
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.message || "Błąd aktualizacji profilu");
+  }
+  return res.json();
+}
+
+export async function getMyProfile(): Promise<User | PublicUser | PrivateUser> {
+  const res = await authenticatedFetch(`${API_URL}/users/me`);
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.message || "Błąd pobierania profilu");
+  }
+  return res.json();
+}
+
+export async function getUsers(): Promise<(PublicUser | PrivateUser)[]> {
+  const res = await authenticatedFetch(`${API_URL}/users`);
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.message || "Błąd pobierania użytkowników");
+  }
+  return res.json();
+}
+
+export interface CreateShadowProfileDto {
+  name: string;
+  hourlyRate: number;
+  maxHours?: number;
+  phoneNumber?: string;
+}
+
+export async function createShadowProfile(data: CreateShadowProfileDto) {
+  const res = await authenticatedFetch(`${API_URL}/users/shadow-profile`, {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.message || "Błąd tworzenia profilu pracownika");
   }
   return res.json();
 }
