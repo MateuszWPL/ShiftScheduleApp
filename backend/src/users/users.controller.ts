@@ -61,8 +61,9 @@ export class UsersController {
       throw new BadRequestException('Brak pliku do uploadu');
     }
 
-    // Zwracamy ścieżkę względną - frontend doda API_URL
-    const avatarUrl = `${process.env.API_URL || 'http://localhost:3001'}/uploads/avatars/${file.filename}`;
+    // Zwracamy pełny URL do avatara
+    const baseUrl = process.env.API_URL || 'http://localhost:3001';
+    const avatarUrl = `${baseUrl}/uploads/avatars/${file.filename}`;
     return this.usersService.updateProfile(user.userId, { avatarUrl });
   }
 

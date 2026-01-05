@@ -7,6 +7,74 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model User {
+  id                     String           @id @default(uuid())
+  email                  String?          @unique
+  name                   String
+  role                   Role             @default(EMPLOYEE)
+  createdAt              DateTime         @default(now())
+  teamId                 String?
+  avatarUrl              String?
+  provider               String?          @default("google")
+  phoneNumber            String?
+  skills                 String[]         @default([])
+  emailVerified          Boolean          @default(false)
+  password               String?
+  emailVerificationToken String?
+  passwordResetExpires   DateTime?
+  passwordResetToken     String?
+  hourlyRate             Decimal?         @db.Decimal(10, 2)
+  maxHours               Int?
+  status                 UserStatus       @default(ACTIVE)
+  nickname               String?
+  notes                  String?
+  shifts                 Shift[]
+  memberships            TeamMembership[]
+  team                   Team?            @relation(fields: [teamId], references: [id])
+}
+
+model Team {
+  id          String           @id @default(uuid())
+  name        String
+  createdAt   DateTime         @default(now())
+  inviteCode  String           @unique
+  shifts      Shift[]
+  memberships TeamMembership[]
+  users       User[]
+}
+
+model Shift {
+  id           String      @id @default(uuid())
+  startTime    DateTime
+  endTime      DateTime
+  roleName     String
+  status       ShiftStatus @default(DRAFT)
+  isUpForGrabs Boolean     @default(false)
+  userId       String?
+  teamId       String
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  team         Team        @relation(fields: [teamId], references: [id])
+  user         User?       @relation(fields: [userId], references: [id])
+
+  @@index([teamId, startTime])
+}
+
+model TeamMembership {
+  id          String           @id @default(uuid())
+  userId      String
+  teamId      String
+  status      MembershipStatus @default(PENDING)
+  role        Role             @default(EMPLOYEE)
+  requestedAt DateTime         @default(now())
+  approvedAt  DateTime?
+  approvedBy  String?
+  team        Team             @relation(fields: [teamId], references: [id])
+  user        User             @relation(fields: [userId], references: [id])
+
+  @@unique([userId, teamId])
+}
+
 enum Role {
   OWNER
   MANAGER
@@ -29,92 +97,4 @@ enum MembershipStatus {
 enum UserStatus {
   ACTIVE
   UNCLAIMED
-}
-
-model User {
-  id    String @id @default(uuid())
-  email String? @unique // Nullable dla shadow profiles
-  name  String // Full name z Google
-
-  role     Role       @default(EMPLOYEE)
-  status   UserStatus @default(ACTIVE)
-  provider String?    @default("google")
-
-  // Dane prywatne (widoczne dla OWNER/MANAGER)
-  hourlyRate  Decimal? @db.Decimal(10, 2) // Stawka godzinowa
-  phoneNumber String? // Numer telefonu
-  maxHours    Int? // Maksymalna liczba godzin (np. tygodniowo)
-  notes       String? // Notatki administracyjne (widoczne tylko dla OWNER/MANAGER)
-
-  // Dane publiczne (widoczne dla zespołu)
-  skills    String[] @default([]) // Tablica stringów (Postgres to potrafi!), np. ["Barista", "Driver"]
-  avatarUrl String? // URL do avatara użytkownika
-  nickname  String? // Pseudonim (opcjonalny)
-
-  // Email + Hasło Authentication
-  password               String? // Hashed password (nullable - Google users nie mają hasła)
-  emailVerified          Boolean @default(false) // Weryfikacja emaila (dla email+hasło)
-  emailVerificationToken String? // Token do weryfikacji emaila
-
-  // Password Reset
-  passwordResetToken   String? // Token do resetu hasła
-  passwordResetExpires DateTime? // Data wygaśnięcia tokenu resetu hasła
-
-  createdAt DateTime @default(now())
-
-  shifts      Shift[]
-  memberships TeamMembership[]
-
-  teamId String?
-  team   Team?   @relation(fields: [teamId], references: [id])
-}
-
-model Team {
-  id         String   @id @default(uuid())
-  name       String
-  inviteCode String   @unique // Generowany przez nanoid(12) w kodzie
-  createdAt  DateTime @default(now())
-
-  users       User[]
-  shifts      Shift[]
-  memberships TeamMembership[]
-}
-
-model Shift {
-  id        String      @id @default(uuid())
-  startTime DateTime
-  endTime   DateTime
-  roleName  String // np. "Kelner" - string, bo role mogą być dynamiczne
-  status    ShiftStatus @default(DRAFT)
-
-  // LOGIKA GIEŁDY
-  isUpForGrabs Boolean @default(false) // Czy zmiana jest na giełdzie?
-
-  // Relacje
-  userId String? // Może być NULL (zmiana nieobsadzona)
-  user   User?   @relation(fields: [userId], references: [id])
-
-  teamId String
-  team   Team   @relation(fields: [teamId], references: [id])
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([teamId, startTime]) // Indeks do szybkiego pobierania grafiku
-}
-
-model TeamMembership {
-  id          String           @id @default(uuid())
-  userId      String
-  teamId      String
-  status      MembershipStatus @default(PENDING)
-  role        Role             @default(EMPLOYEE)
-  requestedAt DateTime         @default(now())
-  approvedAt  DateTime?
-  approvedBy  String?
-
-  user User @relation(fields: [userId], references: [id])
-  team Team @relation(fields: [teamId], references: [id])
-
-  @@unique([userId, teamId])
 }
