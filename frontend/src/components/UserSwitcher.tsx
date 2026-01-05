@@ -1,6 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+import { useSession } from "next-auth/react";
 import { getUsers, PublicUser, PrivateUser } from "@/lib/api";
 
 interface Props {
@@ -9,9 +10,12 @@ interface Props {
 }
 
 export function UserSwitcher({ currentUserId, onUserChange }: Props) {
+  const { data: session } = useSession();
   const { data: users } = useQuery({
     queryKey: ["users"],
-    queryFn: getUsers
+    queryFn: getUsers,
+    enabled: !!session,
+    retry: false,
   });
 
   if (!users) return <div>Ładowanie userów...</div>;

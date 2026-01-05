@@ -21,25 +21,37 @@ export default function ProfilePage() {
   const [phoneNumber, setPhoneNumber] = useState("");
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
+  // Przekierowujemy na stronę główną jeśli nie ma sesji
+  useEffect(() => {
+    if (!session) {
+      window.location.replace('/');
+    }
+  }, [session]);
+
   const { data: profile, isLoading, error } = useQuery({
     queryKey: ["my-profile"],
     queryFn: getMyProfile,
-    enabled: !!session, // Pobierz profil tylko gdy jest sesja
-    retry: false, // Nie próbuj ponownie przy błędzie 401
+    enabled: !!session,
+    retry: false,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
   });
 
   useEffect(() => {
-    if (profile) {
+    if (profile && !isEditing) {
       setPhoneNumber("phoneNumber" in profile ? (profile.phoneNumber || "") : "");
       setAvatarUrl(profile.avatarUrl || null);
     }
-  }, [profile]);
+  }, [profile, isEditing]);
 
   const updateAvatarMutation = useMutation({
     mutationFn: (url: string) => updateUserAvatar(url),
     onSuccess: (updatedProfile) => {
       toast.success("Avatar zaktualizowany!");
-      queryClient.setQueryData(["my-profile"], updatedProfile);
+      queryClient.setQueryData(["my-profile"], (old: any) => {
+        if (!old) return updatedProfile;
+        return { ...old, ...updatedProfile };
+      });
       if (updatedProfile && "avatarUrl" in updatedProfile) {
         setAvatarUrl(updatedProfile.avatarUrl || null);
       }
@@ -52,9 +64,12 @@ export default function ProfilePage() {
   const updateProfileMutation = useMutation({
     mutationFn: () => updateMyProfile(phoneNumber, avatarUrl || undefined),
     onSuccess: (updatedProfile) => {
-      toast.success("Profil zaktualizowany!");
-      queryClient.setQueryData(["my-profile"], updatedProfile);
+      queryClient.setQueryData(["my-profile"], (old: any) => {
+        if (!old) return updatedProfile;
+        return { ...old, ...updatedProfile };
+      });
       setIsEditing(false);
+      toast.success("Profil zaktualizowany!");
     },
     onError: (err: Error) => {
       toast.error("Błąd aktualizacji profilu", { description: err.message });

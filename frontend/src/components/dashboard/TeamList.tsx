@@ -1,10 +1,11 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+import { useSession } from "next-auth/react";
 import { getTeamMembers, User } from "@/lib/api";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Settings2, Phone } from "lucide-react"; // Dodaj import Phone
+import { Settings2, Phone } from "lucide-react";
 import { useState } from "react";
 import { ManageEmployeeDialog } from "./ManageEmployeeDialog";
 
@@ -14,10 +15,12 @@ interface Props {
 }
 
 export function TeamList({ currentUserId, currentUserRole }: Props) {
+  const { data: session } = useSession();
   const { data: members, isLoading } = useQuery({
     queryKey: ["team-members", currentUserId],
     queryFn: () => getTeamMembers(),
-    enabled: !!currentUserId,
+    enabled: !!session && !!currentUserId,
+    retry: false,
   });
 
   const [editingUser, setEditingUser] = useState<User | null>(null);

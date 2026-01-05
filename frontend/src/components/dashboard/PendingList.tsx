@@ -1,6 +1,7 @@
 "use client";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useSession } from "next-auth/react";
 import { getPendingMembers, approvePending, rejectPending, PendingMember } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -10,11 +11,13 @@ interface Props {
 }
 
 export function PendingList({ currentUserRole }: Props) {
+  const { data: session } = useSession();
   const queryClient = useQueryClient();
   const { data: pending, isLoading } = useQuery({
     queryKey: ["pending-members"],
     queryFn: () => getPendingMembers(),
-    enabled: currentUserRole === "OWNER" || currentUserRole === "MANAGER",
+    enabled: !!session && (currentUserRole === "OWNER" || currentUserRole === "MANAGER"),
+    retry: false,
   });
 
   const approveMutation = useMutation({

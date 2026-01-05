@@ -38,6 +38,8 @@ export default function Home() {
       setMembershipStatus(null);
       setLastSyncedEmail(null);
       clearAuthTokenCache();
+      queryClient.cancelQueries();
+      queryClient.removeQueries();
       queryClient.clear();
     }
   }, [session, queryClient]);
@@ -104,7 +106,8 @@ export default function Home() {
   const { data: shifts, isLoading } = useQuery({
     queryKey: ["shifts", dbUser?.id],
     queryFn: () => getShifts(),
-    enabled: !!dbUser?.teamId,
+    enabled: !!session && !!dbUser?.teamId,
+    retry: false,
   });
 
   const claimMutation = useMutation({
