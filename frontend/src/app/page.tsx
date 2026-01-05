@@ -173,7 +173,7 @@ export default function Home() {
       userRole={dbUser?.role} 
       userName={dbUser?.name}
       userAvatar={dbUser?.avatarUrl}
-      onLogout={() => signOut()}
+      onLogout={logout}
     >
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
