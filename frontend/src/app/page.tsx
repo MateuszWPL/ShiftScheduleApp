@@ -86,30 +86,36 @@ export default function Home() {
           setDbUser(user);
           setLastSyncedEmail(email);
           
-          // Sprawdź membership status jeśli user ma teamId
-          // OPTYMALIZACJA: Sprawdź status tylko jeśli nie mamy go już zapisanego lub jeśli teamId się zmieniło
-          if (user.teamId) {
-            // Jeśli już mamy status i teamId się nie zmieniło, nie sprawdzaj ponownie
-            const previousTeamId = dbUser?.teamId;
-            if (membershipStatus && user.teamId === previousTeamId) {
-              console.log("[DEBUG] Using cached membership status:", membershipStatus);
-            } else {
-              try {
-                console.log("[DEBUG] Checking membership status for teamId:", user.teamId);
-                const statusData = await getMyMembershipStatus();
-                // Backend zwraca { status: "PENDING" | "ACTIVE" | ... }
-                const status = statusData.status || "ACTIVE";
-                console.log("[DEBUG] Membership status:", status);
-                setMembershipStatus(status);
-              } catch (err) {
-                console.error("[DEBUG] Error getting membership status:", err);
-                // Jeśli błąd, zakładamy ACTIVE (stary user bez membership = ACTIVE)
-                setMembershipStatus("ACTIVE");
-              }
+          // WAŻNE: Sprawdź membership status ZAWSZE, nawet jeśli teamId jest null
+          // Użytkownik z PENDING membership ma teamId: null, ale ma TeamMembership z statusem PENDING
+          // Musimy sprawdzić status żeby pokazać odpowiedni ekran (PendingView vs OnboardingView)
+          try {
+            console.log("[DEBUG] Checking membership status for user:", user.id);
+            const statusData = await getMyMembershipStatus();
+            // Backend zwraca { status: "PENDING" | "ACTIVE" | "REJECTED" | "LEFT" | null }
+            const status = statusData.status;
+            console.log("[DEBUG] Membership status:", status);
+            setMembershipStatus(status);
+            
+            // Jeśli status jest PENDING lub ACTIVE, ale user.teamId jest null, 
+            // to znaczy że membership istnieje ale teamId nie jest jeszcze przypisany do User
+            // W takim przypadku ustawiamy teamId z membership (jeśli dostępne)
+            if (status && (status === "PENDING" || status === "ACTIVE") && !user.teamId) {
+              console.log("[DEBUG] User has membership but no teamId - this is expected for PENDING");
+              // Nie ustawiamy teamId tutaj - backend powinien to zrobić przy approve
+              // Ale możemy sprawdzić czy membership ma teamId
             }
-          } else {
-            console.log("[DEBUG] No teamId, setting membershipStatus to null");
-            setMembershipStatus(null);
+          } catch (err) {
+            console.error("[DEBUG] Error getting membership status:", err);
+            // Jeśli błąd (np. 401 - brak autoryzacji), sprawdź czy user ma teamId
+            // Jeśli ma teamId, zakładamy ACTIVE (stary user bez membership = ACTIVE)
+            if (user.teamId) {
+              console.log("[DEBUG] Error but user has teamId, assuming ACTIVE");
+              setMembershipStatus("ACTIVE");
+            } else {
+              console.log("[DEBUG] No membership status and no teamId, setting to null");
+              setMembershipStatus(null);
+            }
           }
           queryClient.invalidateQueries({ queryKey: ["shifts"] });
         })
@@ -189,6 +195,21 @@ export default function Home() {
     );
   }
 
+  // WAŻNE: Sprawdź membership status PRZED sprawdzeniem teamId
+  // Użytkownik z PENDING membership ma teamId: null, ale powinien widzieć PendingView
+  const isPending = membershipStatus === "PENDING" || dbUser?.membershipStatus === "PENDING";
+  
+  // Jeśli user ma PENDING membership, pokaż ekran oczekiwania (nawet jeśli teamId jest null)
+  if (dbUser && isPending) {
+    return (
+      <PendingView
+        userName={dbUser.name || "Użytkownik"}
+        onLogout={logout}
+      />
+    );
+  }
+
+  // Jeśli user nie ma teamId i nie ma PENDING membership, pokaż onboarding
   if (dbUser && !dbUser.teamId) {
     return (
       <OnboardingView
@@ -201,19 +222,6 @@ export default function Home() {
             setMembershipStatus("PENDING");
           }
         }}
-        onLogout={logout}
-      />
-    );
-  }
-
-  // Jeśli user ma teamId, ale status PENDING - pokaż ekran oczekiwania
-  // Sprawdzamy zarówno membershipStatus state jak i dbUser.membershipStatus
-  const isPending = membershipStatus === "PENDING" || dbUser?.membershipStatus === "PENDING";
-  
-  if (dbUser && dbUser.teamId && isPending) {
-    return (
-      <PendingView
-        userName={dbUser.name || "Użytkownik"}
         onLogout={logout}
       />
     );

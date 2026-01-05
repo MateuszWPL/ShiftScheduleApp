@@ -100,11 +100,16 @@ async function authenticatedFetch(url: string, options: RequestInit = {}): Promi
     headers,
   });
 
-  console.log("[AUTH] Response status for", url, ":", response.status);
+  // Nie loguj requestów do /api/auth/token podczas wylogowania (to jest normalne)
+  if (!isTokenRequest || response.status !== 401) {
+    console.log("[AUTH] Response status for", url, ":", response.status);
+  }
 
   // Nie logujemy 401 jako błąd - to normalne podczas wylogowania
   if (!response.ok && response.status === 401) {
-    console.log("[AUTH] 401 response, clearing token cache");
+    if (!isTokenRequest) {
+      console.log("[AUTH] 401 response, clearing token cache");
+    }
     // Wyczyść cache tokena przy 401
     tokenCache = null;
   }
