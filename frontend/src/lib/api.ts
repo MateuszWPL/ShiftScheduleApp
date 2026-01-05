@@ -72,7 +72,13 @@ async function getAuthToken(): Promise<string | null> {
 
 // Helper function do wykonywania autentykowanych requestów
 async function authenticatedFetch(url: string, options: RequestInit = {}): Promise<Response> {
-  console.log("[AUTH] authenticatedFetch called for:", url, "method:", options.method || "GET");
+  // Nie loguj requestów do /api/auth/token podczas wylogowania (to jest normalne)
+  const isTokenRequest = url.includes("/api/auth/token");
+  
+  if (!isTokenRequest) {
+    console.log("[AUTH] authenticatedFetch called for:", url, "method:", options.method || "GET");
+  }
+  
   const token = await getAuthToken();
   
   if (!token) {
