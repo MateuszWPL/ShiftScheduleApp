@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { getUsers, User } from "@/lib/api";
+import { getUsers, PublicUser, PrivateUser } from "@/lib/api";
 
 interface Props {
   currentUserId: string;
@@ -24,7 +24,7 @@ export function UserSwitcher({ currentUserId, onUserChange }: Props) {
         value={currentUserId}
         onChange={(e) => onUserChange(e.target.value)}
       >
-        {users.map((u: User) => (
+        {users.map((u: PublicUser | PrivateUser) => (
           <option key={u.id} value={u.id}>
             {u.name} ({u.role})
           </option>

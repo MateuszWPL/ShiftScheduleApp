@@ -10,7 +10,7 @@ import { useSession, signOut } from "next-auth/react";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { Card } from "@/components/ui/card";
-import { Lock, User, Phone, Mail, DollarSign, Clock } from "lucide-react";
+import { Lock, User as UserIcon, Phone, Mail, DollarSign, Clock } from "lucide-react";
 
 export default function ProfilePage() {
   const { data: session } = useSession();
@@ -28,7 +28,7 @@ export default function ProfilePage() {
 
   useEffect(() => {
     if (profile) {
-      setPhoneNumber(profile.phoneNumber || "");
+      setPhoneNumber("phoneNumber" in profile ? (profile.phoneNumber || "") : "");
       setAvatarUrl(profile.avatarUrl || null);
     }
   }, [profile]);
@@ -67,9 +67,9 @@ export default function ProfilePage() {
   if (isLoading) {
     return (
       <DashboardLayout
-        userRole={profile?.role}
-        userName={profile?.name}
-        userAvatar={profile?.avatarUrl}
+        userRole={undefined}
+        userName={undefined}
+        userAvatar={null}
         onLogout={() => signOut()}
       >
         <div className="flex items-center justify-center h-full">
@@ -149,7 +149,7 @@ export default function ProfilePage() {
             <div className="flex-1 space-y-4">
               <div>
                 <label className="text-sm font-medium text-gray-500 flex items-center gap-2">
-                  <User className="h-4 w-4" /> Imię i Nazwisko
+                  <UserIcon className="h-4 w-4" /> Imię i Nazwisko
                 </label>
                 <div className="mt-1 flex items-center gap-2">
                   <p className="text-lg font-semibold">{user.name}</p>
@@ -190,7 +190,7 @@ export default function ProfilePage() {
                     className="mt-1"
                   />
                 ) : (
-                  <p className="text-lg mt-1">{user.phoneNumber || "Nie podano"}</p>
+                  <p className="text-lg mt-1">{"phoneNumber" in user ? (user.phoneNumber || "Nie podano") : "Nie podano"}</p>
                 )}
               </div>
 
@@ -263,7 +263,7 @@ export default function ProfilePage() {
                     variant="ghost"
                     onClick={() => {
                       setIsEditing(false);
-                      setPhoneNumber(user.phoneNumber || "");
+                      setPhoneNumber("phoneNumber" in user ? (user.phoneNumber || "") : "");
                       setAvatarUrl(user.avatarUrl || null);
                     }}
                   >
