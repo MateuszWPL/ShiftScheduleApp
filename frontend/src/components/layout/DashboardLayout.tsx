@@ -51,7 +51,8 @@ export function DashboardLayout({ children, userRole, userName, userAvatar, onLo
           </Button>
           
           {/* Elementy administracyjne - tylko dla OWNER/MANAGER */}
-          {isAdmin && (
+          {/* TODO: Stworzyć stronę /settings w przyszłości */}
+          {/* {isAdmin && (
             <div className="pt-4 mt-4 border-t border-slate-800 space-y-2">
               <Button variant="ghost" className="w-full justify-start text-slate-300 hover:text-white hover:bg-slate-800" asChild>
                 <Link href="/settings">
@@ -59,7 +60,7 @@ export function DashboardLayout({ children, userRole, userName, userAvatar, onLo
                 </Link>
               </Button>
             </div>
-          )}
+          )} */}
           
           {/* Profil - dostępny dla wszystkich */}
           <div className="pt-4 mt-4 border-t border-slate-800">

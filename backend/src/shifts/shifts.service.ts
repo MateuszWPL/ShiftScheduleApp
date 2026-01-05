@@ -199,6 +199,28 @@ export class ShiftsService {
 
   async createTeam(userId: string, teamName: string) {
     return this.prisma.$transaction(async (tx) => {
+      // WALIDACJA: Sprawdź czy użytkownik już ma zespół lub aktywne członkostwo
+      const user = await tx.user.findUnique({
+        where: { id: userId },
+        select: { teamId: true },
+      });
+
+      if (user?.teamId) {
+        throw new BadRequestException('Już należysz do zespołu. Nie możesz utworzyć nowego zespołu.');
+      }
+
+      // Sprawdź czy użytkownik ma aktywne członkostwo w jakimkolwiek zespole
+      const activeMembership = await tx.teamMembership.findFirst({
+        where: {
+          userId,
+          status: MembershipStatus.ACTIVE,
+        },
+      });
+
+      if (activeMembership) {
+        throw new BadRequestException('Masz już aktywne członkostwo w zespole. Nie możesz utworzyć nowego zespołu.');
+      }
+
       // 1. Stwórz Team z 12-znakowym kodem nanoid
       const inviteCode = nanoid(12);
       const team = await tx.team.create({

@@ -50,32 +50,50 @@ export default function Home() {
       
       // Nie synchronizuj ponownie jeśli już zsynchronizowaliśmy tego użytkownika
       if (lastSyncedEmail === email && dbUser) {
+        console.log("[DEBUG] Skipping sync - already synced for:", email);
         return;
       }
 
+      console.log("[DEBUG] Starting user sync for:", email);
       setIsSyncingUser(true);
+      
       fetch(`${API_URL}/shifts/users/sync?email=${encodeURIComponent(email)}&name=${encodeURIComponent(name || "")}`)
-        .then(res => res.json())
+        .then(res => {
+          console.log("[DEBUG] Sync response status:", res.status);
+          return res.json();
+        })
         .then(async (user) => {
+          console.log("[DEBUG] User synced:", { id: user.id, teamId: user.teamId, email: user.email });
           setDbUser(user);
           setLastSyncedEmail(email);
+          
           // Sprawdź membership status jeśli user ma teamId
           if (user.teamId) {
             try {
+              console.log("[DEBUG] Checking membership status for teamId:", user.teamId);
               const statusData = await getMyMembershipStatus();
               // Backend zwraca { status: "PENDING" | "ACTIVE" | ... }
               const status = statusData.status || "ACTIVE";
+              console.log("[DEBUG] Membership status:", status);
               setMembershipStatus(status);
             } catch (err) {
+              console.error("[DEBUG] Error getting membership status:", err);
               // Jeśli błąd, zakładamy ACTIVE (stary user bez membership = ACTIVE)
               setMembershipStatus("ACTIVE");
             }
           } else {
+            console.log("[DEBUG] No teamId, setting membershipStatus to null");
             setMembershipStatus(null);
           }
           queryClient.invalidateQueries({ queryKey: ["shifts"] });
         })
-        .finally(() => setIsSyncingUser(false));
+        .catch((err) => {
+          console.error("[DEBUG] Error during sync:", err);
+        })
+        .finally(() => {
+          setIsSyncingUser(false);
+          console.log("[DEBUG] Sync completed");
+        });
     }
   }, [session?.user?.email, lastSyncedEmail, dbUser, queryClient]);
 

@@ -22,18 +22,23 @@ export function clearAuthTokenCache() {
 async function getAuthToken(): Promise<string | null> {
   // Sprawdź cache (token ważny 7 dni, ale odświeżamy co 6 dni)
   if (tokenCache && tokenCache.expiresAt > Date.now()) {
+    console.log("[AUTH] Using cached token");
     return tokenCache.token;
   }
 
+  console.log("[AUTH] Fetching new token from /api/auth/token");
   try {
     const res = await fetch("/api/auth/token", {
       credentials: "include", // Ważne: wysyłamy cookies z sesją
     });
     
+    console.log("[AUTH] Token response status:", res.status);
+    
     if (!res.ok) {
       // Jeśli 401, to znaczy że nie ma sesji - użytkownik nie jest zalogowany
       // Nie logujemy tego jako błąd, bo to normalna sytuacja podczas wylogowania
       if (res.status === 401) {
+        console.log("[AUTH] 401 - no session, clearing cache");
         // Wyczyść cache tokena
         tokenCache = null;
         return null;
@@ -55,6 +60,7 @@ async function getAuthToken(): Promise<string | null> {
         token,
         expiresAt: Date.now() + 6 * 24 * 60 * 60 * 1000, // 6 dni
       };
+      console.log("[AUTH] Token cached until:", new Date(tokenCache.expiresAt).toISOString());
     }
     
     return token;
@@ -66,9 +72,11 @@ async function getAuthToken(): Promise<string | null> {
 
 // Helper function do wykonywania autentykowanych requestów
 async function authenticatedFetch(url: string, options: RequestInit = {}): Promise<Response> {
+  console.log("[AUTH] authenticatedFetch called for:", url, "method:", options.method || "GET");
   const token = await getAuthToken();
   
   if (!token) {
+    console.log("[AUTH] No token available, returning 401");
     // Zwróć odpowiedź z błędem zamiast rzucać wyjątek
     // To pozwala komponentom obsłużyć błąd 401 gracefully
     return new Response(
@@ -92,10 +100,17 @@ async function authenticatedFetch(url: string, options: RequestInit = {}): Promi
     headers,
   });
 
+  console.log("[AUTH] Response status for", url, ":", response.status);
+
   // Nie logujemy 401 jako błąd - to normalne podczas wylogowania
   if (!response.ok && response.status === 401) {
+    console.log("[AUTH] 401 response, clearing token cache");
     // Wyczyść cache tokena przy 401
     tokenCache = null;
+  }
+
+  if (response.status === 429) {
+    console.error("[AUTH] 429 Too Many Requests for:", url);
   }
 
   return response;
