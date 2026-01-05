@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google"; // Zakładam domyślne fonty z Nexta
 import "./globals.css";
-import QueryProvider from "@/components/providers/QueryProvider"; // <--- SPRAWDŹ TEN IMPORT
+import QueryProvider from "@/components/providers/QueryProvider";
 import AuthProvider from "@/components/providers/AuthProvider";
 import { Toaster } from "sonner";
 

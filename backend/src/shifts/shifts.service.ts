@@ -81,7 +81,6 @@ export class ShiftsService {
           throw new ForbiddenException('Brak aktywnego członkostwa w zespole.');
         }
 
-        // Blokada rekordu zmiany – SELECT FOR UPDATE
         const rawShifts = await tx.$queryRaw<Shift[]>`
           SELECT * FROM "Shift"
           WHERE "id" = ${shiftId}
@@ -148,43 +147,32 @@ export class ShiftsService {
   // Backend: src/shifts/shifts.service.ts
 
   async syncUserByEmail(email: string, name: string) {
-    // Znajdź użytkownika po emailu (email jest unique, więc może być tylko jeden)
     let user = await this.prisma.user.findUnique({
       where: { email },
       include: { team: true },
     });
 
     if (!user) {
-      // Tylko dla Google OAuth - użytkownicy email+hasło są tworzeni przez /auth/register
       user = await this.prisma.user.create({
         data: {
           email,
           name,
-          role: 'EMPLOYEE', // Domyślna rola
-          provider: 'google', // Google OAuth
-          status: 'ACTIVE', // Google OAuth użytkownicy są automatycznie aktywni
-          // teamId: ... (tutaj w przyszłości przypiszemy do teamu)
+          role: 'EMPLOYEE',
+          provider: 'google',
+          status: 'ACTIVE',
         },
         include: { team: true },
       });
     } else {
-      // Użytkownik już istnieje - aktualizuj dane
-      // Jeśli użytkownik ma hasło (email+hasło), to nie zmieniamy providera
-      // Ale aktualizujemy name jeśli się zmieniło
       const updateData: any = {};
       
       if (name && name !== user.name) {
         updateData.name = name;
       }
       
-      // Jeśli użytkownik nie ma hasła i provider nie jest "google", ustaw provider na "google"
-      // (może być sytuacja gdzie użytkownik był stworzony inaczej)
       if (!user.password && user.provider !== 'google') {
         updateData.provider = 'google';
       }
-      
-      // Jeśli użytkownik ma hasło, ale loguje się przez Google - to jest OK, 
-      // używamy istniejącego konta (nie zmieniamy providera na "google")
       
       if (Object.keys(updateData).length > 0) {
         user = await this.prisma.user.update({
@@ -199,7 +187,6 @@ export class ShiftsService {
 
   async createTeam(userId: string, teamName: string) {
     return this.prisma.$transaction(async (tx) => {
-      // WALIDACJA: Sprawdź czy użytkownik już ma zespół lub aktywne członkostwo
       const user = await tx.user.findUnique({
         where: { id: userId },
         select: { teamId: true },
@@ -209,7 +196,6 @@ export class ShiftsService {
         throw new BadRequestException('Już należysz do zespołu. Nie możesz utworzyć nowego zespołu.');
       }
 
-      // Sprawdź czy użytkownik ma aktywne członkostwo w jakimkolwiek zespole
       const activeMembership = await tx.teamMembership.findFirst({
         where: {
           userId,
@@ -221,7 +207,6 @@ export class ShiftsService {
         throw new BadRequestException('Masz już aktywne członkostwo w zespole. Nie możesz utworzyć nowego zespołu.');
       }
 
-      // 1. Stwórz Team z 12-znakowym kodem nanoid
       const inviteCode = nanoid(12);
       const team = await tx.team.create({
         data: { 
@@ -230,7 +215,6 @@ export class ShiftsService {
         },
       });
 
-      // 2. Członkostwo OWNER (ACTIVE)
       await tx.teamMembership.create({
         data: {
           userId,
@@ -242,7 +226,6 @@ export class ShiftsService {
         },
       });
 
-      // 3. Zaktualizuj Usera (przypisz do teamu i roli OWNER)
       const updatedUser = await tx.user.update({
         where: { id: userId },
         data: {
@@ -254,7 +237,6 @@ export class ShiftsService {
 
       return { team, user: updatedUser };
     }).then((result) => {
-      // Wyślij mail powitalny dla OWNER asynchronicznie
       if (result.user.email) {
         this.emailService
           .sendWelcomeEmailOwner(
@@ -262,9 +244,7 @@ export class ShiftsService {
             result.user.name || 'Właścicielu',
             result.team.name,
           )
-          .catch((error) => {
-            // Logowanie błędów już jest w EmailService
-          });
+          .catch(() => {});
       }
       return result;
     });
@@ -278,7 +258,6 @@ export class ShiftsService {
       throw new BadRequestException('Nieprawidłowy kod zespołu.');
     }
 
-    // Pobierz dane użytkownika zgłaszającego się
     const applicant = await this.prisma.user.findUnique({
       where: { id: userId },
       select: { name: true, email: true },
@@ -288,7 +267,6 @@ export class ShiftsService {
       throw new NotFoundException('Użytkownik nie istnieje.');
     }
 
-    // Sprawdź istniejące członkostwo
     const existing = await this.prisma.teamMembership.findUnique({
       where: {
         userId_teamId: { userId, teamId: team.id },
@@ -303,8 +281,6 @@ export class ShiftsService {
       return { status: MembershipStatus.PENDING, team };
     }
 
-    // Jeśli istnieje rekord z statusem REJECTED lub LEFT, zaktualizuj go na PENDING
-    // zamiast tworzyć nowy (unikamy unique constraint error)
     if (existing) {
       await this.prisma.teamMembership.update({
         where: {
@@ -312,11 +288,10 @@ export class ShiftsService {
         },
         data: {
           status: MembershipStatus.PENDING,
-          requestedAt: new Date(), // Zaktualizuj datę zgłoszenia
+          requestedAt: new Date(),
         },
       });
     } else {
-      // Utwórz nowe zgłoszenie PENDING (tylko jeśli nie ma istniejącego rekordu)
       await this.prisma.teamMembership.create({
         data: {
           userId,
@@ -370,12 +345,10 @@ export class ShiftsService {
     });
 
     if (!membership) {
-      // Jeśli brak membership, sprawdź czy user ma teamId (stare konta)
       const user = await this.prisma.user.findUnique({
         where: { id: userId },
         select: { teamId: true },
       });
-      // Jeśli ma teamId ale brak membership, zakładamy ACTIVE (stare konta)
       return { status: user?.teamId ? MembershipStatus.ACTIVE : null };
     }
 
@@ -446,7 +419,6 @@ export class ShiftsService {
     });
   }
 
-  // ---- PENDING LIST + APPROVAL ----
   async getPendingMembers(requesterId: string) {
     const requesterMembership = await this.prisma.teamMembership.findFirst({
       where: { userId: requesterId, status: MembershipStatus.ACTIVE },

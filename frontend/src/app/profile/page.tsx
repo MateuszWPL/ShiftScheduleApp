@@ -37,9 +37,12 @@ export default function ProfilePage() {
 
   const updateAvatarMutation = useMutation({
     mutationFn: (url: string) => updateUserAvatar(url),
-    onSuccess: () => {
+    onSuccess: (updatedProfile) => {
       toast.success("Avatar zaktualizowany!");
-      queryClient.invalidateQueries({ queryKey: ["my-profile"] });
+      queryClient.setQueryData(["my-profile"], updatedProfile);
+      if (updatedProfile && "avatarUrl" in updatedProfile) {
+        setAvatarUrl(updatedProfile.avatarUrl || null);
+      }
     },
     onError: (err: Error) => {
       toast.error("Błąd aktualizacji avatara", { description: err.message });
@@ -48,9 +51,9 @@ export default function ProfilePage() {
 
   const updateProfileMutation = useMutation({
     mutationFn: () => updateMyProfile(phoneNumber, avatarUrl || undefined),
-    onSuccess: () => {
+    onSuccess: (updatedProfile) => {
       toast.success("Profil zaktualizowany!");
-      queryClient.invalidateQueries({ queryKey: ["my-profile"] });
+      queryClient.setQueryData(["my-profile"], updatedProfile);
       setIsEditing(false);
     },
     onError: (err: Error) => {
@@ -61,9 +64,8 @@ export default function ProfilePage() {
   const isEmployee = profile && "role" in profile && profile.role === "EMPLOYEE";
   const isAdmin = profile && "role" in profile && (profile.role === "OWNER" || profile.role === "MANAGER");
 
-  // Jeśli nie ma sesji, przekieruj do logowania (NextAuth to obsłuży)
   if (!session) {
-    return null; // NextAuth przekieruje automatycznie
+    return null;
   }
 
   if (isLoading) {
@@ -81,11 +83,10 @@ export default function ProfilePage() {
     );
   }
 
-  // Jeśli błąd 401, użytkownik prawdopodobnie się wylogowuje - nie pokazuj błędu
   if (error) {
     const errorMessage = (error as any)?.message || String(error);
     if (errorMessage.includes("401") || errorMessage.includes("autoryzacji")) {
-      return null; // NextAuth przekieruje automatycznie
+      return null;
     }
   }
 

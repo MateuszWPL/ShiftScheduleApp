@@ -12,8 +12,8 @@ import { UsersModule } from './users/users.module';
   imports: [
     ThrottlerModule.forRoot([
       {
-        ttl: 60000, // 1 minuta
-        limit: 100, // 100 requestów na minutę (zwiększone z 10, bo normalne użytkowanie wymaga więcej requestów)
+        ttl: 60000,
+        limit: 100,
       },
     ]),
     PrismaModule,

@@ -18,7 +18,7 @@ export function OnboardingView({ userId, userName, onSuccess, onLogout }: Props)
   const [teamName, setTeamName] = useState("");
 
   const createTeamMutation = useMutation({
-    mutationFn: () => createTeam(teamName), // userId jest teraz z tokena - BEZPIECZNIE
+    mutationFn: () => createTeam(teamName),
     onSuccess: (data) => {
       toast.success("Firma założona!", {
         description: "Możesz teraz zapraszać pracowników.",
@@ -33,22 +33,19 @@ export function OnboardingView({ userId, userName, onSuccess, onLogout }: Props)
   });
 
   const joinTeamMutation = useMutation({
-    mutationFn: () => joinTeam(inviteCode), // userId jest teraz z tokena - BEZPIECZNIE
+    mutationFn: () => joinTeam(inviteCode),
     onSuccess: (result: any) => {
-      // Backend zwraca { status: "PENDING", team: {...} }
       if (result?.status === "PENDING") {
         toast.info("Zgłoszenie wysłane", {
           description: "Czekaj na akceptację managera. Otrzymasz powiadomienie gdy zostaniesz zaakceptowany.",
         });
-        // Przekazujemy dane do page.tsx - teamId z team.id, ale membershipStatus PENDING
-        // page.tsx sprawdzi membershipStatus i pokaże PendingView
         onSuccess({ 
-          id: userId, // Zachowaj ID usera
-          name: userName, // Zachowaj imię
-          email: "", // Będzie zaktualizowane przez sync
-          teamId: result.team?.id || null, // Team ID z odpowiedzi
-          membershipStatus: "PENDING", // Flaga dla page.tsx
-          team: result.team, // Dane teamu
+          id: userId,
+          name: userName,
+          email: "",
+          teamId: result.team?.id || null,
+          membershipStatus: "PENDING",
+          team: result.team,
         });
       } else {
         toast.success("Dołączono do zespołu!", {
@@ -63,8 +60,6 @@ export function OnboardingView({ userId, userName, onSuccess, onLogout }: Props)
       });
     },
   });
-
-  // Usunięto isPending view - page.tsx obsługuje PENDING status i pokazuje PendingView
 
   return (
     <div className="flex h-screen items-center justify-center bg-slate-100">

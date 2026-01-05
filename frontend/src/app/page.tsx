@@ -5,7 +5,7 @@ import { getShifts, claimShift, releaseShift, Shift, API_URL } from "@/lib/api";
 import { ShiftCard } from "@/components/ShiftCard";
 import { OnboardingView } from "@/components/onboarding/OnboardingView";
 import { TeamList } from "@/components/dashboard/TeamList";
-import { DashboardLayout } from "@/components/layout/DashboardLayout"; // NOWY LAYOUT
+import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { useSession, signIn } from "next-auth/react";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -32,46 +32,36 @@ export default function Home() {
   const [membershipStatus, setMembershipStatus] = useState<string | null>(null);
   const [lastSyncedEmail, setLastSyncedEmail] = useState<string | null>(null);
 
-  // Czyszczenie stanu gdy użytkownik się wylogowuje
   useEffect(() => {
     if (!session) {
       setDbUser(null);
       setMembershipStatus(null);
       setLastSyncedEmail(null);
       clearAuthTokenCache();
-      queryClient.clear(); // Wyczyść cały cache React Query
+      queryClient.clear();
     }
   }, [session, queryClient]);
 
-  // Sync User i sprawdź membership status
   useEffect(() => {
     if (session?.user?.email) {
       const { email, name } = session.user;
       
-      // Nie synchronizuj ponownie jeśli już zsynchronizowaliśmy tego użytkownika
       if (lastSyncedEmail === email && dbUser) {
-        console.log("[DEBUG] Skipping sync - already synced for:", email);
         return;
       }
 
-      // OPTYMALIZACJA: Dodaj flagę żeby uniknąć wielokrotnych wywołań podczas renderowania
       if (isSyncingUser) {
-        console.log("[DEBUG] Sync already in progress, skipping");
         return;
       }
 
-      console.log("[DEBUG] Starting user sync for:", email);
       setIsSyncingUser(true);
       
-      // Dodaj timeout żeby uniknąć zawieszenia
       const timeoutId = setTimeout(() => {
-        console.error("[DEBUG] Sync timeout - taking too long");
         setIsSyncingUser(false);
-      }, 10000); // 10 sekund timeout
+      }, 10000);
       
       fetch(`${API_URL}/shifts/users/sync?email=${encodeURIComponent(email)}&name=${encodeURIComponent(name || "")}`)
         .then(res => {
-          console.log("[DEBUG] Sync response status:", res.status);
           if (res.status === 429) {
             throw new Error("Too many requests - please wait a moment");
           }
@@ -82,38 +72,16 @@ export default function Home() {
         })
         .then(async (user) => {
           clearTimeout(timeoutId);
-          console.log("[DEBUG] User synced:", { id: user.id, teamId: user.teamId, email: user.email });
           setDbUser(user);
           setLastSyncedEmail(email);
           
-          // WAŻNE: Sprawdź membership status ZAWSZE, nawet jeśli teamId jest null
-          // Użytkownik z PENDING membership ma teamId: null, ale ma TeamMembership z statusem PENDING
-          // Musimy sprawdzić status żeby pokazać odpowiedni ekran (PendingView vs OnboardingView)
           try {
-            console.log("[DEBUG] Checking membership status for user:", user.id);
             const statusData = await getMyMembershipStatus();
-            // Backend zwraca { status: "PENDING" | "ACTIVE" | "REJECTED" | "LEFT" | null }
-            const status = statusData.status;
-            console.log("[DEBUG] Membership status:", status);
-            setMembershipStatus(status);
-            
-            // Jeśli status jest PENDING lub ACTIVE, ale user.teamId jest null, 
-            // to znaczy że membership istnieje ale teamId nie jest jeszcze przypisany do User
-            // W takim przypadku ustawiamy teamId z membership (jeśli dostępne)
-            if (status && (status === "PENDING" || status === "ACTIVE") && !user.teamId) {
-              console.log("[DEBUG] User has membership but no teamId - this is expected for PENDING");
-              // Nie ustawiamy teamId tutaj - backend powinien to zrobić przy approve
-              // Ale możemy sprawdzić czy membership ma teamId
-            }
+            setMembershipStatus(statusData.status);
           } catch (err) {
-            console.error("[DEBUG] Error getting membership status:", err);
-            // Jeśli błąd (np. 401 - brak autoryzacji), sprawdź czy user ma teamId
-            // Jeśli ma teamId, zakładamy ACTIVE (stary user bez membership = ACTIVE)
             if (user.teamId) {
-              console.log("[DEBUG] Error but user has teamId, assuming ACTIVE");
               setMembershipStatus("ACTIVE");
             } else {
-              console.log("[DEBUG] No membership status and no teamId, setting to null");
               setMembershipStatus(null);
             }
           }
@@ -121,41 +89,33 @@ export default function Home() {
         })
         .catch((err) => {
           clearTimeout(timeoutId);
-          console.error("[DEBUG] Error during sync:", err);
-          // Jeśli 429, poczekaj chwilę przed ponowną próbą
           if (err.message.includes("429") || err.message.includes("Too many requests")) {
-            console.log("[DEBUG] Rate limited - will retry after delay");
             setTimeout(() => {
-              setLastSyncedEmail(null); // Reset żeby móc spróbować ponownie
-            }, 5000); // 5 sekund opóźnienia
+              setLastSyncedEmail(null);
+            }, 5000);
           }
         })
         .finally(() => {
           setIsSyncingUser(false);
-          console.log("[DEBUG] Sync completed");
         });
     }
   }, [session?.user?.email, lastSyncedEmail, dbUser, queryClient, isSyncingUser, membershipStatus]);
 
-  // Pobieranie zmian
   const { data: shifts, isLoading } = useQuery({
     queryKey: ["shifts", dbUser?.id],
-    queryFn: () => getShifts(), // userId jest teraz z tokena - BEZPIECZNIE
+    queryFn: () => getShifts(),
     enabled: !!dbUser?.teamId,
   });
 
-  // Mutacje
   const claimMutation = useMutation({
-    mutationFn: (shiftId: string) => claimShift(shiftId), // userId jest teraz z tokena - BEZPIECZNIE
+    mutationFn: (shiftId: string) => claimShift(shiftId),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["shifts"] }),
   });
 
   const releaseMutation = useMutation({
-    mutationFn: (shiftId: string) => releaseShift(shiftId), // userId jest teraz z tokena - BEZPIECZNIE
+    mutationFn: (shiftId: string) => releaseShift(shiftId),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["shifts"] }),
   });
-
-  // --- WIDOKI ---
 
   if (!session) {
     return (
@@ -172,7 +132,6 @@ export default function Home() {
     );
   }
 
-  // Unikamy mignięcia dashboardu zanim zsynchronizujemy użytkownika
   if (isSyncingUser || !dbUser) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50">
@@ -184,8 +143,6 @@ export default function Home() {
     );
   }
 
-  // Sprawdź czy użytkownik jest zweryfikowany (tylko dla email+hasło)
-  // Google OAuth użytkownicy są automatycznie zweryfikowani
   if (dbUser && dbUser.provider === "email" && !dbUser.emailVerified) {
     return (
       <UnverifiedView
@@ -195,11 +152,8 @@ export default function Home() {
     );
   }
 
-  // WAŻNE: Sprawdź membership status PRZED sprawdzeniem teamId
-  // Użytkownik z PENDING membership ma teamId: null, ale powinien widzieć PendingView
   const isPending = membershipStatus === "PENDING" || dbUser?.membershipStatus === "PENDING";
   
-  // Jeśli user ma PENDING membership, pokaż ekran oczekiwania (nawet jeśli teamId jest null)
   if (dbUser && isPending) {
     return (
       <PendingView
@@ -209,7 +163,6 @@ export default function Home() {
     );
   }
 
-  // Jeśli user nie ma teamId i nie ma PENDING membership, pokaż onboarding
   if (dbUser && !dbUser.teamId) {
     return (
       <OnboardingView
@@ -217,7 +170,6 @@ export default function Home() {
         userName={dbUser.name}
         onSuccess={(user) => {
           setDbUser(user);
-          // Jeśli user dołączył i ma status PENDING, ustaw flagę
           if (user.membershipStatus === "PENDING") {
             setMembershipStatus("PENDING");
           }
@@ -227,7 +179,6 @@ export default function Home() {
     );
   }
 
-  // --- NOWY DASHBOARD Z SIDEBAREM ---
   return (
     <DashboardLayout 
       userRole={dbUser?.role} 
@@ -237,10 +188,7 @@ export default function Home() {
     >
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
-        {/* KOLUMNA LEWA: KOD + ZESPÓŁ */}
         <div className="space-y-6">
-
-          {/* Karta: Mój Profil */}
           <div className="bg-white p-5 rounded-lg shadow-sm border">
             <div className="flex justify-between items-start mb-4">
               <div>
@@ -266,12 +214,10 @@ export default function Home() {
             )}
           </div>
 
-          {/* Lista Zespołu (z nową funkcją edycji) */}
           <TeamList currentUserId={dbUser?.id} currentUserRole={dbUser?.role} />
           <PendingList currentUserRole={dbUser?.role} />
         </div>
 
-        {/* KOLUMNA PRAWA: GRAFIK (Szersza) */}
         <div className="lg:col-span-2 space-y-6">
           <div className="flex justify-between items-center">
             <h2 className="text-2xl font-bold text-slate-800">Aktualny Grafik</h2>
@@ -283,7 +229,6 @@ export default function Home() {
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
             {isLoading && <p>Ładowanie...</p>}
             {shifts?.map((shift: Shift) => {
-              // LOGIKA UI KARTY (Bez zmian)
               const isMyShift = shift.userId === dbUser?.id;
               const isAvailable = shift.isUpForGrabs;
               const timeStr = new Date(shift.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -318,7 +263,7 @@ export default function Home() {
               return (
                 <ShiftCard
                   key={shift.id}
-                  role={shift.roleName} // Tu można dodać (TY) w UI ShiftCard
+                  role={shift.roleName}
                   time={timeStr}
                   status={statusBadge}
                   actionLabel={actionLabel}
@@ -331,7 +276,6 @@ export default function Home() {
         </div>
       </div>
 
-      {/* MODALE */}
       {dbUser && (
         <>
           <EditProfileDialog

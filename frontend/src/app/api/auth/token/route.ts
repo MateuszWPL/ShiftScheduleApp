@@ -3,7 +3,6 @@ import { NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
 import { authOptions } from "../[...nextauth]/route";
 
-// Endpoint który zwraca JWT token dla backendu
 export async function GET() {
   try {
     const session = await getServerSession(authOptions);
@@ -12,12 +11,10 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized - no session" }, { status: 401 });
     }
 
-    // Jeśli to logowanie przez Credentials (email+hasło), mamy już token w session
     if ((session as any).accessToken) {
       return NextResponse.json({ token: (session as any).accessToken });
     }
 
-    // Dla Google OAuth - pobierz userId z backendu (sync user)
     const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
     const syncResponse = await fetch(
       `${API_URL}/shifts/users/sync?email=${encodeURIComponent(session.user.email)}&name=${encodeURIComponent(session.user.name || "")}`
@@ -29,7 +26,6 @@ export async function GET() {
 
     const dbUser = await syncResponse.json();
 
-    // Generuj JWT token w formacie który NestJS może zweryfikować
     const secret = process.env.JWT_SECRET || process.env.NEXTAUTH_SECRET;
 
     if (!secret) {
@@ -38,18 +34,17 @@ export async function GET() {
 
     const token = jwt.sign(
       {
-        sub: dbUser.id, // userId - standard JWT claim
+        sub: dbUser.id,
         email: dbUser.email,
       },
       secret,
       {
-        expiresIn: "7d", // Token ważny 7 dni
+        expiresIn: "7d",
       }
     );
 
     return NextResponse.json({ token });
   } catch (error) {
-    console.error("Error generating token:", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

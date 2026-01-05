@@ -20,7 +20,7 @@ export function ManageEmployeeDialog({ managerId, targetUser, onClose }: Props) 
     mutationFn: () => {
       // Zamień string "Barista, Kierowca" na tablicę ["Barista", "Kierowca"]
       const skillsArray = skillsInput.split(",").map(s => s.trim()).filter(s => s.length > 0);
-      return updateEmployeeSkills(targetUser!.id, skillsArray); // managerId jest teraz z tokena - BEZPIECZNIE
+      return updateEmployeeSkills(targetUser!.id, skillsArray);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["team-members"] });

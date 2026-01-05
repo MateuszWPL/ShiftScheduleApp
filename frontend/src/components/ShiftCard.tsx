@@ -53,11 +53,8 @@ export const ShiftCard: React.FC<ShiftCardProps> = ({
       <CardFooter>
         <Button
           onClick={onAction}
-          // ZMIANA TUTAJ: Usuwamy "|| status !== 'open'"
-          // Komponent ma słuchać tylko propsa actionDisabled
           disabled={actionDisabled}
           className="w-full"
-          // Opcjonalnie: Zmień kolor przycisku, jeśli to "Oddaj" (variant="outline" lub "destructive")
           variant={actionLabel.includes("Oddaj") ? "outline" : "default"}
         >
           {actionLabel}

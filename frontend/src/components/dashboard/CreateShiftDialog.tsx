@@ -21,7 +21,6 @@ export function CreateShiftDialog({ isOpen, onClose }: Props) {
 
   const mutation = useMutation({
     mutationFn: () => {
-      // Połącz datę i czas w ISO string
       const startDateTime = new Date(`${startDate}T${startTime}:00`).toISOString();
       const endDateTime = new Date(`${endDate}T${endTime}:00`).toISOString();
 
@@ -37,7 +36,6 @@ export function CreateShiftDialog({ isOpen, onClose }: Props) {
         description: "Zmiana została dodana do grafiku.",
       });
       onClose();
-      // Reset formularza
       setRoleName("");
       setStartDate("");
       setStartTime("");

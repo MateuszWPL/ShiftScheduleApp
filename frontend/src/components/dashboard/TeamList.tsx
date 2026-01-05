@@ -16,7 +16,7 @@ interface Props {
 export function TeamList({ currentUserId, currentUserRole }: Props) {
   const { data: members, isLoading } = useQuery({
     queryKey: ["team-members", currentUserId],
-    queryFn: () => getTeamMembers(), // userId jest teraz z tokena - BEZPIECZNIE
+    queryFn: () => getTeamMembers(),
     enabled: !!currentUserId,
   });
 
@@ -45,7 +45,6 @@ export function TeamList({ currentUserId, currentUserRole }: Props) {
                   </Badge>
                 </div>
 
-                {/* ZMIANA 1: Email + Telefon w jednej linii */}
                 <div className="flex items-center gap-2 mt-0.5">
                   <p className="text-xs text-gray-400">{member.email}</p>
                   {member.phoneNumber && (
@@ -55,7 +54,6 @@ export function TeamList({ currentUserId, currentUserRole }: Props) {
                   )}
                 </div>
 
-                {/* ZMIANA 2: Tagi tylko dla PRACOWNIKÓW (ukryj dla Owner/Manager) */}
                 {member.role === 'EMPLOYEE' && (
                   <div className="flex gap-1 mt-2 flex-wrap">
                     {member.skills && member.skills.map((skill, idx) => (

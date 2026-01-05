@@ -10,44 +10,27 @@ export interface Shift {
   userId: string | null;
 }
 
-// Cache tokena (żeby nie pobierać za każdym razem)
 let tokenCache: { token: string; expiresAt: number } | null = null;
 
-// Funkcja do czyszczenia cache tokena (np. podczas wylogowania)
 export function clearAuthTokenCache() {
   tokenCache = null;
 }
 
-// Helper function do pobierania JWT tokena
 async function getAuthToken(): Promise<string | null> {
-  // Sprawdź cache (token ważny 7 dni, ale odświeżamy co 6 dni)
   if (tokenCache && tokenCache.expiresAt > Date.now()) {
-    console.log("[AUTH] Using cached token");
     return tokenCache.token;
   }
 
-  console.log("[AUTH] Fetching new token from /api/auth/token");
   try {
     const res = await fetch("/api/auth/token", {
-      credentials: "include", // Ważne: wysyłamy cookies z sesją
+      credentials: "include",
     });
     
-    console.log("[AUTH] Token response status:", res.status);
-    
     if (!res.ok) {
-      // Jeśli 401, to znaczy że nie ma sesji - użytkownik nie jest zalogowany
-      // Nie logujemy tego jako błąd, bo to normalna sytuacja podczas wylogowania
       if (res.status === 401) {
-        console.log("[AUTH] 401 - no session, clearing cache");
-        // Wyczyść cache tokena
         tokenCache = null;
         return null;
       }
-      
-      // Dla innych błędów logujemy
-      const errorData = await res.json().catch(() => ({}));
-      console.error("[AUTH] Error fetching token:", res.status, errorData);
-      
       return null;
     }
     
@@ -55,36 +38,22 @@ async function getAuthToken(): Promise<string | null> {
     const token = data.token || null;
     
     if (token) {
-      // Cache tokena (ważny 7 dni, ale odświeżamy po 6 dniach)
       tokenCache = {
         token,
-        expiresAt: Date.now() + 6 * 24 * 60 * 60 * 1000, // 6 dni
+        expiresAt: Date.now() + 6 * 24 * 60 * 60 * 1000,
       };
-      console.log("[AUTH] Token cached until:", new Date(tokenCache.expiresAt).toISOString());
     }
     
     return token;
   } catch (error) {
-    console.error("[AUTH] Error fetching auth token:", error);
     return null;
   }
 }
 
-// Helper function do wykonywania autentykowanych requestów
 async function authenticatedFetch(url: string, options: RequestInit = {}): Promise<Response> {
-  // Nie loguj requestów do /api/auth/token podczas wylogowania (to jest normalne)
-  const isTokenRequest = url.includes("/api/auth/token");
-  
-  if (!isTokenRequest) {
-    console.log("[AUTH] authenticatedFetch called for:", url, "method:", options.method || "GET");
-  }
-  
   const token = await getAuthToken();
   
   if (!token) {
-    console.log("[AUTH] No token available, returning 401");
-    // Zwróć odpowiedź z błędem zamiast rzucać wyjątek
-    // To pozwala komponentom obsłużyć błąd 401 gracefully
     return new Response(
       JSON.stringify({ message: "Brak autoryzacji. Zaloguj się ponownie." }),
       {
@@ -106,29 +75,14 @@ async function authenticatedFetch(url: string, options: RequestInit = {}): Promi
     headers,
   });
 
-  // Nie loguj requestów do /api/auth/token podczas wylogowania (to jest normalne)
-  if (!isTokenRequest || response.status !== 401) {
-    console.log("[AUTH] Response status for", url, ":", response.status);
-  }
-
-  // Nie logujemy 401 jako błąd - to normalne podczas wylogowania
   if (!response.ok && response.status === 401) {
-    if (!isTokenRequest) {
-      console.log("[AUTH] 401 response, clearing token cache");
-    }
-    // Wyczyść cache tokena przy 401
     tokenCache = null;
-  }
-
-  if (response.status === 429) {
-    console.error("[AUTH] 429 Too Many Requests for:", url);
   }
 
   return response;
 }
 
 export async function getShifts(): Promise<Shift[]> {
-  // userId jest teraz z tokena, nie z query - BEZPIECZNIE
   const res = await authenticatedFetch(`${API_URL}/shifts`);
   if (!res.ok) {
     const error = await res.json();
@@ -138,7 +92,6 @@ export async function getShifts(): Promise<Shift[]> {
 }
 
 export async function claimShift(shiftId: string): Promise<Shift> {
-  // userId jest teraz z tokena, nie z body - BEZPIECZNIE
   const res = await authenticatedFetch(`${API_URL}/shifts/${shiftId}/claim`, {
     method: "POST",
   });
@@ -151,7 +104,6 @@ export async function claimShift(shiftId: string): Promise<Shift> {
 }
 
 export async function releaseShift(shiftId: string): Promise<Shift> {
-  // userId jest teraz z tokena, nie z body - BEZPIECZNIE
   const res = await authenticatedFetch(`${API_URL}/shifts/${shiftId}/release`, {
     method: "PATCH",
   });
@@ -193,7 +145,6 @@ export interface PrivateUser extends PublicUser {
 }
 
 export async function createTeam(name: string) {
-  // userId jest teraz z tokena - BEZPIECZNIE
   const res = await authenticatedFetch(`${API_URL}/shifts/teams`, {
     method: "POST",
     body: JSON.stringify({ name }),
@@ -207,7 +158,6 @@ export async function createTeam(name: string) {
 }
 
 export async function joinTeam(code: string) {
-  // userId jest teraz z tokena - BEZPIECZNIE
   const res = await authenticatedFetch(`${API_URL}/shifts/teams/join`, {
     method: "POST",
     body: JSON.stringify({ code }),
@@ -220,7 +170,6 @@ export async function joinTeam(code: string) {
 }
 
 export async function getTeamMembers(): Promise<User[]> {
-  // userId jest teraz z tokena - BEZPIECZNIE
   const res = await authenticatedFetch(`${API_URL}/shifts/team/members`);
   if (!res.ok) {
     const error = await res.json();
@@ -230,7 +179,6 @@ export async function getTeamMembers(): Promise<User[]> {
 }
 
 export async function updateUserProfile(name: string, phoneNumber: string) {
-  // userId jest teraz z tokena - BEZPIECZNIE
   const res = await authenticatedFetch(`${API_URL}/shifts/users/me`, {
     method: "PATCH",
     body: JSON.stringify({ name, phoneNumber }),
@@ -304,7 +252,6 @@ export async function createShadowProfile(data: CreateShadowProfileDto) {
 }
 
 export async function updateEmployeeSkills(targetId: string, skills: string[]) {
-  // requesterId jest teraz z tokena - BEZPIECZNIE
   const res = await authenticatedFetch(`${API_URL}/shifts/teams/members/${targetId}`, {
     method: "PATCH",
     body: JSON.stringify({ skills }),
@@ -317,8 +264,8 @@ export async function updateEmployeeSkills(targetId: string, skills: string[]) {
 }
 
 export interface CreateShiftInput {
-  startTime: string; // ISO string
-  endTime: string; // ISO string
+  startTime: string;
+  endTime: string;
   roleName: string;
   status?: "DRAFT" | "PUBLISHED" | "COMPLETED";
 }
@@ -343,10 +290,8 @@ export async function getMyMembershipStatus(): Promise<{ status: string }> {
     throw new Error(error.message || "Błąd pobierania statusu członkostwa");
   }
   const data = await res.json();
-  return data; // Backend zwraca { status: "PENDING" | "ACTIVE" | ... }
+  return data;
 }
-
-// --- MEMBERSHIP / PENDING ---
 
 export type MembershipStatus = "PENDING" | "ACTIVE" | "REJECTED" | "LEFT";
 
@@ -390,8 +335,6 @@ export async function rejectPending(membershipId: string) {
   }
   return res.json();
 }
-
-// --- PASSWORD RESET ---
 
 export async function requestPasswordReset(email: string) {
   const res = await fetch(`${API_URL}/auth/request-reset`, {

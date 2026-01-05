@@ -26,7 +26,6 @@ export function DashboardLayout({ children, userRole, userName, userAvatar, onLo
 
   return (
     <div className="flex h-screen bg-slate-50 overflow-hidden">
-      {/* SIDEBAR (LEWY PANEL) */}
       <aside className="w-64 bg-slate-900 text-slate-300 flex flex-col hidden md:flex shadow-xl">
         <div className="p-6 border-b border-slate-800">
           <h1 className="text-xl font-bold text-white tracking-wider">ShiftApp <span className="text-blue-500">B2B</span></h1>
@@ -49,9 +48,6 @@ export function DashboardLayout({ children, userRole, userName, userAvatar, onLo
               <Users className="mr-2 h-4 w-4" /> Zespół
             </Link>
           </Button>
-          
-          {/* Elementy administracyjne - tylko dla OWNER/MANAGER */}
-          {/* TODO: Stworzyć stronę /settings w przyszłości - na razie wyłączone */}
           
           {/* Profil - dostępny dla wszystkich */}
           <div className="pt-4 mt-4 border-t border-slate-800">
@@ -81,15 +77,12 @@ export function DashboardLayout({ children, userRole, userName, userAvatar, onLo
         </div>
       </aside>
 
-      {/* MAIN CONTENT (PRAWA STRONA) */}
       <main className="flex-1 overflow-auto relative flex flex-col">
-        {/* Mobile Header */}
         <header className="md:hidden bg-slate-900 text-white p-4 flex justify-between items-center">
           <span className="font-bold">ShiftApp</span>
           <Button size="sm" variant="ghost" onClick={onLogout}><LogOut className="h-4 w-4" /></Button>
         </header>
 
-        {/* Content właściwy - wstrzykiwany tutaj */}
         <div className="flex-1 p-6 md:p-10">
           {children}
         </div>

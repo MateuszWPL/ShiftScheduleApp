@@ -26,7 +26,7 @@ export class UsersController {
     return this.usersService.createShadowProfile(user.teamId, createDto);
   }
 
-  @SkipThrottle() // GET endpointy są bezpieczne (autentykowane) i często używane
+  @SkipThrottle()
   @Get()
   async findAll(@CurrentUser() user: CurrentUserType) {
     if (!user.teamId) {
@@ -35,7 +35,7 @@ export class UsersController {
     return this.usersService.findAll(user.teamId, user.role);
   }
 
-  @SkipThrottle() // GET endpointy są bezpieczne (autentykowane) i często używane
+  @SkipThrottle()
   @Get('me')
   async getMyProfile(@CurrentUser() user: CurrentUserType) {
     return this.usersService.findOne(user.userId, user.role, user.teamId);
@@ -49,7 +49,7 @@ export class UsersController {
     return this.usersService.updateProfile(user.userId, updateDto);
   }
 
-  @SkipThrottle() // GET endpointy są bezpieczne (autentykowane) i często używane
+  @SkipThrottle()
   @Get(':id')
   async findOne(
     @Param('id') id: string,

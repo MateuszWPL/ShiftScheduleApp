@@ -62,17 +62,14 @@ export const authOptions: NextAuthOptions = {
   // Tajny klucz do szyfrowania ciasteczek
   secret: process.env.NEXTAUTH_SECRET,
   session: {
-    strategy: "jwt", // Używamy JWT strategy zamiast database sessions
+    strategy: "jwt",
   },
   callbacks: {
-    // Dodajemy userId do tokena (będzie dostępny w session)
     async jwt({ token, user, account }) {
       if (user) {
-        // Po pierwszym logowaniu
         token.email = user.email;
         token.name = user.name;
         
-        // Jeśli to logowanie przez Credentials (email+hasło), mamy accessToken
         if ((user as any).accessToken) {
           token.accessToken = (user as any).accessToken;
         }
@@ -80,15 +77,12 @@ export const authOptions: NextAuthOptions = {
       return token;
     },
     async session({ session, token }) {
-      // Dodajemy token do session, żeby frontend mógł go użyć
       if (token) {
         session.user = {
           ...session.user,
           email: token.email as string,
           name: token.name as string,
         };
-        // Token JWT będzie dostępny przez endpoint /api/auth/token
-        // Dla Credentials mamy już token w accessToken
         if (token.accessToken) {
           (session as any).accessToken = token.accessToken;
         }
