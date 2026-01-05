@@ -6,15 +6,17 @@ import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useSession, signOut } from "next-auth/react";
+import { useSession } from "next-auth/react";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { Card } from "@/components/ui/card";
 import { Lock, User as UserIcon, Phone, Mail, DollarSign, Clock } from "lucide-react";
+import { useLogout } from "@/hooks/useLogout";
 
 export default function ProfilePage() {
   const { data: session } = useSession();
   const queryClient = useQueryClient();
+  const logout = useLogout();
   const [isEditing, setIsEditing] = useState(false);
   const [phoneNumber, setPhoneNumber] = useState("");
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
@@ -70,7 +72,7 @@ export default function ProfilePage() {
         userRole={undefined}
         userName={undefined}
         userAvatar={null}
-        onLogout={() => signOut()}
+        onLogout={logout}
       >
         <div className="flex items-center justify-center h-full">
           <div className="animate-spin h-8 w-8 border-4 border-gray-300 border-t-blue-500 rounded-full" />
@@ -93,7 +95,7 @@ export default function ProfilePage() {
         userRole={undefined}
         userName={undefined}
         userAvatar={null}
-        onLogout={() => signOut()}
+        onLogout={logout}
       >
         <div className="text-center">Błąd ładowania profilu</div>
       </DashboardLayout>
@@ -107,7 +109,7 @@ export default function ProfilePage() {
       userRole={user.role}
       userName={user.name}
       userAvatar={user.avatarUrl}
-      onLogout={() => signOut()}
+      onLogout={logout}
     >
       <div className="max-w-4xl mx-auto space-y-6">
         <div className="flex items-center justify-between">

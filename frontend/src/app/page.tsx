@@ -6,7 +6,7 @@ import { ShiftCard } from "@/components/ShiftCard";
 import { OnboardingView } from "@/components/onboarding/OnboardingView";
 import { TeamList } from "@/components/dashboard/TeamList";
 import { DashboardLayout } from "@/components/layout/DashboardLayout"; // NOWY LAYOUT
-import { useSession, signIn, signOut } from "next-auth/react";
+import { useSession, signIn } from "next-auth/react";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { EditProfileDialog } from "@/components/dashboard/EditProfileDialog";
@@ -14,30 +14,51 @@ import { CreateShiftDialog } from "@/components/dashboard/CreateShiftDialog";
 import { Chrome } from "lucide-react";
 import { PendingList } from "@/components/dashboard/PendingList";
 import { PendingView } from "@/components/onboarding/PendingView";
-import { getMyMembershipStatus } from "@/lib/api";
+import { getMyMembershipStatus, clearAuthTokenCache } from "@/lib/api";
 import { LoginPage } from "@/components/auth/LoginPage";
 import { UnverifiedView } from "@/components/auth/UnverifiedView";
 import { Navbar } from "@/components/layout/Navbar";
+import { useLogout } from "@/hooks/useLogout";
 
 export default function Home() {
   const { data: session } = useSession();
   const [authMode, setAuthMode] = useState<"login" | "register" | "reset" | undefined>(undefined);
   const queryClient = useQueryClient();
+  const logout = useLogout();
   const [dbUser, setDbUser] = useState<any>(null);
   const [isSyncingUser, setIsSyncingUser] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isCreateShiftOpen, setIsCreateShiftOpen] = useState(false);
   const [membershipStatus, setMembershipStatus] = useState<string | null>(null);
+  const [lastSyncedEmail, setLastSyncedEmail] = useState<string | null>(null);
+
+  // Czyszczenie stanu gdy użytkownik się wylogowuje
+  useEffect(() => {
+    if (!session) {
+      setDbUser(null);
+      setMembershipStatus(null);
+      setLastSyncedEmail(null);
+      clearAuthTokenCache();
+      queryClient.clear(); // Wyczyść cały cache React Query
+    }
+  }, [session, queryClient]);
 
   // Sync User i sprawdź membership status
   useEffect(() => {
     if (session?.user?.email) {
       const { email, name } = session.user;
+      
+      // Nie synchronizuj ponownie jeśli już zsynchronizowaliśmy tego użytkownika
+      if (lastSyncedEmail === email && dbUser) {
+        return;
+      }
+
       setIsSyncingUser(true);
       fetch(`${API_URL}/shifts/users/sync?email=${encodeURIComponent(email)}&name=${encodeURIComponent(name || "")}`)
         .then(res => res.json())
         .then(async (user) => {
           setDbUser(user);
+          setLastSyncedEmail(email);
           // Sprawdź membership status jeśli user ma teamId
           if (user.teamId) {
             try {
@@ -49,12 +70,14 @@ export default function Home() {
               // Jeśli błąd, zakładamy ACTIVE (stary user bez membership = ACTIVE)
               setMembershipStatus("ACTIVE");
             }
+          } else {
+            setMembershipStatus(null);
           }
           queryClient.invalidateQueries({ queryKey: ["shifts"] });
         })
         .finally(() => setIsSyncingUser(false));
     }
-  }, [session, queryClient]);
+  }, [session?.user?.email, lastSyncedEmail, dbUser, queryClient]);
 
   // Pobieranie zmian
   const { data: shifts, isLoading } = useQuery({
@@ -126,7 +149,7 @@ export default function Home() {
             setMembershipStatus("PENDING");
           }
         }}
-        onLogout={() => signOut()}
+        onLogout={logout}
       />
     );
   }
@@ -139,7 +162,7 @@ export default function Home() {
     return (
       <PendingView
         userName={dbUser.name || "Użytkownik"}
-        onLogout={() => signOut()}
+        onLogout={logout}
       />
     );
   }

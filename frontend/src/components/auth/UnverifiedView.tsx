@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { ResendVerificationButton } from "./ResendVerificationButton";
-import { signOut } from "next-auth/react";
+import { useLogout } from "@/hooks/useLogout";
 
 interface UnverifiedViewProps {
   email: string;
@@ -10,6 +10,8 @@ interface UnverifiedViewProps {
 }
 
 export function UnverifiedView({ email, userName }: UnverifiedViewProps) {
+  const logout = useLogout();
+
   return (
     <div className="flex h-screen items-center justify-center bg-slate-100">
       <div className="max-w-md w-full p-8 bg-white rounded-xl shadow-lg text-center space-y-6">
@@ -40,7 +42,7 @@ export function UnverifiedView({ email, userName }: UnverifiedViewProps) {
 
         <div className="space-y-3">
           <ResendVerificationButton email={email} />
-          <Button variant="outline" className="w-full" onClick={() => signOut()}>
+          <Button variant="outline" className="w-full" onClick={logout}>
             Wyloguj się
           </Button>
         </div>
