@@ -29,8 +29,8 @@ export default function ProfilePage() {
     queryFn: getMyProfile,
     enabled: !!session,
     retry: false,
-    refetchOnWindowFocus: true,
-    refetchOnMount: true,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
   });
 
   useEffect(() => {

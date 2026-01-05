@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { getShifts, claimShift, releaseShift, Shift, API_URL, getAvatarUrl } from "@/lib/api";
+import { getShifts, claimShift, releaseShift, Shift, API_URL, getAvatarUrl, getMyProfile } from "@/lib/api";
 import { ShiftCard } from "@/components/ShiftCard";
 import { OnboardingView } from "@/components/onboarding/OnboardingView";
 import { TeamList } from "@/components/dashboard/TeamList";
@@ -88,6 +88,8 @@ export default function Home() {
             }
           }
           queryClient.invalidateQueries({ queryKey: ["shifts"] });
+          // Po sync, pobierz najnowsze dane z profilu
+          queryClient.invalidateQueries({ queryKey: ["my-profile"] });
         })
         .catch((err) => {
           clearTimeout(timeoutId);
@@ -101,7 +103,21 @@ export default function Home() {
           setIsSyncingUser(false);
         });
     }
-  }, [session?.user?.email, lastSyncedEmail, dbUser, queryClient, isSyncingUser, membershipStatus]);
+  }, [session?.user?.email, lastSyncedEmail, queryClient]);
+
+  // Pobierz dane użytkownika z React Query (synchronizacja z profile page)
+  const { data: myProfile } = useQuery({
+    queryKey: ["my-profile"],
+    queryFn: getMyProfile,
+    enabled: !!session && !!dbUser?.teamId,
+    retry: false,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+  });
+
+  // Użyj myProfile jeśli jest dostępny, w przeciwnym razie dbUser
+  // myProfile ma priorytet bo zawiera najnowsze dane z profilu
+  const currentUser = myProfile || dbUser;
 
   const { data: shifts, isLoading } = useQuery({
     queryKey: ["shifts", dbUser?.id],
@@ -184,9 +200,9 @@ export default function Home() {
 
   return (
       <DashboardLayout
-        userRole={dbUser?.role}
-        userName={dbUser?.name}
-        userAvatar={getAvatarUrl(dbUser?.avatarUrl) || null}
+        userRole={currentUser?.role || dbUser?.role}
+        userName={currentUser?.name || dbUser?.name}
+        userAvatar={getAvatarUrl(currentUser?.avatarUrl || dbUser?.avatarUrl) || null}
         onLogout={logout}
       >
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -195,8 +211,8 @@ export default function Home() {
           <div className="bg-white p-5 rounded-lg shadow-sm border">
             <div className="flex justify-between items-start mb-4">
               <div>
-                <h2 className="font-bold text-xl text-slate-900">{dbUser?.name}</h2>
-                <p className="text-sm text-gray-500">{dbUser?.phoneNumber || "Dodaj telefon..."}</p>
+                <h2 className="font-bold text-xl text-slate-900">{currentUser?.name || dbUser?.name}</h2>
+                <p className="text-sm text-gray-500">{"phoneNumber" in (currentUser || {}) ? (currentUser as any)?.phoneNumber : dbUser?.phoneNumber || "Dodaj telefon..."}</p>
                 <div className="flex flex-wrap gap-1 mt-2">
                   {dbUser?.skills?.map((s: string) => (
                     <span key={s} className="text-xs bg-gray-100 px-2 py-1 rounded">{s}</span>
