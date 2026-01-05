@@ -57,7 +57,7 @@ export class ShiftsController {
   }
 
   @Public() // Publiczny endpoint - używany do pierwszego sync usera przed autentykacją
-  @Throttle({ default: { limit: 10, ttl: 60000 } }) // 10 synców na minutę (publiczny endpoint)
+  @Throttle({ default: { limit: 30, ttl: 60000 } }) // 30 synców na minutę (zwiększone, bo jest wywoływany z dwóch miejsc: token endpoint + page.tsx)
   @Get('users/sync')
   async syncUser(@Query() query: SyncUserDto) {
     // Walidacja przez DTO (email, name)

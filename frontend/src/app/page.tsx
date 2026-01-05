@@ -54,15 +54,34 @@ export default function Home() {
         return;
       }
 
+      // OPTYMALIZACJA: Dodaj flagę żeby uniknąć wielokrotnych wywołań podczas renderowania
+      if (isSyncingUser) {
+        console.log("[DEBUG] Sync already in progress, skipping");
+        return;
+      }
+
       console.log("[DEBUG] Starting user sync for:", email);
       setIsSyncingUser(true);
+      
+      // Dodaj timeout żeby uniknąć zawieszenia
+      const timeoutId = setTimeout(() => {
+        console.error("[DEBUG] Sync timeout - taking too long");
+        setIsSyncingUser(false);
+      }, 10000); // 10 sekund timeout
       
       fetch(`${API_URL}/shifts/users/sync?email=${encodeURIComponent(email)}&name=${encodeURIComponent(name || "")}`)
         .then(res => {
           console.log("[DEBUG] Sync response status:", res.status);
+          if (res.status === 429) {
+            throw new Error("Too many requests - please wait a moment");
+          }
+          if (!res.ok) {
+            throw new Error(`Sync failed with status ${res.status}`);
+          }
           return res.json();
         })
         .then(async (user) => {
+          clearTimeout(timeoutId);
           console.log("[DEBUG] User synced:", { id: user.id, teamId: user.teamId, email: user.email });
           setDbUser(user);
           setLastSyncedEmail(email);
@@ -95,14 +114,22 @@ export default function Home() {
           queryClient.invalidateQueries({ queryKey: ["shifts"] });
         })
         .catch((err) => {
+          clearTimeout(timeoutId);
           console.error("[DEBUG] Error during sync:", err);
+          // Jeśli 429, poczekaj chwilę przed ponowną próbą
+          if (err.message.includes("429") || err.message.includes("Too many requests")) {
+            console.log("[DEBUG] Rate limited - will retry after delay");
+            setTimeout(() => {
+              setLastSyncedEmail(null); // Reset żeby móc spróbować ponownie
+            }, 5000); // 5 sekund opóźnienia
+          }
         })
         .finally(() => {
           setIsSyncingUser(false);
           console.log("[DEBUG] Sync completed");
         });
     }
-  }, [session?.user?.email, lastSyncedEmail, dbUser, queryClient]);
+  }, [session?.user?.email, lastSyncedEmail, dbUser, queryClient, isSyncingUser, membershipStatus]);
 
   // Pobieranie zmian
   const { data: shifts, isLoading } = useQuery({
