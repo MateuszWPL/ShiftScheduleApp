@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { getTeamMembers, getMyProfile, User, PrivateUser } from "@/lib/api";
+import { getTeamMembers, getMyProfile, User, PrivateUser, getAvatarUrl } from "@/lib/api";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -44,7 +44,7 @@ export default function TeamPage() {
       <DashboardLayout
         userRole={profile?.role}
         userName={profile?.name}
-        userAvatar={(profile as any)?.avatarUrl || null}
+        userAvatar={getAvatarUrl((profile as any)?.avatarUrl) || null}
         onLogout={logout}
       >
         <div className="flex items-center justify-center h-full">
@@ -60,7 +60,7 @@ export default function TeamPage() {
     <DashboardLayout
       userRole={user?.role}
       userName={user?.name}
-      userAvatar={user?.avatarUrl || null}
+      userAvatar={getAvatarUrl(user?.avatarUrl) || null}
       onLogout={logout}
     >
       <div className="max-w-6xl mx-auto space-y-6">
@@ -93,7 +93,7 @@ export default function TeamPage() {
               <Card key={member.id} className="p-5 hover:shadow-md transition-shadow">
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex items-center gap-3">
-                    <Avatar src={member.avatarUrl || undefined} name={member.name} size="md" />
+                    <Avatar src={getAvatarUrl(member.avatarUrl) || undefined} name={member.name} size="md" />
                     <div>
                       <div className="flex items-center gap-2">
                         <h3 className="font-semibold text-lg">{member.name}</h3>

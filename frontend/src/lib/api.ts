@@ -1,5 +1,22 @@
 export const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
 
+// Helper function do budowania pełnego URL dla avatara
+export function getAvatarUrl(avatarUrl?: string | null): string | undefined {
+  if (!avatarUrl) return undefined;
+  
+  // Jeśli już jest pełny URL (http/https), zwróć jak jest
+  if (avatarUrl.startsWith('http://') || avatarUrl.startsWith('https://')) {
+    return avatarUrl;
+  }
+  
+  // Jeśli jest względną ścieżką, dodaj API_URL
+  if (avatarUrl.startsWith('/')) {
+    return `${API_URL}${avatarUrl}`;
+  }
+  
+  return avatarUrl;
+}
+
 export interface Shift {
   id: string;
   startTime: string;

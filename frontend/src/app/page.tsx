@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { getShifts, claimShift, releaseShift, Shift, API_URL } from "@/lib/api";
+import { getShifts, claimShift, releaseShift, Shift, API_URL, getAvatarUrl } from "@/lib/api";
 import { ShiftCard } from "@/components/ShiftCard";
 import { OnboardingView } from "@/components/onboarding/OnboardingView";
 import { TeamList } from "@/components/dashboard/TeamList";
@@ -183,12 +183,12 @@ export default function Home() {
   }
 
   return (
-    <DashboardLayout 
-      userRole={dbUser?.role} 
-      userName={dbUser?.name}
-      userAvatar={dbUser?.avatarUrl}
-      onLogout={logout}
-    >
+      <DashboardLayout
+        userRole={dbUser?.role}
+        userName={dbUser?.name}
+        userAvatar={getAvatarUrl(dbUser?.avatarUrl) || null}
+        onLogout={logout}
+      >
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
         <div className="space-y-6">

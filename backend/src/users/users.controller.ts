@@ -8,12 +8,16 @@ import { Roles } from '../auth/decorators/roles.decorator';
 import { CurrentUser, CurrentUser as CurrentUserType } from '../auth/decorators/user.decorator';
 import { CreateShadowProfileDto } from './dto/create-shadow-profile.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
-import { FileUploadInterceptor } from './interceptors/file-upload.interceptor';
+import { CloudinaryService } from '../cloudinary/cloudinary.service';
+import { memoryStorage } from 'multer';
 
 @Controller('users')
 @UseGuards(JwtAuthGuard)
 export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(
+    private readonly usersService: UsersService,
+    private readonly cloudinaryService: CloudinaryService,
+  ) {}
 
   @Post('shadow-profile')
   @UseGuards(RolesGuard)
@@ -52,7 +56,23 @@ export class UsersController {
   }
 
   @Post('me/avatar')
-  @UseInterceptors(FileInterceptor('avatar', FileUploadInterceptor.MulterOptions))
+  @UseInterceptors(
+    FileInterceptor('avatar', {
+      storage: memoryStorage(),
+      limits: {
+        fileSize: 5 * 1024 * 1024, // 5MB
+      },
+      fileFilter: (req, file, cb) => {
+        if (!file.mimetype.match(/\/(jpg|jpeg|png|gif|webp)$/)) {
+          return cb(
+            new BadRequestException('Tylko pliki obrazów (JPG, PNG, GIF, WEBP) są dozwolone'),
+            false,
+          );
+        }
+        cb(null, true);
+      },
+    }),
+  )
   async uploadAvatar(
     @UploadedFile() file: Express.Multer.File,
     @CurrentUser() user: CurrentUserType,
@@ -61,12 +81,18 @@ export class UsersController {
       throw new BadRequestException('Brak pliku do uploadu');
     }
 
-    // Zwracamy pełny URL do avatara
-    const baseUrl = process.env.API_URL || 'http://localhost:3001';
-    const avatarUrl = `${baseUrl}/uploads/avatars/${file.filename}`;
-    return this.usersService.updateProfile(user.userId, { avatarUrl });
+    try {
+      // Upload do Cloudinary
+      const result = await this.cloudinaryService.uploadImage(file, 'avatars');
+      
+      // Zaktualizuj profil użytkownika z URL z Cloudinary
+      return this.usersService.updateProfile(user.userId, {
+        avatarUrl: result.secure_url,
+      });
+    } catch (error) {
+      throw new BadRequestException('Błąd podczas wgrywania zdjęcia: ' + (error as Error).message);
+    }
   }
-
 
   @SkipThrottle()
   @Get(':id')

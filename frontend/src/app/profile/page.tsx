@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { getMyProfile, uploadAvatar, updateUserProfile, User } from "@/lib/api";
+import { getMyProfile, uploadAvatar, updateUserProfile, User, getAvatarUrl } from "@/lib/api";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -160,7 +160,7 @@ export default function ProfilePage() {
     <DashboardLayout
       userRole={user.role}
       userName={user.name}
-      userAvatar={user.avatarUrl}
+      userAvatar={getAvatarUrl(user.avatarUrl) || null}
       onLogout={logout}
     >
       <div className="max-w-4xl mx-auto space-y-6">
@@ -176,7 +176,7 @@ export default function ProfilePage() {
             <div className="flex-shrink-0">
               <div className="relative">
                 <Avatar 
-                  src={avatarPreview || user.avatarUrl || undefined} 
+                  src={avatarPreview || getAvatarUrl(user.avatarUrl) || undefined} 
                   name={user.name} 
                   size="xl" 
                 />

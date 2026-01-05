@@ -7,6 +7,7 @@ import { PrismaModule } from './prisma/prisma.module';
 import { ShiftsModule } from './shifts/shifts.module';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
+import { CloudinaryModule } from './cloudinary/cloudinary.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { UsersModule } from './users/users.module';
     ShiftsModule,
     AuthModule,
     UsersModule,
+    CloudinaryModule,
   ],
   controllers: [AppController],
   providers: [
