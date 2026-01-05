@@ -1,4 +1,5 @@
 import { Controller, Get, Post, Body, Param, Patch, Query, UseGuards } from '@nestjs/common';
+import { SkipThrottle, Throttle } from '@nestjs/throttler';
 import { ShiftsService } from './shifts.service';
 import { JwtAuthGuard } from '../auth/auth.guard';
 import { CurrentUser, CurrentUser as User } from '../auth/decorators/user.decorator';
@@ -16,6 +17,7 @@ import { ShiftIdParamDto, TargetIdParamDto, MembershipIdParamDto } from './dto/p
 export class ShiftsController {
   constructor(private readonly shiftsService: ShiftsService) {}
 
+  @SkipThrottle() // GET endpointy są bezpieczne (autentykowane) i często używane
   @Get()
   findAll(@CurrentUser() user: User) {
     // userId jest teraz z tokena, nie z query - BEZPIECZNIE
@@ -47,6 +49,7 @@ export class ShiftsController {
     return this.shiftsService.releaseShift(params.id, user.userId);
   }
 
+  @SkipThrottle() // GET endpointy są bezpieczne (autentykowane) i często używane
   @Get('users/all')
   getAllUsers() {
     // TODO: Może powinno być ograniczone do teamu? Na razie zostawiamy
@@ -54,9 +57,9 @@ export class ShiftsController {
   }
 
   @Public() // Publiczny endpoint - używany do pierwszego sync usera przed autentykacją
+  @Throttle({ default: { limit: 10, ttl: 60000 } }) // 10 synców na minutę (publiczny endpoint)
   @Get('users/sync')
   async syncUser(@Query() query: SyncUserDto) {
-    // UWAGA: Ten endpoint jest publiczny, ale powinien być chroniony przez rate limiting w produkcji
     // Walidacja przez DTO (email, name)
     return this.shiftsService.syncUserByEmail(query.email, query.name || '');
   }
@@ -76,6 +79,7 @@ export class ShiftsController {
   }
 
   // Lista oczekujących (PENDING) - tylko dla OWNER/MANAGER
+  @SkipThrottle() // GET endpointy są bezpieczne (autentykowane) i często używane
   @Get('teams/pending')
   getPending(@CurrentUser() user: User) {
     return this.shiftsService.getPendingMembers(user.userId);
@@ -91,12 +95,14 @@ export class ShiftsController {
     return this.shiftsService.rejectMember(user.userId, params.membershipId);
   }
 
+  @SkipThrottle() // GET endpointy są bezpieczne (autentykowane) i często używane
   @Get('team/members')
   getTeamMembers(@CurrentUser() user: User) {
     // userId z tokena - BEZPIECZNIE
     return this.shiftsService.getTeamMembers(user.userId);
   }
 
+  @SkipThrottle() // GET endpointy są bezpieczne (autentykowane) i często używane
   @Get('teams/my-membership')
   getMyMembershipStatus(@CurrentUser() user: User) {
     // Zwraca status membership użytkownika (PENDING, ACTIVE, etc.)

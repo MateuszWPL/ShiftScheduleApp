@@ -1,4 +1,5 @@
 import { Controller, Get, Post, Body, Param, Patch, UseGuards, BadRequestException } from '@nestjs/common';
+import { SkipThrottle } from '@nestjs/throttler';
 import { UsersService } from './users.service';
 import { JwtAuthGuard } from '../auth/auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
@@ -25,6 +26,7 @@ export class UsersController {
     return this.usersService.createShadowProfile(user.teamId, createDto);
   }
 
+  @SkipThrottle() // GET endpointy są bezpieczne (autentykowane) i często używane
   @Get()
   async findAll(@CurrentUser() user: CurrentUserType) {
     if (!user.teamId) {
@@ -33,6 +35,7 @@ export class UsersController {
     return this.usersService.findAll(user.teamId, user.role);
   }
 
+  @SkipThrottle() // GET endpointy są bezpieczne (autentykowane) i często używane
   @Get('me')
   async getMyProfile(@CurrentUser() user: CurrentUserType) {
     return this.usersService.findOne(user.userId, user.role, user.teamId);
@@ -46,6 +49,7 @@ export class UsersController {
     return this.usersService.updateProfile(user.userId, updateDto);
   }
 
+  @SkipThrottle() // GET endpointy są bezpieczne (autentykowane) i często używane
   @Get(':id')
   async findOne(
     @Param('id') id: string,

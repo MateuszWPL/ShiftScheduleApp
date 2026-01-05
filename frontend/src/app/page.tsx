@@ -68,18 +68,25 @@ export default function Home() {
           setLastSyncedEmail(email);
           
           // Sprawdź membership status jeśli user ma teamId
+          // OPTYMALIZACJA: Sprawdź status tylko jeśli nie mamy go już zapisanego lub jeśli teamId się zmieniło
           if (user.teamId) {
-            try {
-              console.log("[DEBUG] Checking membership status for teamId:", user.teamId);
-              const statusData = await getMyMembershipStatus();
-              // Backend zwraca { status: "PENDING" | "ACTIVE" | ... }
-              const status = statusData.status || "ACTIVE";
-              console.log("[DEBUG] Membership status:", status);
-              setMembershipStatus(status);
-            } catch (err) {
-              console.error("[DEBUG] Error getting membership status:", err);
-              // Jeśli błąd, zakładamy ACTIVE (stary user bez membership = ACTIVE)
-              setMembershipStatus("ACTIVE");
+            // Jeśli już mamy status i teamId się nie zmieniło, nie sprawdzaj ponownie
+            const previousTeamId = dbUser?.teamId;
+            if (membershipStatus && user.teamId === previousTeamId) {
+              console.log("[DEBUG] Using cached membership status:", membershipStatus);
+            } else {
+              try {
+                console.log("[DEBUG] Checking membership status for teamId:", user.teamId);
+                const statusData = await getMyMembershipStatus();
+                // Backend zwraca { status: "PENDING" | "ACTIVE" | ... }
+                const status = statusData.status || "ACTIVE";
+                console.log("[DEBUG] Membership status:", status);
+                setMembershipStatus(status);
+              } catch (err) {
+                console.error("[DEBUG] Error getting membership status:", err);
+                // Jeśli błąd, zakładamy ACTIVE (stary user bez membership = ACTIVE)
+                setMembershipStatus("ACTIVE");
+              }
             }
           } else {
             console.log("[DEBUG] No teamId, setting membershipStatus to null");
