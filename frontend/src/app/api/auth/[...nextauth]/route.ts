@@ -4,7 +4,6 @@ import CredentialsProvider from "next-auth/providers/credentials";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
 
-// Eksportujemy authOptions, żeby móc go użyć w innych miejscach (np. getServerSession)
 export const authOptions: NextAuthOptions = {
   providers: [
     GoogleProvider({
@@ -12,7 +11,7 @@ export const authOptions: NextAuthOptions = {
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
       authorization: {
         params: {
-          prompt: "select_account", // Wymusza wybór konta przy każdym logowaniu
+          prompt: "select_account",
         },
       },
     }),
@@ -46,12 +45,11 @@ export const authOptions: NextAuthOptions = {
 
           const data = await res.json();
           
-          // Zwracamy dane użytkownika dla NextAuth
           return {
             id: data.user.id,
             email: data.user.email,
             name: data.user.name,
-            accessToken: data.access_token, // Zapisujemy token do użycia w callback
+            accessToken: data.access_token,
           };
         } catch (error: any) {
           throw new Error(error.message || "Błąd logowania");
@@ -59,7 +57,6 @@ export const authOptions: NextAuthOptions = {
       },
     }),
   ],
-  // Tajny klucz do szyfrowania ciasteczek
   secret: process.env.NEXTAUTH_SECRET,
   session: {
     strategy: "jwt",

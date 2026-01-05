@@ -11,52 +11,24 @@ export interface Shift {
 }
 
 let tokenCache: { token: string; expiresAt: number } | null = null;
-let isLoggingOut = false;
 
 export function clearAuthTokenCache() {
   tokenCache = null;
 }
 
-export function setLoggingOut(value: boolean) {
-  isLoggingOut = value;
-}
-
 async function getAuthToken(): Promise<string | null> {
-  // Jeśli trwa wylogowywanie, nie próbuj pobierać tokena
-  if (isLoggingOut) {
-    return null;
-  }
-
-  if (isSessionExpired()) {
-    tokenCache = null;
-    return null;
-  }
-
   if (tokenCache && tokenCache.expiresAt > Date.now()) {
     return tokenCache.token;
   }
 
   try {
-    // Sprawdzamy ponownie czy nie trwa wylogowywanie przed wykonaniem fetch
-    if (isLoggingOut) {
-      return null;
-    }
-    
     const res = await fetch("/api/auth/token", {
       credentials: "include",
     });
     
-    // Sprawdzamy ponownie po fetch (może się zmienić podczas wykonywania)
-    if (isLoggingOut) {
-      return null;
-    }
-    
     if (!res.ok) {
       if (res.status === 401) {
         tokenCache = null;
-        // Cicho zwracamy null - nie logujemy błędu do konsoli
-        // ponieważ może to być normalna sytuacja podczas wylogowywania
-        return null;
       }
       return null;
     }
@@ -73,46 +45,11 @@ async function getAuthToken(): Promise<string | null> {
     
     return token;
   } catch (error) {
-    // Cicho obsługujemy błędy - nie logujemy do konsoli
-    // ponieważ może to być normalna sytuacja podczas wylogowywania
     return null;
   }
 }
 
-function isSessionExpired(): boolean {
-  if (typeof window === 'undefined') return false;
-  const cookies = document.cookie;
-  const hasSessionToken = cookies.includes('next-auth.session-token') || 
-                          cookies.includes('__Secure-next-auth.session-token') ||
-                          cookies.includes('authjs.session-token') ||
-                          cookies.includes('__Secure-authjs.session-token');
-  return !hasSessionToken;
-}
-
 async function authenticatedFetch(url: string, options: RequestInit = {}): Promise<Response> {
-  // Jeśli trwa wylogowywanie, nie wykonuj zapytań
-  if (isLoggingOut) {
-    return new Response(
-      JSON.stringify({ message: "Wylogowywanie..." }),
-      {
-        status: 499, // Client Closed Request
-        statusText: "Request Aborted",
-        headers: { "Content-Type": "application/json" },
-      }
-    );
-  }
-
-  if (isSessionExpired()) {
-    tokenCache = null;
-    return new Response(
-      JSON.stringify({ message: "Brak autoryzacji. Zaloguj się ponownie." }),
-      {
-        status: 401,
-        statusText: "Unauthorized",
-        headers: { "Content-Type": "application/json" },
-      }
-    );
-  }
 
   const token = await getAuthToken();
   
@@ -345,7 +282,6 @@ export async function createShift(data: CreateShiftInput): Promise<Shift> {
   return res.json();
 }
 
-// Sprawdź status membership użytkownika
 export async function getMyMembershipStatus(): Promise<{ status: string }> {
   const res = await authenticatedFetch(`${API_URL}/shifts/teams/my-membership`);
   if (!res.ok) {

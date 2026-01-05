@@ -10,23 +10,30 @@ interface Props {
   user: User;
   isOpen: boolean;
   onClose: () => void;
+  onUpdate?: (updatedUser: User) => void;
 }
 
-export function EditProfileDialog({ user, isOpen, onClose }: Props) {
+export function EditProfileDialog({ user, isOpen, onClose, onUpdate }: Props) {
   const queryClient = useQueryClient();
   const [name, setName] = useState(user.name);
   const [phone, setPhone] = useState(user.phoneNumber || "");
 
   const mutation = useMutation({
     mutationFn: () => updateUserProfile(name, phone),
-    onSuccess: () => {
+    onSuccess: (updatedUser) => {
       toast.success("Profil zaktualizowany!", {
         description: "Twoje dane zostały zaktualizowane.",
       });
       queryClient.invalidateQueries({ queryKey: ["team-members"] });
+      queryClient.invalidateQueries({ queryKey: ["my-profile"] });
+      queryClient.setQueryData(["my-profile"], (old: any) => {
+        if (!old) return updatedUser;
+        return { ...old, ...updatedUser };
+      });
+      if (onUpdate) {
+        onUpdate(updatedUser);
+      }
       onClose();
-      // Odśwież stronę żeby zobaczyć zmiany
-      setTimeout(() => window.location.reload(), 500);
     },
     onError: (err: Error) => {
       toast.error("Błąd aktualizacji profilu", {

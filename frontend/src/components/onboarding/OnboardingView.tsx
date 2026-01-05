@@ -69,7 +69,6 @@ export function OnboardingView({ userId, userName, onSuccess, onLogout }: Props)
           <p className="text-gray-500">Wybierz swoją ścieżkę.</p>
         </div>
 
-        {/* DOŁĄCZ */}
         <div className="space-y-4 pt-4 border-t">
           <h2 className="font-semibold text-blue-600">Dołącz do zespołu</h2>
           <div className="flex gap-2">

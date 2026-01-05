@@ -24,7 +24,6 @@ export class ShiftsService {
     });
 
     if (!activeMembership) {
-      // Brak aktywnego członkostwa => brak danych
       return [];
     }
 
@@ -41,7 +40,6 @@ export class ShiftsService {
     userId: string,
     data: { startTime: Date; endTime: Date; roleName: string; status?: ShiftStatus },
   ) {
-    // 1. Sprawdź aktywne członkostwo
     const membership = await this.prisma.teamMembership.findFirst({
       where: { userId, status: MembershipStatus.ACTIVE },
     });
@@ -65,14 +63,25 @@ export class ShiftsService {
   }
 
   getAllUsers() {
-    return this.prisma.user.findMany();
+    return this.prisma.user.findMany({
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        role: true,
+        status: true,
+        provider: true,
+        skills: true,
+        avatarUrl: true,
+        createdAt: true,
+      },
+    });
   }
   
 
   async claimShift(shiftId: string, userId: string) {
     try {
       return await this.prisma.$transaction(async (tx) => {
-        // Sprawdź aktywne członkostwo w tym samym zespole
         const membership = await tx.teamMembership.findFirst({
           where: { userId, status: MembershipStatus.ACTIVE },
         });
@@ -139,12 +148,11 @@ export class ShiftsService {
       return tx.shift.update({
         where: { id: shiftId },
         data: {
-          isUpForGrabs: true, // Flaga giełdy, userId zostaje do czasu przejęcia
+          isUpForGrabs: true,
         },
       });
     });
   }
-  // Backend: src/shifts/shifts.service.ts
 
   async syncUserByEmail(email: string, name: string) {
     let user = await this.prisma.user.findUnique({
@@ -302,7 +310,6 @@ export class ShiftsService {
       });
     }
 
-    // Wyślij powiadomienia do wszystkich OWNER i MANAGER w zespole
     const managers = await this.prisma.teamMembership.findMany({
       where: {
         teamId: team.id,
@@ -319,7 +326,6 @@ export class ShiftsService {
       },
     });
 
-    // Wyślij powiadomienia asynchronicznie (nie blokujemy odpowiedzi)
     managers.forEach((membership) => {
       if (membership.user.email && applicant.email) {
         this.emailService
@@ -330,9 +336,7 @@ export class ShiftsService {
             applicant.email,
             team.name,
           )
-          .catch((error) => {
-            // Logowanie błędów już jest w EmailService
-          });
+          .catch(() => {});
       }
     });
 
@@ -341,7 +345,7 @@ export class ShiftsService {
   async getMyMembershipStatus(userId: string) {
     const membership = await this.prisma.teamMembership.findFirst({
       where: { userId },
-      orderBy: { requestedAt: 'desc' }, // Najnowsze członkostwo
+      orderBy: { requestedAt: 'desc' },
     });
 
     if (!membership) {
@@ -485,7 +489,6 @@ export class ShiftsService {
         },
       });
 
-      // Ustaw teamId na użytkowniku (obecny model zakłada jedno aktywne członkostwo)
       await tx.user.update({
         where: { id: membership.userId },
         data: {
@@ -497,7 +500,6 @@ export class ShiftsService {
       return updatedMembership;
     });
 
-    // Wyślij powiadomienie i mail powitalny do zaakceptowanego użytkownika
     if (membership.user.email) {
       this.emailService
         .sendMembershipApprovedNotification(
@@ -505,20 +507,15 @@ export class ShiftsService {
           membership.user.name || 'Użytkowniku',
           membership.team.name,
         )
-        .catch((error) => {
-          // Logowanie błędów już jest w EmailService
-        });
+        .catch(() => {});
       
-      // Wyślij dodatkowy mail powitalny dla pracownika
       this.emailService
         .sendWelcomeEmailEmployee(
           membership.user.email,
           membership.user.name || 'Użytkowniku',
           membership.team.name,
         )
-        .catch((error) => {
-          // Logowanie błędów już jest w EmailService
-        });
+        .catch(() => {});
     }
 
     return result;
@@ -567,7 +564,6 @@ export class ShiftsService {
       },
     });
 
-    // Wyślij powiadomienie do odrzuconego użytkownika
     if (membership.user.email) {
       this.emailService
         .sendMembershipRejectedNotification(
@@ -575,9 +571,7 @@ export class ShiftsService {
           membership.user.name || 'Użytkowniku',
           membership.team.name,
         )
-        .catch((error) => {
-          // Logowanie błędów już jest w EmailService
-        });
+        .catch(() => {});
     }
 
     return result;

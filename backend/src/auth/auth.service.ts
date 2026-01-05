@@ -1,4 +1,4 @@
-import { Injectable, BadRequestException, UnauthorizedException, NotFoundException } from '@nestjs/common';
+import { Injectable, BadRequestException, UnauthorizedException, NotFoundException, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
 import { RegisterDto } from './dto/register.dto';
@@ -11,6 +11,8 @@ import { randomBytes } from 'crypto';
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
+
   constructor(
     private prisma: PrismaService,
     private jwtService: JwtService,
@@ -18,7 +20,6 @@ export class AuthService {
   ) {}
 
   async register(registerDto: RegisterDto) {
-    // Sprawdź czy email już istnieje
     const existingUser = await this.prisma.user.findUnique({
       where: { email: registerDto.email },
     });
@@ -27,21 +28,17 @@ export class AuthService {
       throw new BadRequestException('Użytkownik z tym emailem już istnieje.');
     }
 
-    // Hash hasła
     const saltRounds = 10;
     const hashedPassword = await bcrypt.hash(registerDto.password, saltRounds);
-
-    // Generuj token weryfikacyjny (32 znaki hex)
     const verificationToken = randomBytes(16).toString('hex');
 
-    // Utwórz użytkownika
     const user = await this.prisma.user.create({
       data: {
         email: registerDto.email,
         name: registerDto.name,
         password: hashedPassword,
         provider: 'email',
-        emailVerified: false, // Wymaga weryfikacji emaila
+        emailVerified: false,
         emailVerificationToken: verificationToken,
       },
       select: {
@@ -51,19 +48,15 @@ export class AuthService {
         emailVerified: true,
         provider: true,
         createdAt: true,
-        // Nie zwracamy hasła ani tokenu!
       },
     });
 
-    // Wyślij email weryfikacyjny ASYNCHRONICZNIE (fire-and-forget)
-    // Nie czekamy na odpowiedź - rejestracja kończy się natychmiast
     this.emailService.sendVerificationEmail(
       registerDto.email,
       registerDto.name,
       verificationToken,
     ).catch((error) => {
-      console.error('[AUTH] Błąd wysyłania emaila weryfikacyjnego (async):', error);
-      // Logujemy błąd, ale nie blokujemy rejestracji
+      this.logger.error('Błąd wysyłania emaila weryfikacyjnego (async)', error);
     });
 
     return {
@@ -73,7 +66,6 @@ export class AuthService {
   }
 
   async login(loginDto: LoginDto) {
-    // Znajdź użytkownika
     const user = await this.prisma.user.findUnique({
       where: { email: loginDto.email },
     });
@@ -82,29 +74,24 @@ export class AuthService {
       throw new UnauthorizedException('Nieprawidłowy email lub hasło.');
     }
 
-    // Sprawdź czy konto nie jest shadow profile (UNCLAIMED)
     if (user.status === 'UNCLAIMED') {
       throw new UnauthorizedException('To konto nie zostało jeszcze aktywowane.');
     }
 
-    // Sprawdź czy użytkownik ma hasło (nie jest z Google)
     if (!user.password) {
       throw new UnauthorizedException('To konto używa logowania przez Google. Zaloguj się przez Google.');
     }
 
-    // Sprawdź hasło
     const isPasswordValid = await bcrypt.compare(loginDto.password, user.password);
 
     if (!isPasswordValid) {
       throw new UnauthorizedException('Nieprawidłowy email lub hasło.');
     }
 
-    // Sprawdź czy email jest zweryfikowany
     if (!user.emailVerified) {
       throw new UnauthorizedException('Email nie został zweryfikowany. Sprawdź skrzynkę pocztową.');
     }
 
-    // Generuj JWT token
     const payload = {
       sub: user.id,
       email: user.email,
@@ -137,23 +124,20 @@ export class AuthService {
       throw new BadRequestException('Email został już zweryfikowany.');
     }
 
-    // Zweryfikuj email
     await this.prisma.user.update({
       where: { id: user.id },
       data: {
         emailVerified: true,
-        emailVerificationToken: null, // Usuń token po weryfikacji
+        emailVerificationToken: null,
       },
     });
 
-    // Wyślij mail powitalny po weryfikacji asynchronicznie
     if (user.email) {
       this.emailService.sendWelcomeEmailAfterVerification(
         user.email,
         user.name,
       ).catch((error) => {
-        console.error('[AUTH] Błąd wysyłania maila powitalnego (after verification):', error);
-        // Logujemy błąd, ale nie blokujemy weryfikacji
+        this.logger.error('Błąd wysyłania maila powitalnego (after verification)', error);
       });
     }
 
@@ -168,7 +152,6 @@ export class AuthService {
     });
 
     if (!user) {
-      // Nie ujawniamy że użytkownik nie istnieje (security best practice)
       return {
         message: 'Jeśli konto istnieje, email weryfikacyjny został wysłany.',
       };
@@ -182,7 +165,6 @@ export class AuthService {
       throw new BadRequestException('To konto używa logowania przez Google i nie wymaga weryfikacji emaila.');
     }
 
-    // Generuj nowy token
     const verificationToken = randomBytes(16).toString('hex');
 
     await this.prisma.user.update({
@@ -192,7 +174,6 @@ export class AuthService {
       },
     });
 
-    // Wyślij email
     if (!user.email) {
       throw new BadRequestException('Użytkownik nie ma przypisanego emaila.');
     }
@@ -203,7 +184,7 @@ export class AuthService {
         verificationToken,
       );
     } catch (error) {
-      console.error('[AUTH] Błąd wysyłania emaila weryfikacyjnego:', error);
+      this.logger.error('Błąd wysyłania emaila weryfikacyjnego', error);
       throw new BadRequestException('Nie udało się wysłać emaila. Spróbuj ponownie później.');
     }
 
@@ -217,24 +198,19 @@ export class AuthService {
       where: { email: requestResetDto.email },
     });
 
-    // Nie ujawniamy czy użytkownik istnieje (security best practice)
     if (!user) {
       return {
         message: 'Jeśli konto istnieje, email z linkiem resetu hasła został wysłany.',
       };
     }
 
-    // Sprawdź czy użytkownik ma hasło (nie jest z Google)
     if (!user.password) {
-      // Nie ujawniamy że to konto Google - po prostu zwracamy sukces
       return {
         message: 'Jeśli konto istnieje, email z linkiem resetu hasła został wysłany.',
       };
     }
 
-    // Generuj token resetu (32 znaki hex)
     const resetToken = randomBytes(16).toString('hex');
-    // Token ważny przez 1 godzinę
     const resetExpires = new Date(Date.now() + 60 * 60 * 1000);
 
     await this.prisma.user.update({
@@ -245,15 +221,13 @@ export class AuthService {
       },
     });
 
-    // Wyślij email asynchronicznie
     if (user.email) {
       this.emailService.sendPasswordResetEmail(
         user.email,
         user.name,
         resetToken,
       ).catch((error) => {
-        console.error('[AUTH] Błąd wysyłania emaila resetu hasła (async):', error);
-        // Logujemy błąd, ale nie blokujemy operacji
+        this.logger.error('Błąd wysyłania emaila resetu hasła (async)', error);
       });
     }
 
@@ -263,12 +237,11 @@ export class AuthService {
   }
 
   async resetPassword(resetPasswordDto: ResetPasswordDto) {
-    // Znajdź użytkownika po tokenie
     const user = await this.prisma.user.findFirst({
       where: {
         passwordResetToken: resetPasswordDto.token,
         passwordResetExpires: {
-          gt: new Date(), // Token musi być jeszcze ważny
+          gt: new Date(),
         },
       },
     });
@@ -286,7 +259,6 @@ export class AuthService {
     const saltRounds = 10;
     const hashedPassword = await bcrypt.hash(resetPasswordDto.password, saltRounds);
 
-    // Zaktualizuj hasło i usuń token
     await this.prisma.user.update({
       where: { id: user.id },
       data: {

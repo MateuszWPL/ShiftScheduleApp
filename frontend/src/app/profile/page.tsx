@@ -21,20 +21,13 @@ export default function ProfilePage() {
   const [phoneNumber, setPhoneNumber] = useState("");
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
-  // Przekierowujemy na stronę główną jeśli nie ma sesji
-  useEffect(() => {
-    if (!session) {
-      window.location.replace('/');
-    }
-  }, [session]);
-
   const { data: profile, isLoading, error } = useQuery({
     queryKey: ["my-profile"],
     queryFn: getMyProfile,
     enabled: !!session,
     retry: false,
-    refetchOnWindowFocus: false,
-    refetchOnMount: false,
+    refetchOnWindowFocus: true,
+    refetchOnMount: true,
   });
 
   useEffect(() => {

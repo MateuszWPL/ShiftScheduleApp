@@ -71,7 +71,6 @@ export function TeamList({ currentUserId, currentUserRole }: Props) {
                 )}
               </div>
 
-              {/* Przycisk akcji tylko dla Szefa (i nie dla samego siebie) */}
               {isBoss && member.id !== currentUserId && (
                 <Button
                   variant="ghost"

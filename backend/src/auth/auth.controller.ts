@@ -12,47 +12,47 @@ import { Public } from './decorators/public.decorator';
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
-  @Public() // Endpoint publiczny - nie wymaga JWT
-  @Throttle({ default: { limit: 3, ttl: 60000 } }) // 3 rejestracje na minutę
+  @Public()
+  @Throttle({ default: { limit: 3, ttl: 60000 } })
   @Post('register')
   @HttpCode(HttpStatus.CREATED)
   async register(@Body() registerDto: RegisterDto) {
     return this.authService.register(registerDto);
   }
 
-  @Public() // Endpoint publiczny - nie wymaga JWT
-  @Throttle({ default: { limit: 5, ttl: 60000 } }) // 5 prób logowania na minutę
+  @Public()
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
   @Post('login')
   @HttpCode(HttpStatus.OK)
   async login(@Body() loginDto: LoginDto) {
     return this.authService.login(loginDto);
   }
 
-  @Public() // Endpoint publiczny - nie wymaga JWT
+  @Public()
   @Get('verify-email/:token')
   @HttpCode(HttpStatus.OK)
   async verifyEmail(@Param('token') token: string) {
     return this.authService.verifyEmail(token);
   }
 
-  @Public() // Endpoint publiczny - nie wymaga JWT
-  @Throttle({ default: { limit: 2, ttl: 60000 } }) // 2 maile weryfikacyjne na minutę
+  @Public()
+  @Throttle({ default: { limit: 2, ttl: 60000 } })
   @Post('resend-verification')
   @HttpCode(HttpStatus.OK)
   async resendVerification(@Body() resendDto: ResendVerificationDto) {
     return this.authService.resendVerificationEmail(resendDto.email);
   }
 
-  @Public() // Endpoint publiczny - nie wymaga JWT
-  @Throttle({ default: { limit: 2, ttl: 60000 } }) // 2 prośby o reset hasła na minutę
+  @Public()
+  @Throttle({ default: { limit: 2, ttl: 60000 } })
   @Post('request-reset')
   @HttpCode(HttpStatus.OK)
   async requestPasswordReset(@Body() requestResetDto: RequestResetPasswordDto) {
     return this.authService.requestPasswordReset(requestResetDto);
   }
 
-  @Public() // Endpoint publiczny - nie wymaga JWT
-  @Throttle({ default: { limit: 5, ttl: 60000 } }) // 5 prób resetu hasła na minutę
+  @Public()
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
   @Post('reset-password')
   @HttpCode(HttpStatus.OK)
   async resetPassword(@Body() resetPasswordDto: ResetPasswordDto) {

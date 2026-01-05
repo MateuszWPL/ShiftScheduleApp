@@ -197,7 +197,6 @@ export default function Home() {
               <div>
                 <h2 className="font-bold text-xl text-slate-900">{dbUser?.name}</h2>
                 <p className="text-sm text-gray-500">{dbUser?.phoneNumber || "Dodaj telefon..."}</p>
-                {/* Moje skille */}
                 <div className="flex flex-wrap gap-1 mt-2">
                   {dbUser?.skills?.map((s: string) => (
                     <span key={s} className="text-xs bg-gray-100 px-2 py-1 rounded">{s}</span>
@@ -285,6 +284,16 @@ export default function Home() {
             user={dbUser}
             isOpen={isProfileOpen}
             onClose={() => setIsProfileOpen(false)}
+            onUpdate={(updatedUser) => {
+              setDbUser({
+                ...updatedUser,
+                team: dbUser?.team,
+                teamId: dbUser?.teamId,
+                role: dbUser?.role,
+                skills: dbUser?.skills,
+                avatarUrl: dbUser?.avatarUrl,
+              });
+            }}
           />
           <CreateShiftDialog
             isOpen={isCreateShiftOpen}

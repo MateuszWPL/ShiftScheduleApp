@@ -13,11 +13,6 @@ export default function QueryProvider({ children }: { children: React.ReactNode 
           }
           return failureCount < 3;
         },
-        onError: (error: any) => {
-          if (error?.status === 401 || error?.response?.status === 401) {
-            return;
-          }
-        },
       },
     },
   }));
