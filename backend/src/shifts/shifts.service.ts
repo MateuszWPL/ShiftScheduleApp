@@ -161,6 +161,7 @@ export class ShiftsService {
     });
 
     if (!user) {
+      // Tworzenie nowego użytkownika - używamy nazwy z Google
       user = await this.prisma.user.create({
         data: {
           email,
@@ -172,11 +173,9 @@ export class ShiftsService {
         include: { team: true },
       });
     } else {
+      // Użytkownik już istnieje - NIE aktualizujemy nazwy, bo użytkownik mógł ją zmienić ręcznie
+      // Aktualizujemy tylko provider jeśli potrzeba
       const updateData: any = {};
-      
-      if (name && name !== user.name) {
-        updateData.name = name;
-      }
       
       if (!user.password && user.provider !== 'google') {
         updateData.provider = 'google';

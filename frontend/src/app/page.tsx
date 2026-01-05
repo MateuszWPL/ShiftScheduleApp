@@ -21,7 +21,7 @@ import { Navbar } from "@/components/layout/Navbar";
 import { useLogout } from "@/hooks/useLogout";
 
 export default function Home() {
-  const { data: session } = useSession();
+  const { data: session, status: sessionStatus } = useSession();
   const [authMode, setAuthMode] = useState<"login" | "register" | "reset" | undefined>(undefined);
   const queryClient = useQueryClient();
   const logout = useLogout();
@@ -46,8 +46,10 @@ export default function Home() {
 
   useEffect(() => {
     if (session?.user?.email) {
-      const { email, name } = session.user;
+      const { email } = session.user;
       
+      // Jeśli użytkownik jest już zsynchronizowany, nie wywołuj sync ponownie
+      // Sync jest potrzebny tylko przy pierwszym logowaniu
       if (lastSyncedEmail === email && dbUser) {
         return;
       }
@@ -62,7 +64,8 @@ export default function Home() {
         setIsSyncingUser(false);
       }, 10000);
       
-      fetch(`${API_URL}/shifts/users/sync?email=${encodeURIComponent(email)}&name=${encodeURIComponent(name || "")}`)
+      // Sync tylko email - nie wysyłamy name, bo backend nie powinien nadpisywać ręcznie zmienionej nazwy
+      fetch(`${API_URL}/shifts/users/sync?email=${encodeURIComponent(email)}`)
         .then(res => {
           if (res.status === 429) {
             throw new Error("Too many requests - please wait a moment");
@@ -88,7 +91,7 @@ export default function Home() {
             }
           }
           queryClient.invalidateQueries({ queryKey: ["shifts"] });
-          // Po sync, pobierz najnowsze dane z profilu
+          // Po sync, pobierz najnowsze dane z profilu (ale nie nadpisuj jeśli użytkownik zmienił dane)
           queryClient.invalidateQueries({ queryKey: ["my-profile"] });
         })
         .catch((err) => {
@@ -103,7 +106,8 @@ export default function Home() {
           setIsSyncingUser(false);
         });
     }
-  }, [session?.user?.email, lastSyncedEmail, queryClient]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session?.user?.email, lastSyncedEmail]);
 
   // Pobierz dane użytkownika z React Query (synchronizacja z profile page)
   const { data: myProfile } = useQuery({
@@ -124,6 +128,8 @@ export default function Home() {
     queryFn: () => getShifts(),
     enabled: !!session && !!dbUser?.teamId,
     retry: false,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
   });
 
   const claimMutation = useMutation({
@@ -135,6 +141,18 @@ export default function Home() {
     mutationFn: (shiftId: string) => releaseShift(shiftId),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["shifts"] }),
   });
+
+  // Jeśli sesja się jeszcze ładuje, pokaż loading zamiast strony logowania
+  if (sessionStatus === "loading") {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <div className="text-center space-y-2">
+          <div className="animate-spin h-8 w-8 border-4 border-gray-300 border-t-blue-500 rounded-full mx-auto" />
+          <p className="text-sm text-gray-600">Ładowanie...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!session) {
     return (
