@@ -379,6 +379,11 @@ export class ShiftsService {
             role: true,
             phoneNumber: true,
             skills: true,
+            nickname: true,
+            hourlyRate: true,
+            maxHours: true,
+            avatarUrl: true,
+            notes: true,
           },
         },
       },
@@ -387,15 +392,32 @@ export class ShiftsService {
     return members.map((m) => m.user);
   }
   async updateProfile(userId: string, data: { name?: string; phoneNumber?: string }) {
+    const updateData: any = {};
+    
+    if (data.name !== undefined) {
+      updateData.name = data.name;
+    }
+    if (data.phoneNumber !== undefined) {
+      updateData.phoneNumber = data.phoneNumber;
+    }
+
     return this.prisma.user.update({
       where: { id: userId },
-      data: {
-        name: data.name,
-        phoneNumber: data.phoneNumber,
-      },
+      data: updateData,
     });
   }
-  async updateEmployee(requesterId: string, targetUserId: string, data: { skills?: string[] }) {
+  async updateEmployee(
+    requesterId: string,
+    targetUserId: string,
+    data: {
+      name?: string;
+      nickname?: string | null;
+      hourlyRate?: number | null;
+      maxHours?: number | null;
+      skills?: string[];
+      notes?: string | null;
+    }
+  ) {
     const requesterMembership = await this.prisma.teamMembership.findFirst({
       where: { userId: requesterId, status: MembershipStatus.ACTIVE },
     });
@@ -415,11 +437,30 @@ export class ShiftsService {
       throw new BadRequestException('Użytkownik nie jest aktywnym członkiem zespołu.');
     }
 
+    const updateData: any = {};
+
+    if (data.name !== undefined) {
+      updateData.name = data.name;
+    }
+    if (data.nickname !== undefined) {
+      updateData.nickname = data.nickname;
+    }
+    if (data.hourlyRate !== undefined) {
+      updateData.hourlyRate = data.hourlyRate !== null ? data.hourlyRate : null;
+    }
+    if (data.maxHours !== undefined) {
+      updateData.maxHours = data.maxHours !== null ? data.maxHours : null;
+    }
+    if (data.skills !== undefined) {
+      updateData.skills = data.skills;
+    }
+    if (data.notes !== undefined) {
+      updateData.notes = data.notes;
+    }
+
     return this.prisma.user.update({
       where: { id: targetUserId },
-      data: {
-        skills: data.skills,
-      },
+      data: updateData,
     });
   }
 

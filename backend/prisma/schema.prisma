@@ -44,10 +44,12 @@ model User {
   hourlyRate  Decimal? @db.Decimal(10, 2) // Stawka godzinowa
   phoneNumber String? // Numer telefonu
   maxHours    Int? // Maksymalna liczba godzin (np. tygodniowo)
+  notes       String? // Notatki administracyjne (widoczne tylko dla OWNER/MANAGER)
 
   // Dane publiczne (widoczne dla zespołu)
   skills    String[] @default([]) // Tablica stringów (Postgres to potrafi!), np. ["Barista", "Driver"]
   avatarUrl String? // URL do avatara użytkownika
+  nickname  String? // Pseudonim (opcjonalny)
 
   // Email + Hasło Authentication
   password               String? // Hashed password (nullable - Google users nie mają hasła)

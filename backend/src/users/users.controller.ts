@@ -1,4 +1,5 @@
-import { Controller, Get, Post, Body, Param, Patch, UseGuards, BadRequestException } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Patch, UseGuards, BadRequestException, UploadedFile, UseInterceptors } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { SkipThrottle } from '@nestjs/throttler';
 import { UsersService } from './users.service';
 import { JwtAuthGuard } from '../auth/auth.guard';
@@ -7,6 +8,7 @@ import { Roles } from '../auth/decorators/roles.decorator';
 import { CurrentUser, CurrentUser as CurrentUserType } from '../auth/decorators/user.decorator';
 import { CreateShadowProfileDto } from './dto/create-shadow-profile.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
+import { FileUploadInterceptor } from './interceptors/file-upload.interceptor';
 
 @Controller('users')
 @UseGuards(JwtAuthGuard)
@@ -49,6 +51,22 @@ export class UsersController {
     return this.usersService.updateProfile(user.userId, updateDto);
   }
 
+  @Post('me/avatar')
+  @UseInterceptors(FileInterceptor('avatar', FileUploadInterceptor.MulterOptions))
+  async uploadAvatar(
+    @UploadedFile() file: Express.Multer.File,
+    @CurrentUser() user: CurrentUserType,
+  ) {
+    if (!file) {
+      throw new BadRequestException('Brak pliku do uploadu');
+    }
+
+    // Zwracamy ścieżkę względną - frontend doda API_URL
+    const avatarUrl = `${process.env.API_URL || 'http://localhost:3001'}/uploads/avatars/${file.filename}`;
+    return this.usersService.updateProfile(user.userId, { avatarUrl });
+  }
+
+
   @SkipThrottle()
   @Get(':id')
   async findOne(
@@ -58,4 +76,3 @@ export class UsersController {
     return this.usersService.findOne(id, user.role, user.teamId);
   }
 }
-

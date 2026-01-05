@@ -1,25 +1,28 @@
 "use client";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { getMyProfile, updateUserAvatar, updateMyProfile, User } from "@/lib/api";
+import { getMyProfile, uploadAvatar, updateUserProfile, User } from "@/lib/api";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useSession } from "next-auth/react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { Card } from "@/components/ui/card";
-import { Lock, User as UserIcon, Phone, Mail, DollarSign, Clock } from "lucide-react";
+import { Lock, User as UserIcon, Phone, Mail, Upload, X } from "lucide-react";
 import { useLogout } from "@/hooks/useLogout";
 
 export default function ProfilePage() {
   const { data: session } = useSession();
   const queryClient = useQueryClient();
   const logout = useLogout();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [isEditing, setIsEditing] = useState(false);
+  const [name, setName] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   const { data: profile, isLoading, error } = useQuery({
     queryKey: ["my-profile"],
@@ -32,35 +35,75 @@ export default function ProfilePage() {
 
   useEffect(() => {
     if (profile && !isEditing) {
+      setName(profile.name || "");
       setPhoneNumber("phoneNumber" in profile ? (profile.phoneNumber || "") : "");
-      setAvatarUrl(profile.avatarUrl || null);
+      setAvatarPreview(null);
+      setSelectedFile(null);
     }
   }, [profile, isEditing]);
 
-  const updateAvatarMutation = useMutation({
-    mutationFn: (url: string) => updateUserAvatar(url),
+  const uploadAvatarMutation = useMutation({
+    mutationFn: (file: File) => uploadAvatar(file),
     onSuccess: (updatedProfile) => {
-      toast.success("Avatar zaktualizowany!");
-      queryClient.setQueryData(["my-profile"], (old: any) => {
-        if (!old) return updatedProfile;
-        return { ...old, ...updatedProfile };
-      });
-      if (updatedProfile && "avatarUrl" in updatedProfile) {
-        setAvatarUrl(updatedProfile.avatarUrl || null);
-      }
+      toast.success("Zdjęcie zostało wgrane!");
+      queryClient.invalidateQueries({ queryKey: ["my-profile"] });
+      setAvatarPreview(null);
+      setSelectedFile(null);
     },
     onError: (err: Error) => {
-      toast.error("Błąd aktualizacji avatara", { description: err.message });
+      toast.error("Błąd wgrywania zdjęcia", { description: err.message });
     },
   });
 
-  const updateProfileMutation = useMutation({
-    mutationFn: () => updateMyProfile(phoneNumber, avatarUrl || undefined),
-    onSuccess: (updatedProfile) => {
-      queryClient.setQueryData(["my-profile"], (old: any) => {
-        if (!old) return updatedProfile;
-        return { ...old, ...updatedProfile };
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Walidacja typu pliku
+    if (!file.type.match(/^image\/(jpg|jpeg|png|gif|webp)$/)) {
+      toast.error("Nieprawidłowy typ pliku", {
+        description: "Wybierz plik obrazu (JPG, PNG, GIF lub WEBP)",
       });
+      return;
+    }
+
+    // Walidacja rozmiaru (5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Plik jest zbyt duży", {
+        description: "Maksymalny rozmiar to 5MB",
+      });
+      return;
+    }
+
+    setSelectedFile(file);
+    
+    // Utworzenie preview
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setAvatarPreview(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleUpload = () => {
+    if (selectedFile) {
+      uploadAvatarMutation.mutate(selectedFile);
+    }
+  };
+
+  const handleRemovePreview = () => {
+    setAvatarPreview(null);
+    setSelectedFile(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
+  const updateProfileMutation = useMutation({
+    mutationFn: () => updateUserProfile(name, phoneNumber),
+    onSuccess: (updatedProfile) => {
+      queryClient.invalidateQueries({ queryKey: ["my-profile"] });
+      queryClient.invalidateQueries({ queryKey: ["team-members"] });
       setIsEditing(false);
       toast.success("Profil zaktualizowany!");
     },
@@ -131,28 +174,62 @@ export default function ProfilePage() {
         <Card className="p-6">
           <div className="flex items-start gap-6">
             <div className="flex-shrink-0">
-              <Avatar src={avatarUrl || user.avatarUrl} name={user.name} size="xl" />
+              <div className="relative">
+                <Avatar 
+                  src={avatarPreview || user.avatarUrl || undefined} 
+                  name={user.name} 
+                  size="xl" 
+                />
+              </div>
               {isEditing && (
                 <div className="mt-4 space-y-2">
-                  <Input
-                    type="url"
-                    placeholder="URL do zdjęcia"
-                    value={avatarUrl || ""}
-                    onChange={(e) => setAvatarUrl(e.target.value)}
-                    className="text-sm"
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
+                    onChange={handleFileSelect}
+                    className="hidden"
+                    id="avatar-upload"
                   />
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => {
-                      if (avatarUrl) {
-                        updateAvatarMutation.mutate(avatarUrl);
-                      }
-                    }}
-                    disabled={updateAvatarMutation.isPending}
-                  >
-                    Zapisz avatar
-                  </Button>
+                  <label htmlFor="avatar-upload">
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      className="w-full cursor-pointer"
+                      asChild
+                    >
+                      <span>
+                        <Upload className="h-4 w-4 mr-2" />
+                        Wybierz zdjęcie
+                      </span>
+                    </Button>
+                  </label>
+                  {selectedFile && (
+                    <div className="space-y-2">
+                      <p className="text-xs text-gray-600 truncate">
+                        {selectedFile.name}
+                      </p>
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          onClick={handleUpload}
+                          disabled={uploadAvatarMutation.isPending}
+                          className="flex-1"
+                        >
+                          {uploadAvatarMutation.isPending ? "Wgrywanie..." : "Wgraj"}
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={handleRemovePreview}
+                          disabled={uploadAvatarMutation.isPending}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -162,14 +239,16 @@ export default function ProfilePage() {
                 <label className="text-sm font-medium text-gray-500 flex items-center gap-2">
                   <UserIcon className="h-4 w-4" /> Imię i Nazwisko
                 </label>
-                <div className="mt-1 flex items-center gap-2">
-                  <p className="text-lg font-semibold">{user.name}</p>
-                  {isEmployee && <Lock className="h-4 w-4 text-gray-400" />}
-                </div>
-                {isEmployee && (
-                  <p className="text-xs text-gray-500 mt-1">
-                    Tylko administrator może zmienić imię i nazwisko
-                  </p>
+                {isEditing ? (
+                  <Input
+                    type="text"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="Imię i Nazwisko"
+                    className="mt-1"
+                  />
+                ) : (
+                  <p className="text-lg font-semibold mt-1">{user.name}</p>
                 )}
               </div>
 
@@ -205,62 +284,29 @@ export default function ProfilePage() {
                 )}
               </div>
 
-              {isAdmin && "hourlyRate" in user && (
-                <div>
-                  <label className="text-sm font-medium text-gray-500 flex items-center gap-2">
-                    <DollarSign className="h-4 w-4" /> Stawka godzinowa
-                  </label>
-                  <div className="mt-1 flex items-center gap-2">
-                    <p className="text-lg">
-                      {user.hourlyRate ? `${user.hourlyRate} PLN/h` : "Nie ustawiono"}
-                    </p>
-                    <Lock className="h-4 w-4 text-gray-400" />
-                  </div>
-                  <p className="text-xs text-gray-500 mt-1">
-                    Tylko administrator może zmienić stawkę
-                  </p>
-                </div>
-              )}
 
-              {isAdmin && "maxHours" in user && (
+              {isEmployee && (
                 <div>
-                  <label className="text-sm font-medium text-gray-500 flex items-center gap-2">
-                    <Clock className="h-4 w-4" /> Maksymalna liczba godzin
-                  </label>
-                  <div className="mt-1 flex items-center gap-2">
-                    <p className="text-lg">
-                      {user.maxHours ? `${user.maxHours} h/tydzień` : "Nie ustawiono"}
-                    </p>
-                    <Lock className="h-4 w-4 text-gray-400" />
+                  <label className="text-sm font-medium text-gray-500">Umiejętności</label>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {user.skills && user.skills.length > 0 ? (
+                      user.skills.map((skill: string, idx: number) => (
+                        <span
+                          key={idx}
+                          className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm"
+                        >
+                          {skill}
+                        </span>
+                      ))
+                    ) : (
+                      <p className="text-gray-500">Brak umiejętności</p>
+                    )}
                   </div>
-                  <p className="text-xs text-gray-500 mt-1">
-                    Tylko administrator może zmienić limit godzin
-                  </p>
-                </div>
-              )}
-
-              <div>
-                <label className="text-sm font-medium text-gray-500">Umiejętności</label>
-                <div className="mt-2 flex flex-wrap gap-2">
-                  {user.skills && user.skills.length > 0 ? (
-                    user.skills.map((skill: string, idx: number) => (
-                      <span
-                        key={idx}
-                        className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm"
-                      >
-                        {skill}
-                      </span>
-                    ))
-                  ) : (
-                    <p className="text-gray-500">Brak umiejętności</p>
-                  )}
-                </div>
-                {isEmployee && (
                   <p className="text-xs text-gray-500 mt-1">
                     Tylko administrator może zmienić umiejętności
                   </p>
-                )}
-              </div>
+                </div>
+              )}
 
               {isEditing && (
                 <div className="flex gap-2 pt-4">
@@ -274,8 +320,10 @@ export default function ProfilePage() {
                     variant="ghost"
                     onClick={() => {
                       setIsEditing(false);
+                      setName(user.name || "");
                       setPhoneNumber("phoneNumber" in user ? (user.phoneNumber || "") : "");
-                      setAvatarUrl(user.avatarUrl || null);
+                      setAvatarPreview(null);
+                      setSelectedFile(null);
                     }}
                   >
                     Anuluj

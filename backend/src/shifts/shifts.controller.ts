@@ -109,7 +109,12 @@ export class ShiftsController {
     @CurrentUser() user: User
   ) {
     return this.shiftsService.updateEmployee(user.userId, params.targetId, {
+      name: updateEmployeeDto.name,
+      nickname: updateEmployeeDto.nickname,
+      hourlyRate: updateEmployeeDto.hourlyRate,
+      maxHours: updateEmployeeDto.maxHours,
       skills: updateEmployeeDto.skills,
+      notes: updateEmployeeDto.notes,
     });
   }
 }

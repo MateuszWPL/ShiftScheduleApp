@@ -49,6 +49,7 @@ async function getAuthToken(): Promise<string | null> {
   }
 }
 
+
 async function authenticatedFetch(url: string, options: RequestInit = {}): Promise<Response> {
 
   const token = await getAuthToken();
@@ -73,6 +74,37 @@ async function authenticatedFetch(url: string, options: RequestInit = {}): Promi
   const response = await fetch(url, {
     ...options,
     headers,
+  });
+
+  if (!response.ok && response.status === 401) {
+    tokenCache = null;
+  }
+
+  return response;
+}
+
+async function authenticatedFetchFormData(url: string, formData: FormData): Promise<Response> {
+  const token = await getAuthToken();
+  
+  if (!token) {
+    return new Response(
+      JSON.stringify({ message: "Brak autoryzacji. Zaloguj się ponownie." }),
+      {
+        status: 401,
+        statusText: "Unauthorized",
+        headers: { "Content-Type": "application/json" },
+      }
+    );
+  }
+
+  const headers: HeadersInit = {
+    Authorization: `Bearer ${token}`,
+  };
+  
+  const response = await fetch(url, {
+    method: "POST",
+    headers,
+    body: formData,
   });
 
   if (!response.ok && response.status === 401) {
@@ -126,6 +158,7 @@ export interface User {
   status?: "ACTIVE" | "UNCLAIMED";
   hourlyRate?: number | null;
   maxHours?: number | null;
+  nickname?: string | null;
 }
 
 export interface PublicUser {
@@ -135,6 +168,7 @@ export interface PublicUser {
   skills: string[];
   avatarUrl?: string | null;
   status?: "ACTIVE" | "UNCLAIMED";
+  nickname?: string | null;
 }
 
 export interface PrivateUser extends PublicUser {
@@ -142,6 +176,7 @@ export interface PrivateUser extends PublicUser {
   hourlyRate: number | null;
   phoneNumber: string | null;
   maxHours: number | null;
+  notes?: string | null;
 }
 
 export async function createTeam(name: string) {
@@ -179,13 +214,26 @@ export async function getTeamMembers(): Promise<User[]> {
 }
 
 export async function updateUserProfile(name: string, phoneNumber: string) {
-  const res = await authenticatedFetch(`${API_URL}/shifts/users/me`, {
+  const res = await authenticatedFetch(`${API_URL}/users/me`, {
     method: "PATCH",
     body: JSON.stringify({ name, phoneNumber }),
   });
   if (!res.ok) {
     const error = await res.json();
     throw new Error(error.message || "Błąd aktualizacji profilu");
+  }
+  return res.json();
+}
+
+export async function uploadAvatar(file: File): Promise<User> {
+  const formData = new FormData();
+  formData.append("avatar", file);
+
+  const res = await authenticatedFetchFormData(`${API_URL}/users/me/avatar`, formData);
+  
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.message || "Błąd wgrywania zdjęcia");
   }
   return res.json();
 }
@@ -251,16 +299,30 @@ export async function createShadowProfile(data: CreateShadowProfileDto) {
   return res.json();
 }
 
-export async function updateEmployeeSkills(targetId: string, skills: string[]) {
+export interface UpdateEmployeeData {
+  name?: string;
+  nickname?: string | null;
+  hourlyRate?: number | null;
+  maxHours?: number | null;
+  skills?: string[];
+  notes?: string | null;
+}
+
+export async function updateEmployee(targetId: string, data: UpdateEmployeeData) {
   const res = await authenticatedFetch(`${API_URL}/shifts/teams/members/${targetId}`, {
     method: "PATCH",
-    body: JSON.stringify({ skills }),
+    body: JSON.stringify(data),
   });
   if (!res.ok) {
     const error = await res.json();
     throw new Error(error.message || "Błąd edycji pracownika");
   }
   return res.json();
+}
+
+// Backward compatibility - można użyć tej funkcji jeśli potrzebujemy tylko skills
+export async function updateEmployeeSkills(targetId: string, skills: string[]) {
+  return updateEmployee(targetId, { skills });
 }
 
 export interface CreateShiftInput {

@@ -5,6 +5,7 @@ export class PublicUserDto {
   skills: string[];
   avatarUrl: string | null;
   status: string;
+  nickname: string | null;
 }
 
 export class PrivateUserDto extends PublicUserDto {

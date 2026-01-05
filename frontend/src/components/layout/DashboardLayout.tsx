@@ -44,7 +44,7 @@ export function DashboardLayout({ children, userRole, userName, userAvatar, onLo
             </Link>
           </Button>
           <Button variant="ghost" className="w-full justify-start text-slate-300 hover:text-white hover:bg-slate-800" asChild>
-            <Link href="/">
+            <Link href="/team">
               <Users className="mr-2 h-4 w-4" /> Zespół
             </Link>
           </Button>

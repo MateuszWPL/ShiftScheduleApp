@@ -42,6 +42,8 @@ export class UsersService {
         maxHours: user.maxHours,
         skills: user.skills,
         avatarUrl: user.avatarUrl,
+        nickname: user.nickname,
+        notes: user.notes,
       }));
     }
 
@@ -53,6 +55,7 @@ export class UsersService {
       status: user.status || 'ACTIVE',
       skills: user.skills,
       avatarUrl: user.avatarUrl,
+      nickname: user.nickname,
     }));
   }
 
@@ -84,10 +87,12 @@ export class UsersService {
         maxHours: u.maxHours,
         skills: u.skills,
         avatarUrl: u.avatarUrl,
+        nickname: u.nickname,
+        notes: u.notes,
       };
     }
 
-    // Dla zwykłych pracowników - tylko dane publiczne
+    // Dla zwykłych pracowników - dane publiczne + własny phoneNumber (widzi swój numer)
     const u = user as any;
     return {
       id: u.id,
@@ -96,11 +101,17 @@ export class UsersService {
       status: u.status || 'ACTIVE',
       skills: u.skills,
       avatarUrl: u.avatarUrl,
+      nickname: u.nickname,
+      phoneNumber: u.phoneNumber, // Pracownik widzi swój własny numer telefonu
     };
   }
 
   async updateProfile(userId: string, updateDto: UpdateProfileDto) {
     const updateData: any = {};
+    
+    if (updateDto.name !== undefined) {
+      updateData.name = updateDto.name;
+    }
     
     if (updateDto.phoneNumber !== undefined) {
       updateData.phoneNumber = updateDto.phoneNumber || null;
@@ -115,6 +126,7 @@ export class UsersService {
       data: updateData,
     });
 
+    // Zwracamy zmapowany obiekt z phoneNumber dla wszystkich (pracownik widzi swój numer)
     return {
       id: user.id,
       name: user.name,
@@ -126,6 +138,8 @@ export class UsersService {
       skills: user.skills,
       hourlyRate: user.hourlyRate ? Number(user.hourlyRate) : null,
       maxHours: user.maxHours,
+      nickname: (user as any).nickname,
+      notes: (user as any).notes,
     };
   }
 }
