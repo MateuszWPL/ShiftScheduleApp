@@ -8,29 +8,29 @@ datasource db {
 }
 
 model User {
-  id                     String           @id @default(uuid())
-  email                  String?          @unique
+  id                     String              @id @default(uuid())
+  email                  String?             @unique
   name                   String
-  role                   Role             @default(EMPLOYEE)
-  createdAt              DateTime         @default(now())
+  role                   Role                @default(EMPLOYEE)
+  createdAt              DateTime            @default(now())
   teamId                 String?
   avatarUrl              String?
-  provider               String?          @default("google")
+  provider               String?             @default("google")
   phoneNumber            String?
-  skills                 String[]         @default([])
-  emailVerified          Boolean          @default(false)
+  skills                 String[]            @default([])
+  emailVerified          Boolean             @default(false)
   password               String?
   emailVerificationToken String?
   passwordResetExpires   DateTime?
   passwordResetToken     String?
-  hourlyRate             Decimal?         @db.Decimal(10, 2)
+  hourlyRate             Decimal?            @db.Decimal(10, 2)
   maxHours               Int?
-  status                 UserStatus       @default(ACTIVE)
+  status                 UserStatus          @default(ACTIVE)
   nickname               String?
   notes                  String?
-  shifts                 Shift[]
+  shiftAssignments       ShiftAssignment[]
   memberships            TeamMembership[]
-  team                   Team?            @relation(fields: [teamId], references: [id])
+  team                   Team?               @relation(fields: [teamId], references: [id])
 }
 
 model Team {
@@ -44,20 +44,35 @@ model Team {
 }
 
 model Shift {
-  id           String      @id @default(uuid())
+  id           String             @id @default(uuid())
   startTime    DateTime
   endTime      DateTime
   roleName     String
-  status       ShiftStatus @default(DRAFT)
-  isUpForGrabs Boolean     @default(false)
-  userId       String?
+  status       ShiftStatus       @default(DRAFT)
   teamId       String
-  createdAt    DateTime    @default(now())
-  updatedAt    DateTime    @updatedAt
-  team         Team        @relation(fields: [teamId], references: [id])
-  user         User?       @relation(fields: [userId], references: [id])
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+  team         Team             @relation(fields: [teamId], references: [id])
+  assignments  ShiftAssignment[]
 
   @@index([teamId, startTime])
+}
+
+/// Jedna "pozycja" na zmianie. Jedna zmiana może mieć wiele pozycji (kilku pracowników).
+/// Giełda: isUpForGrabs = true — ktoś może przejąć to przypisanie (claim).
+model ShiftAssignment {
+  id           String   @id @default(uuid())
+  shiftId      String
+  userId       String?
+  isUpForGrabs Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  shift        Shift    @relation(fields: [shiftId], references: [id], onDelete: Cascade)
+  user         User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([shiftId])
+  @@index([userId])
+  @@index([isUpForGrabs])
 }
 
 model TeamMembership {

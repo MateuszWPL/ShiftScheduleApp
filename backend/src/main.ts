@@ -28,27 +28,18 @@ async function bootstrap() {
     }),
   );
 
-  const allowedOrigins = [
-    'http://localhost:3000',
-    'http://localhost:3001',
-    process.env.FRONTEND_URL,
-    'https://shift-schedule-app-rho.vercel.app',
-  ].filter(Boolean);
+  const frontendUrl = process.env.FRONTEND_URL;
+  const allowedOrigins =
+    process.env.NODE_ENV === 'production'
+      ? (frontendUrl ? frontendUrl.split(',').map((u) => u.trim()).filter(Boolean) : [])
+      : ['http://localhost:3000', 'http://localhost:3001'];
 
   app.enableCors({
     origin: (origin, callback) => {
-      if (!origin) {
-        return callback(null, true);
-      }
-      
-      if (allowedOrigins.includes(origin) || process.env.NODE_ENV === 'development') {
-        return callback(null, true);
-      }
-      
-      if (process.env.NODE_ENV === 'production' && !process.env.FRONTEND_URL) {
-        return callback(new Error('CORS: FRONTEND_URL must be set in production'));
-      }
-      
+      if (!origin) return callback(null, true);
+      if (process.env.NODE_ENV === 'development') return callback(null, true);
+      if (allowedOrigins.length === 0) return callback(new Error('CORS: FRONTEND_URL must be set in production'));
+      if (allowedOrigins.includes(origin)) return callback(null, true);
       callback(new Error('Not allowed by CORS'));
     },
     methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],

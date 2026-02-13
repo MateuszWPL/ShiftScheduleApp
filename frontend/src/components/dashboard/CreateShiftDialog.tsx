@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { createShift } from "@/lib/api";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { createShift, addAssignment, getTeamMembers } from "@/lib/api";
 import { toast } from "sonner";
 
 interface Props {
@@ -18,20 +18,34 @@ export function CreateShiftDialog({ isOpen, onClose }: Props) {
   const [startTime, setStartTime] = useState("");
   const [endDate, setEndDate] = useState("");
   const [endTime, setEndTime] = useState("");
+  const [assignToId, setAssignToId] = useState<string>("");
+  const [isUpForGrabs, setIsUpForGrabs] = useState(false);
+
+  const { data: teamMembers = [] } = useQuery({
+    queryKey: ["team-members"],
+    queryFn: getTeamMembers,
+    enabled: isOpen,
+  });
 
   const mutation = useMutation({
-    mutationFn: () => {
+    mutationFn: async () => {
       const startDateTime = new Date(`${startDate}T${startTime}:00`).toISOString();
       const endDateTime = new Date(`${endDate}T${endTime}:00`).toISOString();
 
-      return createShift({
+      const shift = await createShift({
         startTime: startDateTime,
         endTime: endDateTime,
         roleName: roleName,
       });
+      await addAssignment(shift.id, {
+        userId: assignToId || undefined,
+        isUpForGrabs,
+      });
+      return shift;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["shifts"] });
+      queryClient.invalidateQueries({ queryKey: ["marketplace"] });
       toast.success("Zmiana utworzona!", {
         description: "Zmiana została dodana do grafiku.",
       });
@@ -41,6 +55,8 @@ export function CreateShiftDialog({ isOpen, onClose }: Props) {
       setStartTime("");
       setEndDate("");
       setEndTime("");
+      setAssignToId("");
+      setIsUpForGrabs(false);
     },
     onError: (err: Error) => {
       toast.error("Błąd tworzenia zmiany", {
@@ -129,6 +145,34 @@ export function CreateShiftDialog({ isOpen, onClose }: Props) {
               />
             </div>
           </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Przypisz do
+            </label>
+            <select
+              className="w-full p-2 border rounded bg-white"
+              value={assignToId}
+              onChange={(e) => setAssignToId(e.target.value)}
+            >
+              <option value="">— Wolna pozycja —</option>
+              {teamMembers.map((m) => (
+                <option key={m.id} value={m.id}>
+                  {m.nickname || m.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={isUpForGrabs}
+              onChange={(e) => setIsUpForGrabs(e.target.checked)}
+              className="rounded border-gray-300"
+            />
+            <span className="text-sm text-gray-700">Wystaw na giełdę (do przejęcia)</span>
+          </label>
 
           <div className="flex gap-2 justify-end mt-6">
             <Button variant="ghost" onClick={onClose}>

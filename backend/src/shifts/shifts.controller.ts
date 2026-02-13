@@ -1,16 +1,24 @@
-import { Controller, Get, Post, Body, Param, Patch, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Patch, Delete, Query, UseGuards } from '@nestjs/common';
 import { SkipThrottle, Throttle } from '@nestjs/throttler';
 import { ShiftsService } from './shifts.service';
 import { JwtAuthGuard } from '../auth/auth.guard';
 import { CurrentUser, CurrentUser as User } from '../auth/decorators/user.decorator';
 import { Public } from '../auth/decorators/public.decorator';
 import { CreateShiftDto } from './dto/create-shift.dto';
+import { AddAssignmentDto } from './dto/add-assignment.dto';
+import { ListShiftsQueryDto } from './dto/list-shifts-query.dto';
 import { CreateTeamDto } from './dto/create-team.dto';
 import { JoinTeamDto } from './dto/join-team.dto';
+import { UpdateShiftDto } from './dto/update-shift.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { UpdateEmployeeDto } from './dto/update-employee.dto';
 import { SyncUserDto } from './dto/sync-user.dto';
-import { ShiftIdParamDto, TargetIdParamDto, MembershipIdParamDto } from './dto/params.dto';
+import {
+  ShiftIdParamDto,
+  TargetIdParamDto,
+  MembershipIdParamDto,
+  AssignmentIdParamDto,
+} from './dto/params.dto';
 
 @Controller('shifts')
 @UseGuards(JwtAuthGuard)
@@ -19,8 +27,24 @@ export class ShiftsController {
 
   @SkipThrottle()
   @Get()
-  findAll(@CurrentUser() user: User) {
-    return this.shiftsService.findAll(user.userId);
+  findAll(@CurrentUser() user: User, @Query() query: ListShiftsQueryDto) {
+    return this.shiftsService.findAll(user.userId, {
+      from: query.from,
+      to: query.to,
+    });
+  }
+
+  /** Pozycje na giełdzie (do przejęcia). */
+  @SkipThrottle()
+  @Get('marketplace')
+  getMarketplace(@CurrentUser() user: User) {
+    return this.shiftsService.getMarketplace(user.userId);
+  }
+
+  @SkipThrottle()
+  @Get(':id')
+  findOne(@Param() params: ShiftIdParamDto, @CurrentUser() user: User) {
+    return this.shiftsService.findOne(user.userId, params.id);
   }
 
   @Post()
@@ -33,14 +57,67 @@ export class ShiftsController {
     });
   }
 
-  @Post(':id/claim')
-  claim(@Param() params: ShiftIdParamDto, @CurrentUser() user: User) {
-    return this.shiftsService.claimShift(params.id, user.userId);
+  @Patch(':id')
+  updateShift(
+    @Param() params: ShiftIdParamDto,
+    @Body() body: UpdateShiftDto,
+    @CurrentUser() user: User,
+  ) {
+    return this.shiftsService.updateShift(user.userId, params.id, {
+      startTime: body.startTime ? new Date(body.startTime) : undefined,
+      endTime: body.endTime ? new Date(body.endTime) : undefined,
+      roleName: body.roleName,
+      status: body.status,
+    });
   }
 
-  @Patch(':id/release')
-  release(@Param() params: ShiftIdParamDto, @CurrentUser() user: User) {
-    return this.shiftsService.releaseShift(params.id, user.userId);
+  /** Dodanie pozycji do zmiany (Owner/Manager): przypisanie użytkownika lub wolna pozycja. */
+  @Post(':id/assignments')
+  addAssignment(
+    @Param() params: ShiftIdParamDto,
+    @Body() body: AddAssignmentDto,
+    @CurrentUser() user: User,
+  ) {
+    return this.shiftsService.addAssignment(user.userId, params.id, {
+      userId: body.userId ?? undefined,
+      isUpForGrabs: body.isUpForGrabs,
+    });
+  }
+
+  @Patch('assignments/:assignmentId')
+  updateAssignment(
+    @Param() params: AssignmentIdParamDto,
+    @Body() body: AddAssignmentDto,
+    @CurrentUser() user: User,
+  ) {
+    return this.shiftsService.updateAssignment(user.userId, params.assignmentId, {
+      userId: body.userId,
+      isUpForGrabs: body.isUpForGrabs,
+    });
+  }
+
+  @Delete('assignments/:assignmentId')
+  removeAssignment(
+    @Param() params: AssignmentIdParamDto,
+    @CurrentUser() user: User,
+  ) {
+    return this.shiftsService.removeAssignment(user.userId, params.assignmentId);
+  }
+
+  @Post('assignments/:assignmentId/claim')
+  claimAssignment(
+    @Param() params: AssignmentIdParamDto,
+    @CurrentUser() user: User,
+  ) {
+    return this.shiftsService.claimAssignment(params.assignmentId, user.userId);
+  }
+
+  @Patch('assignments/:assignmentId/release')
+  releaseAssignment(
+    @Param() params: AssignmentIdParamDto,
+    @CurrentUser() user: User,
+  ) {
+    return this.shiftsService.releaseAssignment(params.assignmentId, user.userId);
   }
 
   @SkipThrottle()

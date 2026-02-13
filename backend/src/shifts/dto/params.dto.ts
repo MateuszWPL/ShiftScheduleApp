@@ -15,3 +15,8 @@ export class MembershipIdParamDto {
   membershipId: string;
 }
 
+export class AssignmentIdParamDto {
+  @IsUUID('4', { message: 'ID przypisania musi być prawidłowym UUID' })
+  assignmentId: string;
+}
+

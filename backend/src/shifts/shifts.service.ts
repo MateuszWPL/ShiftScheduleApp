@@ -7,7 +7,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { EmailService } from '../email/email.service';
-import { MembershipStatus, Role, Shift, ShiftStatus } from '@prisma/client';
+import { MembershipStatus, Role, ShiftStatus } from '@prisma/client';
 import { nanoid } from 'nanoid';
 
 @Injectable()
@@ -17,25 +17,99 @@ export class ShiftsService {
     private readonly emailService: EmailService,
   ) {}
 
-  async findAll(userId: string) {
+  /** Lista zmian zespołu (grafik). Opcjonalny filtr dat from/to. */
+  async findAll(
+    userId: string,
+    query?: { from?: string; to?: string },
+  ) {
     const activeMembership = await this.prisma.teamMembership.findFirst({
       where: { userId, status: MembershipStatus.ACTIVE },
-      include: { team: true },
     });
 
     if (!activeMembership) {
       return [];
     }
 
+    const where: {
+      teamId: string;
+      startTime?: { lte?: Date };
+      endTime?: { gte?: Date };
+    } = {
+      teamId: activeMembership.teamId,
+    };
+    // Zakres dat: zmiany zachodzące w [from, to] (start przed końcem okresu, koniec po początku)
+    if (query?.from) {
+      where.endTime = { gte: new Date(query.from) };
+    }
+    if (query?.to) {
+      where.startTime = { ...where.startTime, lte: new Date(query.to) };
+    }
+
     return this.prisma.shift.findMany({
-      where: {
-        teamId: activeMembership.teamId,
+      where,
+      include: {
+        assignments: {
+          include: { user: true },
+        },
       },
-      include: { user: true },
       orderBy: { startTime: 'asc' },
     });
   }
 
+  /** Jedna zmiana z przypisaniami (np. do edycji). */
+  async findOne(userId: string, shiftId: string) {
+    const membership = await this.prisma.teamMembership.findFirst({
+      where: { userId, status: MembershipStatus.ACTIVE },
+    });
+    if (!membership) {
+      throw new BadRequestException('Brak aktywnego członkostwa.');
+    }
+    const shift = await this.prisma.shift.findFirst({
+      where: { id: shiftId, teamId: membership.teamId },
+      include: {
+        assignments: { include: { user: true } },
+      },
+    });
+    if (!shift) {
+      throw new NotFoundException('Zmiana nie istnieje.');
+    }
+    return shift;
+  }
+
+  /** Aktualizacja zmiany (godziny, rola, status) – Owner/Manager. */
+  async updateShift(
+    requesterId: string,
+    shiftId: string,
+    data: { startTime?: Date; endTime?: Date; roleName?: string; status?: ShiftStatus },
+  ) {
+    const membership = await this.prisma.teamMembership.findFirst({
+      where: { userId: requesterId, status: MembershipStatus.ACTIVE },
+    });
+    if (!membership) {
+      throw new BadRequestException('Brak aktywnego członkostwa.');
+    }
+    if (membership.role !== Role.OWNER && membership.role !== Role.MANAGER) {
+      throw new ForbiddenException('Tylko Owner/Manager może edytować zmiany.');
+    }
+    const shift = await this.prisma.shift.findFirst({
+      where: { id: shiftId, teamId: membership.teamId },
+    });
+    if (!shift) {
+      throw new NotFoundException('Zmiana nie istnieje.');
+    }
+    const updateData: { startTime?: Date; endTime?: Date; roleName?: string; status?: ShiftStatus } = {};
+    if (data.startTime !== undefined) updateData.startTime = data.startTime;
+    if (data.endTime !== undefined) updateData.endTime = data.endTime;
+    if (data.roleName !== undefined) updateData.roleName = data.roleName;
+    if (data.status !== undefined) updateData.status = data.status;
+    return this.prisma.shift.update({
+      where: { id: shiftId },
+      data: updateData,
+      include: { assignments: { include: { user: true } } },
+    });
+  }
+
+  /** Tworzenie zmiany (bez przypisań). Przypisania dodaje się przez addAssignment. */
   async create(
     userId: string,
     data: { startTime: Date; endTime: Date; roleName: string; status?: ShiftStatus },
@@ -48,6 +122,10 @@ export class ShiftsService {
       throw new BadRequestException('Musisz należeć do zespołu (ACTIVE), żeby tworzyć zmiany.');
     }
 
+    if (membership.role !== Role.OWNER && membership.role !== Role.MANAGER) {
+      throw new ForbiddenException('Tylko Owner lub Manager może tworzyć zmiany.');
+    }
+
     return this.prisma.shift.create({
       data: {
         startTime: data.startTime,
@@ -55,10 +133,127 @@ export class ShiftsService {
         roleName: data.roleName,
         status: data.status ?? ShiftStatus.DRAFT,
         teamId: membership.teamId,
-        userId: null,
-        isUpForGrabs: false,
       },
-      include: { user: true },
+      include: {
+        assignments: { include: { user: true } },
+      },
+    });
+  }
+
+  /** Dodanie jednej pozycji do zmiany (przypisanie pracownika lub wolna pozycja na giełdzie). */
+  async addAssignment(
+    requesterId: string,
+    shiftId: string,
+    data: { userId?: string; isUpForGrabs?: boolean },
+  ) {
+    const membership = await this.prisma.teamMembership.findFirst({
+      where: { userId: requesterId, status: MembershipStatus.ACTIVE },
+    });
+    if (!membership) {
+      throw new BadRequestException('Brak aktywnego członkostwa.');
+    }
+    if (membership.role !== Role.OWNER && membership.role !== Role.MANAGER) {
+      throw new ForbiddenException('Tylko Owner/Manager może dodawać przypisania.');
+    }
+
+    const shift = await this.prisma.shift.findFirst({
+      where: { id: shiftId, teamId: membership.teamId },
+    });
+    if (!shift) {
+      throw new NotFoundException('Zmiana nie istnieje lub nie należy do Twojego zespołu.');
+    }
+
+    return this.prisma.shiftAssignment.create({
+      data: {
+        shiftId,
+        userId: data.userId ?? null,
+        isUpForGrabs: data.isUpForGrabs ?? false,
+      },
+      include: {
+        shift: true,
+        user: true,
+      },
+    });
+  }
+
+  /** Usunięcie przypisania (tylko Owner/Manager). */
+  async removeAssignment(requesterId: string, assignmentId: string) {
+    const membership = await this.prisma.teamMembership.findFirst({
+      where: { userId: requesterId, status: MembershipStatus.ACTIVE },
+    });
+    if (!membership) {
+      throw new BadRequestException('Brak aktywnego członkostwa.');
+    }
+    if (membership.role !== Role.OWNER && membership.role !== Role.MANAGER) {
+      throw new ForbiddenException('Tylko Owner/Manager może usuwać przypisania.');
+    }
+
+    const assignment = await this.prisma.shiftAssignment.findFirst({
+      where: { id: assignmentId },
+      include: { shift: true },
+    });
+    if (!assignment || assignment.shift.teamId !== membership.teamId) {
+      throw new NotFoundException('Przypisanie nie istnieje lub nie należy do Twojego zespołu.');
+    }
+
+    await this.prisma.shiftAssignment.delete({ where: { id: assignmentId } });
+    return { success: true };
+  }
+
+  /** Edycja przypisania (Owner/Manager): zmiana użytkownika lub ustawienie giełdy. */
+  async updateAssignment(
+    requesterId: string,
+    assignmentId: string,
+    data: { userId?: string | null; isUpForGrabs?: boolean },
+  ) {
+    const membership = await this.prisma.teamMembership.findFirst({
+      where: { userId: requesterId, status: MembershipStatus.ACTIVE },
+    });
+    if (!membership) {
+      throw new BadRequestException('Brak aktywnego członkostwa.');
+    }
+    if (membership.role !== Role.OWNER && membership.role !== Role.MANAGER) {
+      throw new ForbiddenException('Tylko Owner/Manager może edytować przypisania.');
+    }
+
+    const assignment = await this.prisma.shiftAssignment.findFirst({
+      where: { id: assignmentId },
+      include: { shift: true },
+    });
+    if (!assignment || assignment.shift.teamId !== membership.teamId) {
+      throw new NotFoundException('Przypisanie nie istnieje lub nie należy do Twojego zespołu.');
+    }
+
+    const updateData: { userId?: string | null; isUpForGrabs?: boolean } = {};
+    if (data.userId !== undefined) updateData.userId = data.userId;
+    if (data.isUpForGrabs !== undefined) updateData.isUpForGrabs = data.isUpForGrabs;
+
+    return this.prisma.shiftAssignment.update({
+      where: { id: assignmentId },
+      data: updateData,
+      include: { shift: true, user: true },
+    });
+  }
+
+  /** Lista pozycji na giełdzie (assignments z isUpForGrabs). */
+  async getMarketplace(userId: string) {
+    const membership = await this.prisma.teamMembership.findFirst({
+      where: { userId, status: MembershipStatus.ACTIVE },
+    });
+    if (!membership) {
+      return [];
+    }
+
+    return this.prisma.shiftAssignment.findMany({
+      where: {
+        isUpForGrabs: true,
+        shift: { teamId: membership.teamId },
+      },
+      include: {
+        shift: true,
+        user: true,
+      },
+      orderBy: { shift: { startTime: 'asc' } },
     });
   }
 
@@ -79,77 +274,79 @@ export class ShiftsService {
   }
   
 
-  async claimShift(shiftId: string, userId: string) {
+  /** Przejęcie pozycji z giełdy (pessimistic lock). */
+  async claimAssignment(assignmentId: string, userId: string) {
     try {
       return await this.prisma.$transaction(async (tx) => {
         const membership = await tx.teamMembership.findFirst({
           where: { userId, status: MembershipStatus.ACTIVE },
         });
-
         if (!membership) {
           throw new ForbiddenException('Brak aktywnego członkostwa w zespole.');
         }
 
-        const rawShifts = await tx.$queryRaw<Shift[]>`
-          SELECT * FROM "Shift"
-          WHERE "id" = ${shiftId}
+        const raw = await tx.$queryRaw<
+          { id: string; shiftId: string; userId: string | null; isUpForGrabs: boolean }[]
+        >`
+          SELECT id, "shiftId", "userId", "isUpForGrabs"
+          FROM "ShiftAssignment"
+          WHERE id = ${assignmentId}
           FOR UPDATE
         `;
-
-        const shift = rawShifts[0];
-
-        if (!shift) {
-          throw new NotFoundException('Zmiana nie istnieje.');
+        const assignment = raw[0];
+        if (!assignment) {
+          throw new NotFoundException('Przypisanie nie istnieje.');
         }
 
-        if (shift.teamId !== membership.teamId) {
-          throw new ForbiddenException('Nie możesz przejąć zmiany z innego zespołu.');
+        const shift = await tx.shift.findUnique({
+          where: { id: assignment.shiftId },
+          select: { teamId: true },
+        });
+        if (!shift || shift.teamId !== membership.teamId) {
+          throw new ForbiddenException('Nie możesz przejąć pozycji z innego zespołu.');
+        }
+        if (!assignment.isUpForGrabs) {
+          throw new BadRequestException('Ta pozycja nie jest dostępna na giełdzie.');
         }
 
-        const isAvailable = (shift as any).isUpForGrabs ?? (shift as any).isupforgrabs;
-
-        if (!isAvailable) {
-          throw new BadRequestException('Ta zmiana nie jest dostępna na giełdzie.');
-        }
-
-        return tx.shift.update({
-          where: { id: shiftId },
-          data: {
-            isUpForGrabs: false,
-            userId,
-          },
+        return tx.shiftAssignment.update({
+          where: { id: assignmentId },
+          data: { isUpForGrabs: false, userId },
+          include: { shift: true, user: true },
         });
       });
     } catch (error) {
-      if (error instanceof BadRequestException || error instanceof NotFoundException || error instanceof ForbiddenException) {
+      if (
+        error instanceof BadRequestException ||
+        error instanceof NotFoundException ||
+        error instanceof ForbiddenException
+      ) {
         throw error;
       }
-      throw new InternalServerErrorException(error.message);
+      throw new InternalServerErrorException(
+        error instanceof Error ? error.message : 'Unknown error',
+      );
     }
   }
-  async releaseShift(shiftId: string, userId: string) {
+
+  /** Oddanie swojej pozycji na giełdę. */
+  async releaseAssignment(assignmentId: string, userId: string) {
     return this.prisma.$transaction(async (tx) => {
-      const rawShifts = await tx.$queryRaw<Shift[]>`
-        SELECT * FROM "Shift"
-        WHERE "id" = ${shiftId}
-        FOR UPDATE
+      const raw = await tx.$queryRaw<{ id: string; userId: string | null }[]>`
+        SELECT id, "userId" FROM "ShiftAssignment" WHERE id = ${assignmentId} FOR UPDATE
       `;
-
-      const shift = rawShifts[0];
-
-      if (!shift) {
-        throw new NotFoundException('Zmiana nie istnieje.');
+      const assignment = raw[0];
+      if (!assignment) {
+        throw new NotFoundException('Przypisanie nie istnieje.');
+      }
+      if (assignment.userId !== userId) {
+        throw new BadRequestException('Nie możesz oddać cudzej pozycji.');
       }
 
-      if (shift.userId !== userId) {
-        throw new BadRequestException('Nie możesz oddać cudzej zmiany!');
-      }
-
-      return tx.shift.update({
-        where: { id: shiftId },
-        data: {
-          isUpForGrabs: true,
-        },
+      return tx.shiftAssignment.update({
+        where: { id: assignmentId },
+        data: { isUpForGrabs: true },
+        include: { shift: true, user: true },
       });
     });
   }

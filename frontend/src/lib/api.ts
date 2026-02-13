@@ -17,14 +17,31 @@ export function getAvatarUrl(avatarUrl?: string | null): string | undefined {
   return avatarUrl;
 }
 
+/** Minimalny user w odpowiedzi z API (np. w assignment) */
+export interface ShiftUser {
+  id: string;
+  name: string;
+  nickname?: string | null;
+  avatarUrl?: string | null;
+}
+
+export interface ShiftAssignment {
+  id: string;
+  shiftId: string;
+  userId: string | null;
+  isUpForGrabs: boolean;
+  user?: ShiftUser | null;
+  shift?: Shift;
+}
+
 export interface Shift {
   id: string;
   startTime: string;
   endTime: string;
   roleName: string;
   status: "DRAFT" | "PUBLISHED" | "COMPLETED";
-  isUpForGrabs: boolean;
-  userId: string | null;
+  teamId: string;
+  assignments?: ShiftAssignment[];
 }
 
 let tokenCache: { token: string; expiresAt: number } | null = null;
@@ -131,8 +148,18 @@ async function authenticatedFetchFormData(url: string, formData: FormData): Prom
   return response;
 }
 
-export async function getShifts(): Promise<Shift[]> {
-  const res = await authenticatedFetch(`${API_URL}/shifts`);
+export interface GetShiftsParams {
+  from?: string; // ISO date
+  to?: string;   // ISO date
+}
+
+export async function getShifts(params?: GetShiftsParams): Promise<Shift[]> {
+  const search = new URLSearchParams();
+  if (params?.from) search.set("from", params.from);
+  if (params?.to) search.set("to", params.to);
+  const q = search.toString();
+  const url = q ? `${API_URL}/shifts?${q}` : `${API_URL}/shifts`;
+  const res = await authenticatedFetch(url);
   if (!res.ok) {
     const error = await res.json();
     throw new Error(error.message || "Błąd pobierania zmian");
@@ -140,28 +167,86 @@ export async function getShifts(): Promise<Shift[]> {
   return res.json();
 }
 
-export async function claimShift(shiftId: string): Promise<Shift> {
-  const res = await authenticatedFetch(`${API_URL}/shifts/${shiftId}/claim`, {
-    method: "POST",
-  });
-
+export async function getShift(shiftId: string): Promise<Shift> {
+  const res = await authenticatedFetch(`${API_URL}/shifts/${shiftId}`);
   if (!res.ok) {
     const error = await res.json();
-    throw new Error(error.message || "Błąd przejmowania zmiany");
+    throw new Error(error.message || "Błąd pobierania zmiany");
   }
   return res.json();
 }
 
-export async function releaseShift(shiftId: string): Promise<Shift> {
-  const res = await authenticatedFetch(`${API_URL}/shifts/${shiftId}/release`, {
-    method: "PATCH",
-  });
-
+export async function getMarketplace(): Promise<ShiftAssignment[]> {
+  const res = await authenticatedFetch(`${API_URL}/shifts/marketplace`);
   if (!res.ok) {
     const error = await res.json();
-    throw new Error(error.message || "Błąd oddawania zmiany");
+    throw new Error(error.message || "Błąd pobierania giełdy");
   }
   return res.json();
+}
+
+export async function claimAssignment(assignmentId: string): Promise<ShiftAssignment> {
+  const res = await authenticatedFetch(`${API_URL}/shifts/assignments/${assignmentId}/claim`, {
+    method: "POST",
+  });
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.message || "Błąd przejmowania pozycji");
+  }
+  return res.json();
+}
+
+export async function releaseAssignment(assignmentId: string): Promise<ShiftAssignment> {
+  const res = await authenticatedFetch(`${API_URL}/shifts/assignments/${assignmentId}/release`, {
+    method: "PATCH",
+  });
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.message || "Błąd oddawania pozycji");
+  }
+  return res.json();
+}
+
+export interface AddAssignmentInput {
+  userId?: string | null;
+  isUpForGrabs?: boolean;
+}
+
+export async function addAssignment(shiftId: string, data: AddAssignmentInput): Promise<ShiftAssignment> {
+  const res = await authenticatedFetch(`${API_URL}/shifts/${shiftId}/assignments`, {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.message || "Błąd dodawania przypisania");
+  }
+  return res.json();
+}
+
+export async function updateAssignment(
+  assignmentId: string,
+  data: AddAssignmentInput
+): Promise<ShiftAssignment> {
+  const res = await authenticatedFetch(`${API_URL}/shifts/assignments/${assignmentId}`, {
+    method: "PATCH",
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.message || "Błąd edycji przypisania");
+  }
+  return res.json();
+}
+
+export async function removeAssignment(assignmentId: string): Promise<void> {
+  const res = await authenticatedFetch(`${API_URL}/shifts/assignments/${assignmentId}`, {
+    method: "DELETE",
+  });
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.message || "Błąd usuwania przypisania");
+  }
 }
 
 export interface User {
@@ -357,6 +442,25 @@ export async function createShift(data: CreateShiftInput): Promise<Shift> {
   if (!res.ok) {
     const error = await res.json();
     throw new Error(error.message || "Błąd tworzenia zmiany");
+  }
+  return res.json();
+}
+
+export interface UpdateShiftInput {
+  startTime?: string;
+  endTime?: string;
+  roleName?: string;
+  status?: "DRAFT" | "PUBLISHED" | "COMPLETED";
+}
+
+export async function updateShift(shiftId: string, data: UpdateShiftInput): Promise<Shift> {
+  const res = await authenticatedFetch(`${API_URL}/shifts/${shiftId}`, {
+    method: "PATCH",
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.message || "Błąd edycji zmiany");
   }
   return res.json();
 }
