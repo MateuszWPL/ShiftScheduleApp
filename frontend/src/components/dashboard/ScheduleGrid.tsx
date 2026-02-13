@@ -128,8 +128,10 @@ export function ScheduleGrid({
     onError: (e: Error) => toast.error(e.message),
   });
 
-  const grid = buildGrid(shifts, members, weekDays);
+  const employeesOnly = members.filter((m) => (m as { role?: string }).role === "EMPLOYEE");
+  const grid = buildGrid(shifts, employeesOnly, weekDays);
   const isLoading = membersLoading || shiftsLoading;
+  const canUseMarketplace = currentUserRole === "EMPLOYEE";
 
   const prevWeek = () => {
     const prev = new Date(monday);
@@ -179,7 +181,7 @@ export function ScheduleGrid({
               </tr>
             </thead>
             <tbody>
-              {members.map((member) => (
+              {employeesOnly.map((member) => (
                 <tr key={member.id} className="border-b border-slate-100 hover:bg-slate-50/50">
                   <td className="p-2 border-r border-slate-100 font-medium text-slate-800 sticky left-0 bg-white z-[1]">
                     {member.nickname || member.name}
@@ -196,8 +198,8 @@ export function ScheduleGrid({
                           {slots.map(({ assignment, shift }) => {
                             const timeStr = `${new Date(shift.startTime).toLocaleTimeString("pl-PL", { hour: "2-digit", minute: "2-digit" })}–${new Date(shift.endTime).toLocaleTimeString("pl-PL", { hour: "2-digit", minute: "2-digit" })}`;
                             const isMine = assignment.userId === currentUserId;
-                            const canClaim = assignment.isUpForGrabs && !isMine;
-                            const canRelease = isMine && !assignment.isUpForGrabs;
+                            const canClaim = canUseMarketplace && assignment.isUpForGrabs && !isMine;
+                            const canRelease = canUseMarketplace && isMine && !assignment.isUpForGrabs;
 
                             return (
                               <div

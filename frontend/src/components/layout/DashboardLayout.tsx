@@ -5,9 +5,10 @@ import {
   LayoutDashboard,
   Users,
   Calendar,
-  Settings,
+  CalendarCheck,
+  ClipboardList,
   LogOut,
-  User
+  User,
 } from "lucide-react";
 import { Avatar } from "@/components/ui/avatar";
 import Link from "next/link";
@@ -39,17 +40,29 @@ export function DashboardLayout({ children, userRole, userName, userAvatar, onLo
             </Link>
           </Button>
           <Button variant="ghost" className="w-full justify-start text-slate-300 hover:text-white hover:bg-slate-800" asChild>
-            <Link href="/">
+            <Link href="/grafik">
               <Calendar className="mr-2 h-4 w-4" /> Grafik
             </Link>
           </Button>
+          {userRole === "EMPLOYEE" && (
+            <Button variant="ghost" className="w-full justify-start text-slate-300 hover:text-white hover:bg-slate-800" asChild>
+              <Link href="/dostepnosc">
+                <CalendarCheck className="mr-2 h-4 w-4" /> Dostępność
+              </Link>
+            </Button>
+          )}
+          {(userRole === "OWNER" || userRole === "MANAGER") && (
+            <Button variant="ghost" className="w-full justify-start text-slate-300 hover:text-white hover:bg-slate-800" asChild>
+              <Link href="/panel">
+                <ClipboardList className="mr-2 h-4 w-4" /> Panel Menedżera
+              </Link>
+            </Button>
+          )}
           <Button variant="ghost" className="w-full justify-start text-slate-300 hover:text-white hover:bg-slate-800" asChild>
             <Link href="/team">
               <Users className="mr-2 h-4 w-4" /> Zespół
             </Link>
           </Button>
-          
-          {/* Profil - dostępny dla wszystkich */}
           <div className="pt-4 mt-4 border-t border-slate-800">
             <Button variant="ghost" className="w-full justify-start text-slate-300 hover:text-white hover:bg-slate-800" asChild>
               <Link href="/profile">
