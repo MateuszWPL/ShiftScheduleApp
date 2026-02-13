@@ -8,6 +8,7 @@ import { ShiftsModule } from './shifts/shifts.module';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { CloudinaryModule } from './cloudinary/cloudinary.module';
+import { AvailabilityModule } from './availability/availability.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { CloudinaryModule } from './cloudinary/cloudinary.module';
     AuthModule,
     UsersModule,
     CloudinaryModule,
+    AvailabilityModule,
   ],
   controllers: [AppController],
   providers: [

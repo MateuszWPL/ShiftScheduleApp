@@ -8,6 +8,7 @@ import { ResetPasswordDto } from './dto/reset-password.dto';
 import { JwtService } from '@nestjs/jwt';
 import { EmailService } from '../email/email.service';
 import { randomBytes } from 'crypto';
+import { DEFAULT_USER_NICKNAME } from '../constants/user-defaults';
 
 @Injectable()
 export class AuthService {
@@ -36,6 +37,7 @@ export class AuthService {
       data: {
         email: registerDto.email,
         name: registerDto.name,
+        nickname: DEFAULT_USER_NICKNAME,
         password: hashedPassword,
         provider: 'email',
         emailVerified: false,

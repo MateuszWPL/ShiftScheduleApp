@@ -9,6 +9,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { EmailService } from '../email/email.service';
 import { MembershipStatus, Role, ShiftStatus } from '@prisma/client';
 import { nanoid } from 'nanoid';
+import { DEFAULT_USER_NAME, DEFAULT_USER_NICKNAME } from '../constants/user-defaults';
 
 @Injectable()
 export class ShiftsService {
@@ -358,11 +359,12 @@ export class ShiftsService {
     });
 
     if (!user) {
-      // Tworzenie nowego użytkownika - używamy nazwy z Google
+      // Nowy użytkownik – domyślne imię i pseudonim do uzupełnienia przez administratora
       user = await this.prisma.user.create({
         data: {
           email,
-          name,
+          name: DEFAULT_USER_NAME,
+          nickname: DEFAULT_USER_NICKNAME,
           role: 'EMPLOYEE',
           provider: 'google',
           status: 'ACTIVE',

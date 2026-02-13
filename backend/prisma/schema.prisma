@@ -29,18 +29,36 @@ model User {
   nickname               String?
   notes                  String?
   shiftAssignments       ShiftAssignment[]
+  availabilitySlots      AvailabilitySlot[]
   memberships            TeamMembership[]
   team                   Team?               @relation(fields: [teamId], references: [id])
 }
 
 model Team {
-  id          String           @id @default(uuid())
-  name        String
-  createdAt   DateTime         @default(now())
-  inviteCode  String           @unique
-  shifts      Shift[]
-  memberships TeamMembership[]
-  users       User[]
+  id                 String             @id @default(uuid())
+  name               String
+  createdAt          DateTime          @default(now())
+  inviteCode         String             @unique
+  shifts             Shift[]
+  availabilitySlots  AvailabilitySlot[]
+  memberships        TeamMembership[]
+  users              User[]
+}
+
+/// Dostępność pracownika: przedział czasowy, w którym może pracować (min. 4h na slot).
+model AvailabilitySlot {
+  id           String   @id @default(uuid())
+  userId       String
+  teamId       String
+  startDateTime DateTime
+  endDateTime   DateTime
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  team         Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  @@index([userId, startDateTime])
+  @@index([teamId, startDateTime])
 }
 
 model Shift {

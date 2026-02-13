@@ -1,6 +1,7 @@
 import { Injectable, ForbiddenException, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateShadowProfileDto } from './dto/create-shadow-profile.dto';
+import { DEFAULT_USER_NICKNAME } from '../constants/user-defaults';
 import { PublicUserDto, PrivateUserDto } from './dto/user-response.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 
@@ -12,6 +13,7 @@ export class UsersService {
     return this.prisma.user.create({
       data: {
         name: createDto.name,
+        nickname: DEFAULT_USER_NICKNAME,
         hourlyRate: createDto.hourlyRate,
         maxHours: createDto.maxHours,
         phoneNumber: createDto.phoneNumber,

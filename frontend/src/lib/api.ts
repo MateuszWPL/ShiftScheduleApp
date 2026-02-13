@@ -249,6 +249,69 @@ export async function removeAssignment(assignmentId: string): Promise<void> {
   }
 }
 
+// --- Dostępność ---
+export interface AvailabilitySlot {
+  id: string;
+  userId: string;
+  teamId: string;
+  startDateTime: string;
+  endDateTime: string;
+  createdAt: string;
+  updatedAt: string;
+  user?: { id: string; name: string; nickname?: string | null };
+}
+
+export interface AvailabilitySlotInput {
+  startDateTime: string;
+  endDateTime: string;
+}
+
+export async function getMyAvailability(params?: { from?: string; to?: string }): Promise<AvailabilitySlot[]> {
+  const search = new URLSearchParams();
+  if (params?.from) search.set("from", params.from);
+  if (params?.to) search.set("to", params.to);
+  const q = search.toString();
+  const url = q ? `${API_URL}/availability/me?${q}` : `${API_URL}/availability/me`;
+  const res = await authenticatedFetch(url);
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.message || "Błąd pobierania dostępności");
+  }
+  return res.json();
+}
+
+export async function getTeamAvailability(params: { from: string; to: string }): Promise<AvailabilitySlot[]> {
+  const search = new URLSearchParams({ from: params.from, to: params.to });
+  const res = await authenticatedFetch(`${API_URL}/availability/team?${search}`);
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.message || "Błąd pobierania dostępności zespołu");
+  }
+  return res.json();
+}
+
+export async function createAvailabilitySlots(slots: AvailabilitySlotInput[]): Promise<AvailabilitySlot[]> {
+  const res = await authenticatedFetch(`${API_URL}/availability`, {
+    method: "POST",
+    body: JSON.stringify({ slots }),
+  });
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.message || "Błąd dodawania dostępności");
+  }
+  return res.json();
+}
+
+export async function deleteAvailabilitySlot(slotId: string): Promise<void> {
+  const res = await authenticatedFetch(`${API_URL}/availability/slots/${slotId}`, {
+    method: "DELETE",
+  });
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.message || "Błąd usuwania slotu");
+  }
+}
+
 export interface User {
   id: string;
   name: string;

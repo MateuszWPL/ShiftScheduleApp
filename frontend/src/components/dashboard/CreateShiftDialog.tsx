@@ -1,10 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createShift, addAssignment, getTeamMembers } from "@/lib/api";
 import { toast } from "sonner";
+import { TimeBlockStrip, minutesToTime } from "./TimeBlockStrip";
+
+const MIN_SHIFT_MINUTES = 60;
 
 interface Props {
   isOpen: boolean;
@@ -14,10 +17,8 @@ interface Props {
 export function CreateShiftDialog({ isOpen, onClose }: Props) {
   const queryClient = useQueryClient();
   const [roleName, setRoleName] = useState("");
-  const [startDate, setStartDate] = useState("");
-  const [startTime, setStartTime] = useState("");
-  const [endDate, setEndDate] = useState("");
-  const [endTime, setEndTime] = useState("");
+  const [shiftDate, setShiftDate] = useState("");
+  const [timeBlock, setTimeBlock] = useState<{ startMin: number; endMin: number } | null>(null);
   const [assignToId, setAssignToId] = useState<string>("");
   const [isUpForGrabs, setIsUpForGrabs] = useState(false);
 
@@ -29,8 +30,10 @@ export function CreateShiftDialog({ isOpen, onClose }: Props) {
 
   const mutation = useMutation({
     mutationFn: async () => {
-      const startDateTime = new Date(`${startDate}T${startTime}:00`).toISOString();
-      const endDateTime = new Date(`${endDate}T${endTime}:00`).toISOString();
+      if (!shiftDate || !timeBlock) throw new Error("Ustaw datę i godziny");
+      const { start, end } = minutesToTime(timeBlock.startMin, timeBlock.endMin);
+      const startDateTime = new Date(`${shiftDate}T${start}:00`).toISOString();
+      const endDateTime = new Date(`${shiftDate}T${end}:00`).toISOString();
 
       const shift = await createShift({
         startTime: startDateTime,
@@ -51,10 +54,8 @@ export function CreateShiftDialog({ isOpen, onClose }: Props) {
       });
       onClose();
       setRoleName("");
-      setStartDate("");
-      setStartTime("");
-      setEndDate("");
-      setEndTime("");
+      setShiftDate("");
+      setTimeBlock(null);
       setAssignToId("");
       setIsUpForGrabs(false);
     },
@@ -67,15 +68,17 @@ export function CreateShiftDialog({ isOpen, onClose }: Props) {
 
   if (!isOpen) return null;
 
-  // Ustaw domyślne wartości dat (dzisiaj)
   const today = new Date().toISOString().split("T")[0];
-  const defaultStartDate = startDate || today;
-  const defaultEndDate = endDate || today;
+  const defaultDate = shiftDate || today;
+  const canSubmit = roleName.trim() && shiftDate && timeBlock && timeBlock.endMin > timeBlock.startMin;
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-white p-6 rounded-lg shadow-xl w-full max-w-md">
-        <h2 className="text-xl font-bold mb-4">Dodaj Nową Zmianę</h2>
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white p-6 rounded-xl shadow-xl w-full max-w-lg">
+        <h2 className="text-xl font-bold mb-4">Dodaj nową zmianę</h2>
+        <p className="text-sm text-slate-600 mb-4">
+          Kliknij na pasmo godzin, aby ustawić przedział. Przeciągnij blok, aby przesunąć; za brzegi — aby skrócić lub wydłużyć.
+        </p>
 
         <div className="space-y-4">
           <div>
@@ -84,66 +87,36 @@ export function CreateShiftDialog({ isOpen, onClose }: Props) {
             </label>
             <input
               type="text"
-              placeholder="np. Kelner, Barista, Kierowca"
-              className="w-full p-2 border rounded"
+              placeholder="np. Kelner, Barista"
+              className="w-full p-2 border border-slate-300 rounded-lg"
               value={roleName}
               onChange={(e) => setRoleName(e.target.value)}
-              required
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Data rozpoczęcia *
-              </label>
-              <input
-                type="date"
-                className="w-full p-2 border rounded"
-                value={defaultStartDate}
-                onChange={(e) => setStartDate(e.target.value)}
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Godzina rozpoczęcia *
-              </label>
-              <input
-                type="time"
-                className="w-full p-2 border rounded"
-                value={startTime}
-                onChange={(e) => setStartTime(e.target.value)}
-                required
-              />
-            </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Data *
+            </label>
+            <input
+              type="date"
+              className="w-full p-2 border border-slate-300 rounded-lg"
+              value={defaultDate}
+              onChange={(e) => setShiftDate(e.target.value)}
+            />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Data zakończenia *
-              </label>
-              <input
-                type="date"
-                className="w-full p-2 border rounded"
-                value={defaultEndDate}
-                onChange={(e) => setEndDate(e.target.value)}
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Godzina zakończenia *
-              </label>
-              <input
-                type="time"
-                className="w-full p-2 border rounded"
-                value={endTime}
-                onChange={(e) => setEndTime(e.target.value)}
-                required
-              />
-            </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Godziny — kliknij na pasmo lub przeciągnij blok *
+            </label>
+            <TimeBlockStrip
+              label={defaultDate}
+              minBlockMinutes={MIN_SHIFT_MINUTES}
+              singleBlock
+              value={timeBlock}
+              onChange={setTimeBlock}
+            />
           </div>
 
           <div>
@@ -180,9 +153,9 @@ export function CreateShiftDialog({ isOpen, onClose }: Props) {
             </Button>
             <Button
               onClick={() => mutation.mutate()}
-              disabled={mutation.isPending || !roleName || !startDate || !startTime || !endDate || !endTime}
+              disabled={mutation.isPending || !canSubmit}
             >
-              {mutation.isPending ? "Tworzenie..." : "Utwórz Zmianę"}
+              {mutation.isPending ? "Tworzenie..." : "Utwórz zmianę"}
             </Button>
           </div>
         </div>
