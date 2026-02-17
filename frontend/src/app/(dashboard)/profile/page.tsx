@@ -8,8 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
-import { Card } from "@/components/ui/card";
-import { Lock, User as UserIcon, Phone, Mail, Upload, X } from "lucide-react";
+import { Lock, User as UserIcon, Phone, Mail, Upload, X, Info } from "lucide-react";
 
 export default function ProfilePage() {
   const { dbUser, currentUser, invalidateQueries } = useDashboardUser();
@@ -78,12 +77,14 @@ export default function ProfilePage() {
   });
 
   const isEmployee = user?.role === "EMPLOYEE";
-  const isAdmin = user?.role === "OWNER" || user?.role === "MANAGER";
 
   if (!user) {
     return (
-      <div className="flex items-center justify-center min-h-[300px] text-slate-500">
-        Ładowanie profilu...
+      <div className="flex items-center justify-center min-h-[300px] text-brand-dark/40">
+        <div className="inline-flex items-center gap-2 text-sm">
+          <div className="w-4 h-4 border-2 border-brand-blue/30 border-t-brand-blue rounded-full animate-spin" />
+          Ładowanie profilu...
+        </div>
       </div>
     );
   }
@@ -91,13 +92,23 @@ export default function ProfilePage() {
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">Mój Profil</h1>
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-brand-muted flex items-center justify-center">
+            <UserIcon className="h-5 w-5 text-brand" />
+          </div>
+          <div>
+            <h1 className="text-xl font-bold text-brand-dark">Mój Profil</h1>
+            <p className="text-xs text-brand-dark/40">Zarządzaj danymi swojego konta</p>
+          </div>
+        </div>
         {!isEditing && (
-          <Button onClick={() => setIsEditing(true)}>Edytuj</Button>
+          <Button onClick={() => setIsEditing(true)} className="bg-brand hover:bg-brand-light text-white">
+            Edytuj
+          </Button>
         )}
       </div>
 
-      <Card className="p-6">
+      <div className="bg-white border border-brand-warm/40 rounded-xl p-6 shadow-sm">
         <div className="flex items-start gap-6">
           <div className="flex-shrink-0">
             <Avatar
@@ -116,25 +127,26 @@ export default function ProfilePage() {
                   id="avatar-upload"
                 />
                 <label htmlFor="avatar-upload">
-                  <Button type="button" size="sm" variant="outline" className="w-full cursor-pointer" asChild>
+                  <Button type="button" size="sm" variant="outline" className="w-full cursor-pointer border-brand-warm/60 hover:bg-brand-warm-light" asChild>
                     <span><Upload className="h-4 w-4 mr-2" /> Wybierz zdjęcie</span>
                   </Button>
                 </label>
                 {selectedFile && (
                   <div className="space-y-2 mt-2">
-                    <p className="text-xs text-gray-600 truncate">{selectedFile.name}</p>
+                    <p className="text-xs text-brand-dark/50 truncate">{selectedFile.name}</p>
                     <div className="flex gap-2">
                       <Button
                         size="sm"
                         onClick={() => uploadAvatarMutation.mutate(selectedFile)}
                         disabled={uploadAvatarMutation.isPending}
-                        className="flex-1"
+                        className="flex-1 bg-brand hover:bg-brand-light text-white"
                       >
                         {uploadAvatarMutation.isPending ? "Wgrywanie..." : "Wgraj"}
                       </Button>
                       <Button
                         size="sm"
                         variant="ghost"
+                        className="text-brand-dark/30 hover:text-brand-dark"
                         onClick={() => {
                           setAvatarPreview(null);
                           setSelectedFile(null);
@@ -150,10 +162,10 @@ export default function ProfilePage() {
             )}
           </div>
 
-          <div className="flex-1 space-y-4">
+          <div className="flex-1 space-y-5">
             <div>
-              <label className="text-sm font-medium text-gray-500 flex items-center gap-2">
-                <UserIcon className="h-4 w-4" /> Imię i Nazwisko
+              <label className="text-xs font-medium text-brand-dark/40 flex items-center gap-1.5 uppercase tracking-wider">
+                <UserIcon className="h-3.5 w-3.5" /> Imię i Nazwisko
               </label>
               {isEditing ? (
                 <Input
@@ -161,27 +173,27 @@ export default function ProfilePage() {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="Imię i Nazwisko"
-                  className="mt-1"
+                  className="mt-1.5 border-brand-warm/60 focus:border-brand focus:ring-brand/20"
                 />
               ) : (
-                <p className="text-lg font-semibold mt-1">{user.name}</p>
+                <p className="text-lg font-semibold text-brand-dark mt-1">{user.name}</p>
               )}
             </div>
             {user.email && (
               <div>
-                <label className="text-sm font-medium text-gray-500 flex items-center gap-2">
-                  <Mail className="h-4 w-4" /> Email
+                <label className="text-xs font-medium text-brand-dark/40 flex items-center gap-1.5 uppercase tracking-wider">
+                  <Mail className="h-3.5 w-3.5" /> Email
                 </label>
                 <div className="mt-1 flex items-center gap-2">
-                  <p className="text-lg">{user.email}</p>
-                  <Lock className="h-4 w-4 text-gray-400" />
+                  <p className="text-lg text-brand-dark">{user.email}</p>
+                  <Lock className="h-3.5 w-3.5 text-brand-dark/20" />
                 </div>
-                <p className="text-xs text-gray-500 mt-1">Email nie może być zmieniony</p>
+                <p className="text-[10px] text-brand-dark/30 mt-0.5">Email nie może być zmieniony</p>
               </div>
             )}
             <div>
-              <label className="text-sm font-medium text-gray-500 flex items-center gap-2">
-                <Phone className="h-4 w-4" /> Numer telefonu
+              <label className="text-xs font-medium text-brand-dark/40 flex items-center gap-1.5 uppercase tracking-wider">
+                <Phone className="h-3.5 w-3.5" /> Numer telefonu
               </label>
               {isEditing ? (
                 <Input
@@ -189,39 +201,44 @@ export default function ProfilePage() {
                   value={phoneNumber}
                   onChange={(e) => setPhoneNumber(e.target.value)}
                   placeholder="+48 000 000 000"
-                  className="mt-1"
+                  className="mt-1.5 border-brand-warm/60 focus:border-brand focus:ring-brand/20"
                 />
               ) : (
-                <p className="text-lg mt-1">{"phoneNumber" in user ? (user.phoneNumber || "Nie podano") : "Nie podano"}</p>
+                <p className="text-lg text-brand-dark mt-1">{"phoneNumber" in user ? (user.phoneNumber || "Nie podano") : "Nie podano"}</p>
               )}
             </div>
             {isEmployee && (
               <div>
-                <label className="text-sm font-medium text-gray-500">Umiejętności</label>
-                <div className="mt-2 flex flex-wrap gap-2">
+                <label className="text-xs font-medium text-brand-dark/40 uppercase tracking-wider">Umiejętności</label>
+                <div className="mt-2 flex flex-wrap gap-1.5">
                   {user.skills?.length ? (
                     user.skills.map((skill: string, idx: number) => (
-                      <span key={idx} className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
+                      <span key={idx} className="text-xs bg-brand-blue-muted text-brand-blue px-2.5 py-1 rounded-full font-medium">
                         {skill}
                       </span>
                     ))
                   ) : (
-                    <p className="text-gray-500">Brak umiejętności</p>
+                    <p className="text-brand-dark/40 text-sm">Brak umiejętności</p>
                   )}
                 </div>
-                <p className="text-xs text-gray-500 mt-1">Tylko administrator może zmienić umiejętności</p>
+                <p className="text-[10px] text-brand-dark/30 mt-1.5 flex items-center gap-1">
+                  <Info className="h-3 w-3" />
+                  Tylko administrator może zmienić umiejętności
+                </p>
               </div>
             )}
             {isEditing && (
-              <div className="flex gap-2 pt-4">
+              <div className="flex gap-2 pt-4 border-t border-brand-warm/20">
                 <Button
                   onClick={() => updateProfileMutation.mutate()}
                   disabled={updateProfileMutation.isPending}
+                  className="bg-brand hover:bg-brand-light text-white"
                 >
                   Zapisz zmiany
                 </Button>
                 <Button
                   variant="ghost"
+                  className="text-brand-dark/50 hover:text-brand-dark"
                   onClick={() => {
                     setIsEditing(false);
                     setName(user.name || "");
@@ -236,7 +253,7 @@ export default function ProfilePage() {
             )}
           </div>
         </div>
-      </Card>
+      </div>
     </div>
   );
 }

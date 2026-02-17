@@ -11,8 +11,7 @@ import {
 } from "@/lib/api";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { ChevronLeft, ChevronRight, Trash2, Check } from "lucide-react";
+import { ChevronLeft, ChevronRight, Trash2, Check, Clock, Info, CalendarCheck } from "lucide-react";
 import { toast } from "sonner";
 import {
   TimeBlockStrip,
@@ -20,7 +19,7 @@ import {
   minutesToTime,
 } from "@/components/dashboard/TimeBlockStrip";
 
-const MIN_BLOCK_MINUTES = 4 * 60; // 4 godziny
+const MIN_BLOCK_MINUTES = 4 * 60;
 const DAY_NAMES = ["Poniedziałek", "Wtorek", "Środa", "Czwartek", "Piątek", "Sobota", "Niedziela"];
 const DAY_SHORT = ["Pon", "Wt", "Śr", "Czw", "Pt", "Sob", "Nd"];
 
@@ -47,14 +46,7 @@ function buildWeekRange(monday: Date): { from: string; to: string } {
   return { from: from.toISOString(), to: to.toISOString() };
 }
 
-/**
- * Parse slot datetime to minutes WITHOUT timezone conversion.
- * The backend stores times that represent "wall clock" times,
- * so we extract hours/minutes from the ISO string directly.
- */
 function slotToMinutes(s: AvailabilitySlot): { startMin: number; endMin: number } {
-  // Parse directly from ISO string to avoid timezone shift
-  // ISO format: "2026-02-17T08:00:00.000Z" → we want 08:00 not local time
   const startMatch = s.startDateTime.match(/T(\d{2}):(\d{2})/);
   const endMatch = s.endDateTime.match(/T(\d{2}):(\d{2})/);
 
@@ -77,7 +69,6 @@ export default function DostepnoscPage() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const [weekStart, setWeekStart] = useState(() => getWeekMonday(new Date()));
-  // Drafts: one array per day index (0-6), each can have multiple blocks
   const [weekDrafts, setWeekDrafts] = useState<Map<number, TimeBlock[]>>(
     () => new Map()
   );
@@ -115,7 +106,6 @@ export default function DostepnoscPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
-  // Organize saved blocks by day
   const blocksByDay = useMemo(() => {
     const map = new Map<number, TimeBlock[]>();
     const monday = new Date(weekStart);
@@ -145,7 +135,6 @@ export default function DostepnoscPage() {
     return map;
   }, [slots, weekStart]);
 
-  // Add a draft block for a day
   const handleDraftCreate = useCallback(
     (dayIndex: number, block: { startMin: number; endMin: number }) => {
       setWeekDrafts((prev) => {
@@ -158,7 +147,6 @@ export default function DostepnoscPage() {
     []
   );
 
-  // Remove a draft block
   const removeDraft = useCallback((dayIndex: number, draftIdx: number) => {
     setWeekDrafts((prev) => {
       const next = new Map(prev);
@@ -169,7 +157,6 @@ export default function DostepnoscPage() {
     });
   }, []);
 
-  // Count total drafts
   const totalDrafts = useMemo(() => {
     let count = 0;
     for (const arr of weekDrafts.values()) {
@@ -178,7 +165,6 @@ export default function DostepnoscPage() {
     return count;
   }, [weekDrafts]);
 
-  // Confirm all drafts at once
   const handleConfirmAll = () => {
     const allSlots: { startDateTime: string; endDateTime: string }[] = [];
 
@@ -191,7 +177,6 @@ export default function DostepnoscPage() {
 
       for (const d of draftBlocks) {
         const { start, end } = minutesToTime(d.startMin, d.endMin);
-        // Send without timezone suffix so backend stores as-is
         allSlots.push({
           startDateTime: `${dateStr}T${start}:00`,
           endDateTime: `${dateStr}T${end}:00`,
@@ -207,19 +192,17 @@ export default function DostepnoscPage() {
     createMutation.mutate(allSlots);
   };
 
-  // Clear all drafts
   const handleClearDrafts = () => {
     setWeekDrafts(new Map());
   };
 
-  // Reset drafts when week changes
   useEffect(() => {
     setWeekDrafts(new Map());
   }, [weekStart]);
 
   if (!dbUser || dbUser.role !== "EMPLOYEE") {
     return (
-      <div className="flex items-center justify-center min-h-[300px] text-slate-500">
+      <div className="flex items-center justify-center min-h-[300px] text-brand-dark/40">
         <p>Przekierowuję...</p>
       </div>
     );
@@ -237,7 +220,6 @@ export default function DostepnoscPage() {
     year: "numeric",
   })}`;
 
-  // Generate day data for the table
   const days = Array.from({ length: 7 }, (_, i) => {
     const d = new Date(monday);
     d.setDate(d.getDate() + i);
@@ -255,111 +237,123 @@ export default function DostepnoscPage() {
     };
   });
 
+  const totalSaved = slots.length;
+
   return (
     <div className="space-y-5 max-w-5xl">
+      {/* Page header */}
       <div className="flex items-center justify-between flex-wrap gap-3">
-        <h1 className="text-2xl font-bold text-slate-800">
-          Moja dostępność
-        </h1>
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-brand-blue-muted flex items-center justify-center">
+            <CalendarCheck className="h-5 w-5 text-brand-blue" />
+          </div>
+          <div>
+            <h1 className="text-xl font-bold text-brand-dark">Moja dostępność</h1>
+            <p className="text-xs text-brand-dark/40">Zgłoś kiedy możesz pracować</p>
+          </div>
+        </div>
         {totalDrafts > 0 && (
           <div className="flex items-center gap-2">
-            <Badge
-              variant="outline"
-              className="border-emerald-300 text-emerald-700 bg-emerald-50"
-            >
-              {totalDrafts} nowy{totalDrafts === 1 ? "" : totalDrafts < 5 ? "e" : "ch"} slot
-              {totalDrafts === 1 ? "" : totalDrafts < 5 ? "y" : "ów"}
-            </Badge>
+            <span className="text-xs font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-full px-2.5 py-1">
+              {totalDrafts} nowy{totalDrafts === 1 ? "" : totalDrafts < 5 ? "e" : "ch"} slot{totalDrafts === 1 ? "" : totalDrafts < 5 ? "y" : "ów"}
+            </span>
             <Button
               variant="ghost"
               size="sm"
-              className="text-xs text-slate-500"
+              className="text-xs text-brand-dark/40 hover:text-brand-dark"
               onClick={handleClearDrafts}
             >
               Wyczyść
             </Button>
             <Button
               size="sm"
-              className="gap-1.5"
+              className="gap-1.5 bg-brand hover:bg-brand-light text-white"
               onClick={handleConfirmAll}
               disabled={createMutation.isPending}
             >
               <Check className="h-3.5 w-3.5" />
-              {createMutation.isPending
-                ? "Zapisywanie..."
-                : "Zatwierdź wszystko"}
+              {createMutation.isPending ? "Zapisywanie..." : "Zatwierdź wszystko"}
             </Button>
           </div>
         )}
       </div>
 
-      <p className="text-slate-500 text-sm">
-        Kliknij i przeciągnij na pasku, aby zaznaczyć dostępność (min. 4h).
-        Dodaj bloki na cały tydzień, a następnie kliknij „Zatwierdź
-        wszystko".
-      </p>
+      {/* Instruction hint */}
+      <div className="flex items-start gap-2.5 p-3.5 rounded-xl bg-brand-blue-muted/30 border border-brand-blue/10 text-sm">
+        <Info className="h-4 w-4 text-brand-blue flex-shrink-0 mt-0.5" />
+        <div className="text-brand-dark/50 text-xs leading-relaxed">
+          <strong className="text-brand-dark/70">Jak dodać dostępność?</strong>{" "}
+          Kliknij i przeciągnij na pasku danego dnia, aby zaznaczyć przedział czasowy (min. 4 godziny).
+          Możesz dodać wiele bloków na cały tydzień. Gdy skończysz, kliknij <strong className="text-brand">&quot;Zatwierdź wszystko&quot;</strong>.
+        </div>
+      </div>
 
       {/* Week navigation */}
       <div className="flex items-center gap-2">
         <Button
           variant="outline"
           size="icon"
+          className="border-brand-warm/60 hover:bg-brand-warm-light"
           onClick={() =>
-            setWeekStart(
-              new Date(weekStart.getTime() - 7 * 24 * 60 * 60 * 1000)
-            )
+            setWeekStart(new Date(weekStart.getTime() - 7 * 24 * 60 * 60 * 1000))
           }
           aria-label="Poprzedni tydzień"
         >
-          <ChevronLeft className="h-4 w-4" />
+          <ChevronLeft className="h-4 w-4 text-brand-dark/50" />
         </Button>
-        <span className="font-medium text-slate-700 min-w-[220px] text-center">
+        <span className="font-semibold text-brand-dark text-sm min-w-[220px] text-center">
           {weekLabel}
         </span>
         <Button
           variant="outline"
           size="icon"
+          className="border-brand-warm/60 hover:bg-brand-warm-light"
           onClick={() =>
-            setWeekStart(
-              new Date(weekStart.getTime() + 7 * 24 * 60 * 60 * 1000)
-            )
+            setWeekStart(new Date(weekStart.getTime() + 7 * 24 * 60 * 60 * 1000))
           }
           aria-label="Następny tydzień"
         >
-          <ChevronRight className="h-4 w-4" />
+          <ChevronRight className="h-4 w-4 text-brand-dark/50" />
         </Button>
         <Button
           variant="ghost"
           size="sm"
-          className="text-xs text-slate-500 ml-1"
+          className="text-xs text-brand hover:text-brand-light hover:bg-brand-muted ml-1"
           onClick={() => setWeekStart(getWeekMonday(new Date()))}
         >
           Dziś
         </Button>
+        {totalSaved > 0 && (
+          <span className="text-[11px] text-brand-dark/30 ml-2">
+            {totalSaved} zapisany{totalSaved > 1 ? "ch" : ""} slot{totalSaved > 1 ? "ów" : ""}
+          </span>
+        )}
       </div>
 
       {/* Availability table */}
-      <div className="bg-white border border-slate-200 rounded-lg overflow-hidden shadow-sm">
+      <div className="bg-white border border-brand-warm/40 rounded-xl overflow-hidden shadow-sm">
         {isLoading ? (
-          <div className="p-8 text-center text-slate-500 animate-pulse">
-            Ładowanie dostępności...
+          <div className="p-12 text-center">
+            <div className="inline-flex items-center gap-2 text-brand-dark/40 text-sm">
+              <div className="w-4 h-4 border-2 border-brand-blue/30 border-t-brand-blue rounded-full animate-spin" />
+              Ładowanie dostępności...
+            </div>
           </div>
         ) : (
           <table className="w-full border-collapse">
-            {/* Header with hour markers */}
             <thead>
-              <tr className="bg-slate-50">
-                <th className="text-left p-2 border-b border-r border-slate-200 font-semibold text-slate-700 w-[120px] min-w-[120px]">
+              <tr className="bg-brand-warm-light/30">
+                <th className="text-left p-2.5 border-b border-r border-brand-warm/30 font-semibold text-brand-dark/50 w-[120px] min-w-[120px] text-[11px] uppercase tracking-wider">
                   Dzień
                 </th>
-                <th className="border-b border-slate-200 p-0">
+                <th className="border-b border-brand-warm/30 p-0">
                   <div className="relative h-5">
                     {Array.from({ length: 25 }, (_, h) => h)
                       .filter((h) => h % 3 === 0)
                       .map((h) => (
                         <span
                           key={h}
-                          className="absolute text-[9px] text-slate-400 select-none"
+                          className="absolute text-[9px] text-brand-dark/25 select-none font-medium"
                           style={{
                             left: `${(h / 24) * 100}%`,
                             transform:
@@ -387,25 +381,25 @@ export default function DostepnoscPage() {
                 return (
                   <tr
                     key={day.index}
-                    className={`border-b border-slate-100 last:border-b-0 ${
-                      isWeekend ? "bg-slate-50/50" : ""
+                    className={`border-b border-brand-warm/15 last:border-b-0 ${
+                      isWeekend ? "bg-brand-warm-light/20" : ""
                     }`}
                   >
-                    {/* Day label */}
                     <td
-                      className={`p-2 border-r border-slate-200 ${
+                      className={`p-2.5 border-r border-brand-warm/20 ${
                         isToday
-                          ? "bg-blue-50 font-semibold text-blue-700"
-                          : "text-slate-700"
+                          ? "bg-brand-muted/40"
+                          : ""
                       }`}
                     >
-                      <div className="text-sm font-medium">{day.short}</div>
-                      <div className="text-xs text-slate-500">
+                      <div className={`text-sm font-medium ${isToday ? "text-brand" : "text-brand-dark/70"}`}>
+                        {day.short}
+                      </div>
+                      <div className="text-[11px] text-brand-dark/30">
                         {day.dateLabel}
                       </div>
                     </td>
 
-                    {/* Time strip cell */}
                     <td className="p-0 relative">
                       <TimeBlockStrip
                         blocks={day.blocks}
@@ -431,11 +425,11 @@ export default function DostepnoscPage() {
 
       {/* Draft summary */}
       {totalDrafts > 0 && (
-        <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4">
+        <div className="bg-emerald-50/80 border border-emerald-200/60 rounded-xl p-4">
           <h3 className="font-semibold text-emerald-800 text-sm mb-2">
             Nowe sloty do zatwierdzenia:
           </h3>
-          <div className="space-y-1">
+          <div className="space-y-1.5">
             {days.map((day) => {
               if (day.drafts.length === 0) return null;
               return (
@@ -445,20 +439,19 @@ export default function DostepnoscPage() {
                   </span>
                   <div className="flex flex-wrap gap-1">
                     {day.drafts.map((d, idx) => {
-                      const { start, end } = minutesToTime(
-                        d.startMin,
-                        d.endMin
-                      );
+                      const { start, end } = minutesToTime(d.startMin, d.endMin);
                       return (
                         <span
                           key={idx}
                           className="inline-flex items-center gap-1 text-xs bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full"
                         >
+                          <Clock className="h-2.5 w-2.5" />
                           {start}–{end}
                           <button
                             type="button"
-                            className="text-emerald-600 hover:text-red-600 font-bold"
+                            className="text-emerald-500 hover:text-red-500 font-bold transition-colors"
                             onClick={() => removeDraft(day.index, idx)}
+                            title="Usuń slot"
                           >
                             ×
                           </button>
@@ -475,7 +468,7 @@ export default function DostepnoscPage() {
               variant="ghost"
               size="sm"
               onClick={handleClearDrafts}
-              className="text-slate-600"
+              className="text-brand-dark/40 hover:text-brand-dark"
             >
               <Trash2 className="h-3.5 w-3.5 mr-1" />
               Wyczyść
@@ -484,7 +477,7 @@ export default function DostepnoscPage() {
               size="sm"
               onClick={handleConfirmAll}
               disabled={createMutation.isPending}
-              className="gap-1.5"
+              className="gap-1.5 bg-brand hover:bg-brand-light text-white"
             >
               <Check className="h-3.5 w-3.5" />
               {createMutation.isPending
@@ -496,14 +489,18 @@ export default function DostepnoscPage() {
       )}
 
       {/* Legend */}
-      <div className="flex items-center gap-4 text-xs text-slate-500">
+      <div className="flex items-center gap-4 text-[11px] text-brand-dark/35">
         <span className="flex items-center gap-1.5">
-          <span className="inline-block w-3 h-3 rounded bg-blue-500/80" />
+          <span className="inline-block w-3 h-3 rounded bg-brand-blue/70" />
           Zapisana dostępność
         </span>
         <span className="flex items-center gap-1.5">
-          <span className="inline-block w-3 h-3 rounded bg-emerald-500/80 border border-dashed border-emerald-600/60" />
+          <span className="inline-block w-3 h-3 rounded bg-emerald-500/70 border border-dashed border-emerald-600/50" />
           Nowy slot (niezapisany)
+        </span>
+        <span className="flex items-center gap-1.5">
+          <Clock className="h-3 w-3" />
+          Minimum 4 godziny
         </span>
       </div>
     </div>

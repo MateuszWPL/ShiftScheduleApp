@@ -18,7 +18,6 @@ import { useDashboardUser } from "@/components/providers/DashboardUserContext";
 import { ScheduleGrid, type AvailabilityDropData } from "@/components/dashboard/ScheduleGrid";
 import { CreateShiftDialog } from "@/components/dashboard/CreateShiftDialog";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import {
   Send,
@@ -26,6 +25,10 @@ import {
   Clock,
   Users,
   GripVertical,
+  ShoppingBag,
+  Plus,
+  Info,
+  CalendarDays,
 } from "lucide-react";
 
 function getWeekMonday(d: Date): Date {
@@ -62,12 +65,17 @@ function GieldaSection({
   if (marketplace.length === 0) return null;
 
   return (
-    <div className="bg-white border border-slate-200 rounded-lg p-4 shadow-sm">
-      <div className="flex items-center gap-2 mb-3">
-        <div className="w-2 h-2 rounded-full bg-orange-400" />
-        <h3 className="font-semibold text-slate-800">
-          Giełda zmian ({marketplace.length})
-        </h3>
+    <div className="bg-white border border-brand-warm/40 rounded-xl p-5 shadow-sm">
+      <div className="flex items-center gap-2.5 mb-4">
+        <div className="w-8 h-8 rounded-lg bg-brand-muted flex items-center justify-center">
+          <ShoppingBag className="h-4 w-4 text-brand" />
+        </div>
+        <div>
+          <h3 className="font-semibold text-brand-dark">
+            Giełda zmian
+          </h3>
+          <p className="text-[11px] text-brand-dark/40">{marketplace.length} {marketplace.length === 1 ? "zmiana dostępna" : "zmian dostępnych"}</p>
+        </div>
       </div>
       <ul className="space-y-2">
         {marketplace.map((a: ShiftAssignment) => {
@@ -83,29 +91,37 @@ function GieldaSection({
           const endMatch = shift.endTime.match(/T(\d{2}:\d{2})/);
           const timeStr = `${startMatch?.[1] ?? "??"}–${endMatch?.[1] ?? "??"}`;
           const isMine = a.userId === currentUserId;
+          const dur = Math.round((new Date(shift.endTime).getTime() - new Date(shift.startTime).getTime()) / 3600000 * 10) / 10;
           return (
             <li
               key={a.id}
-              className="flex items-center justify-between gap-3 py-2.5 px-3 rounded-lg border border-slate-100 bg-slate-50/50 text-sm"
+              className="flex items-center justify-between gap-3 py-3 px-4 rounded-lg border border-brand-warm/30 bg-brand-warm-light/30 text-sm hover:bg-brand-warm-light/60 transition-colors"
             >
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
-                  <span className="font-semibold text-slate-800">{shift.roleName}</span>
-                  <span className="text-slate-400">·</span>
-                  <span className="text-slate-600">{date}</span>
+                  <span className="font-semibold text-brand-dark">{shift.roleName}</span>
+                  <span className="text-brand-dark/20">·</span>
+                  <span className="text-brand-dark/60">{date}</span>
                 </div>
-                <div className="text-slate-500 text-xs mt-0.5">
-                  {timeStr}
-                  {who && <span className="text-slate-400"> — oddaje: {who}</span>}
+                <div className="flex items-center gap-2 text-brand-dark/40 text-xs mt-0.5">
+                  <span className="flex items-center gap-1">
+                    <Clock className="h-3 w-3" />
+                    {timeStr}
+                  </span>
+                  <span className="text-[10px] font-medium text-brand-dark/25 bg-brand-dark/5 px-1 rounded">
+                    {dur}h
+                  </span>
+                  {who && <span className="text-brand-dark/30">oddaje: {who}</span>}
                 </div>
               </div>
               {!isMine && currentUserRole === "EMPLOYEE" && (
                 <Button
                   size="sm"
+                  className="bg-brand hover:bg-brand-light text-white text-xs"
                   onClick={() => claimMutation.mutate(a.id)}
                   disabled={claimMutation.isPending}
                 >
-                  Biorę
+                  Przejmij
                 </Button>
               )}
             </li>
@@ -145,7 +161,6 @@ function AvailabilityPanel({
     return days;
   }, [monday]);
 
-  // Group by user
   const byUser = useMemo(() => {
     const map = new Map<string, { name: string; userId: string; slots: { dayIdx: number; dateKey: string; start: string; end: string }[] }>();
 
@@ -200,40 +215,55 @@ function AvailabilityPanel({
 
   if (isLoading) {
     return (
-      <div className="bg-white border border-slate-200 rounded-lg p-4 shadow-sm">
-        <div className="animate-pulse text-slate-500 text-sm">Ładowanie dostępności...</div>
+      <div className="bg-white border border-brand-warm/40 rounded-xl p-5 shadow-sm">
+        <div className="flex items-center gap-2 text-brand-dark/40 text-sm">
+          <div className="w-4 h-4 border-2 border-brand-blue/30 border-t-brand-blue rounded-full animate-spin" />
+          Ładowanie dostępności...
+        </div>
       </div>
     );
   }
 
   if (byUser.size === 0) {
     return (
-      <div className="bg-white border border-slate-200 rounded-lg p-4 shadow-sm">
-        <div className="flex items-center gap-2 mb-2">
-          <Users className="h-4 w-4 text-blue-500" />
-          <h3 className="font-semibold text-slate-800">Dostępność pracowników</h3>
+      <div className="bg-white border border-brand-warm/40 rounded-xl p-5 shadow-sm">
+        <div className="flex items-center gap-2.5 mb-2">
+          <div className="w-8 h-8 rounded-lg bg-brand-blue-muted flex items-center justify-center">
+            <Users className="h-4 w-4 text-brand-blue" />
+          </div>
+          <h3 className="font-semibold text-brand-dark">Dostępność pracowników</h3>
         </div>
-        <p className="text-slate-500 text-sm">Brak zgłoszonej dostępności na ten tydzień.</p>
+        <p className="text-brand-dark/40 text-sm">Brak zgłoszonej dostępności na ten tydzień.</p>
       </div>
     );
   }
 
   return (
-    <div className="bg-white border border-slate-200 rounded-lg p-4 shadow-sm">
-      <div className="flex items-center gap-2 mb-3">
-        <Users className="h-4 w-4 text-blue-500" />
-        <h3 className="font-semibold text-slate-800">Dostępność pracowników</h3>
-        <span className="text-xs text-slate-400 ml-2">Przeciągnij blok na kalendarz, aby utworzyć zmianę</span>
+    <div className="bg-white border border-brand-warm/40 rounded-xl p-5 shadow-sm">
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-lg bg-brand-blue-muted flex items-center justify-center">
+            <Users className="h-4 w-4 text-brand-blue" />
+          </div>
+          <div>
+            <h3 className="font-semibold text-brand-dark">Dostępność pracowników</h3>
+            <p className="text-[11px] text-brand-dark/30">{byUser.size} {byUser.size === 1 ? "pracownik" : "pracowników"} zgłosiło dostępność</p>
+          </div>
+        </div>
+        <span className="flex items-center gap-1 text-[11px] text-brand-dark/30 bg-brand-blue-muted/50 px-2.5 py-1 rounded-full">
+          <GripVertical className="h-3 w-3" />
+          Przeciągnij na kalendarz
+        </span>
       </div>
       <div className="overflow-x-auto">
         <table className="w-full text-xs border-collapse">
           <thead>
-            <tr className="bg-slate-50">
-              <th className="text-left p-1.5 border-b border-slate-200 font-medium text-slate-600 min-w-[100px]">
+            <tr className="bg-brand-warm-light/30">
+              <th className="text-left p-2 border-b border-brand-warm/30 font-semibold text-brand-dark/50 min-w-[120px] text-[11px] uppercase tracking-wider">
                 Pracownik
               </th>
               {DAY_SHORT.map((d, i) => (
-                <th key={i} className="p-1.5 border-b border-l border-slate-200 font-medium text-slate-600 text-center min-w-[70px]">
+                <th key={i} className="p-2 border-b border-l border-brand-warm/20 font-medium text-brand-dark/40 text-center min-w-[80px] text-[11px]">
                   {d}
                 </th>
               ))}
@@ -241,12 +271,19 @@ function AvailabilityPanel({
           </thead>
           <tbody>
             {Array.from(byUser.entries()).map(([mapUserId, data]) => (
-              <tr key={mapUserId} className="border-b border-slate-100">
-                <td className="p-1.5 text-slate-700 font-medium">{data.name}</td>
+              <tr key={mapUserId} className="border-b border-brand-warm/10 hover:bg-brand-warm-light/20 transition-colors">
+                <td className="p-2 text-brand-dark font-medium">
+                  <div className="flex items-center gap-2">
+                    <div className="w-6 h-6 rounded-full bg-brand-blue-muted flex items-center justify-center text-[10px] font-bold text-brand-blue flex-shrink-0">
+                      {data.name.charAt(0).toUpperCase()}
+                    </div>
+                    <span className="truncate max-w-[80px]">{data.name}</span>
+                  </div>
+                </td>
                 {Array.from({ length: 7 }, (_, dayIdx) => {
                   const daySlots = data.slots.filter((s) => s.dayIdx === dayIdx);
                   return (
-                    <td key={dayIdx} className="p-1 border-l border-slate-100 text-center">
+                    <td key={dayIdx} className="p-1 border-l border-brand-warm/10 text-center align-middle">
                       {daySlots.length > 0 ? (
                         <div className="space-y-0.5">
                           {daySlots.map((s, si) => (
@@ -256,17 +293,16 @@ function AvailabilityPanel({
                               onDragStart={(e) =>
                                 handleDragStart(e, data.userId, data.name, s.dateKey, s.start, s.end)
                               }
-                              className="bg-blue-100 text-blue-700 rounded px-1 py-0.5 text-[10px] font-medium cursor-grab active:cursor-grabbing hover:bg-blue-200 transition-colors flex items-center gap-0.5 select-none"
-                              title="Przeciągnij na kalendarz, aby utworzyć zmianę"
+                              className="bg-emerald-50 text-emerald-700 border border-emerald-200/50 rounded-md px-1.5 py-1 text-[10px] font-medium cursor-grab active:cursor-grabbing hover:bg-emerald-100 hover:shadow-sm transition-all flex items-center gap-0.5 select-none justify-center"
+                              title={`${data.name}: ${s.start}–${s.end} — przeciągnij na kalendarz`}
                             >
-                              <GripVertical className="h-2.5 w-2.5 text-blue-400 flex-shrink-0" />
-                              <Clock className="inline h-2.5 w-2.5 mr-0.5 flex-shrink-0" />
-                              {s.start}–{s.end}
+                              <GripVertical className="h-2.5 w-2.5 text-emerald-400 flex-shrink-0 opacity-50" />
+                              <span>{s.start}–{s.end}</span>
                             </div>
                           ))}
                         </div>
                       ) : (
-                        <span className="text-slate-300">—</span>
+                        <span className="text-brand-dark/10">—</span>
                       )}
                     </td>
                   );
@@ -328,7 +364,6 @@ export default function GrafikPage() {
 
   const isAdmin = dbUser?.role === "OWNER" || dbUser?.role === "MANAGER";
 
-  // Open dialog for creating shift (from cell click)
   const handleCellClick = (employeeId: string, dateKey: string) => {
     setEditShift(null);
     setPrefilledDate(dateKey);
@@ -336,7 +371,6 @@ export default function GrafikPage() {
     setIsShiftDialogOpen(true);
   };
 
-  // Open dialog for editing shift
   const handleShiftClick = (shift: Shift) => {
     setEditShift(shift);
     setPrefilledDate(undefined);
@@ -344,7 +378,6 @@ export default function GrafikPage() {
     setIsShiftDialogOpen(true);
   };
 
-  // Open dialog for creating shift (from button)
   const handleAddShiftButton = () => {
     setEditShift(null);
     setPrefilledDate(undefined);
@@ -352,7 +385,6 @@ export default function GrafikPage() {
     setIsShiftDialogOpen(true);
   };
 
-  // Handle dropping availability onto calendar grid
   const dropShiftMutation = useMutation({
     mutationFn: async (data: AvailabilityDropData) => {
       const startISO = `${data.dateKey}T${data.startTime}:00`;
@@ -394,35 +426,46 @@ export default function GrafikPage() {
     <div className="space-y-6">
       {/* Page header */}
       <div className="flex justify-between items-center flex-wrap gap-3">
-        <h1 className="text-2xl font-bold text-slate-800">Grafik</h1>
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-brand-muted flex items-center justify-center">
+            <CalendarDays className="h-5 w-5 text-brand" />
+          </div>
+          <div>
+            <h1 className="text-xl font-bold text-brand-dark">Grafik</h1>
+            <p className="text-xs text-brand-dark/40">Zarządzaj zmianami pracowników</p>
+          </div>
+        </div>
         <div className="flex items-center gap-2">
           {isAdmin && draftCount > 0 && (
             <Button
               variant="outline"
-              className="gap-2 border-amber-300 text-amber-700 hover:bg-amber-50"
+              className="gap-2 border-amber-300 text-amber-700 hover:bg-amber-50 text-sm"
               onClick={() => publishMutation.mutate()}
               disabled={publishMutation.isPending}
             >
               <Send className="h-4 w-4" />
-              {publishMutation.isPending ? "Publikowanie..." : `Publikuj tydzień (${draftCount})`}
+              {publishMutation.isPending ? "Publikowanie..." : `Publikuj (${draftCount})`}
             </Button>
           )}
           {isAdmin && (
-            <Button onClick={handleAddShiftButton}>+ Dodaj zmianę</Button>
+            <Button onClick={handleAddShiftButton} className="gap-1.5 bg-brand hover:bg-brand-light text-white text-sm">
+              <Plus className="h-4 w-4" />
+              Dodaj zmianę
+            </Button>
           )}
         </div>
       </div>
 
       {/* Publish warning banner */}
       {isAdmin && draftCount > 0 && (
-        <div className="flex items-start gap-3 p-3 rounded-lg bg-amber-50 border border-amber-200 text-sm text-amber-800">
+        <div className="flex items-start gap-3 p-4 rounded-xl bg-amber-50/80 border border-amber-200/60 text-sm">
           <AlertTriangle className="h-5 w-5 text-amber-500 flex-shrink-0 mt-0.5" />
           <div>
-            <p className="font-medium">
+            <p className="font-medium text-amber-800">
               {draftCount} zmian{draftCount === 1 ? "a" : draftCount < 5 ? "y" : ""} w szkicu
             </p>
-            <p className="text-amber-600 text-xs mt-0.5">
-              Pracownicy nie widzą zmian w statusie &quot;szkic&quot;. Kliknij &quot;Publikuj tydzień&quot;, aby udostępnić grafik.
+            <p className="text-amber-600/80 text-xs mt-0.5">
+              Pracownicy nie widzą zmian w statusie &quot;szkic&quot;. Kliknij &quot;Publikuj&quot;, aby udostępnić grafik.
             </p>
           </div>
         </div>

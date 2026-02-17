@@ -8,6 +8,16 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --color-brand: #FF8400;
+  --color-brand-light: #FFA940;
+  --color-brand-muted: #FFF4E8;
+  --color-brand-blue: #8FACDB;
+  --color-brand-blue-light: #B5C9E8;
+  --color-brand-blue-muted: #EEF3FA;
+  --color-brand-warm: #F9DFC6;
+  --color-brand-warm-light: #FDF2E8;
+  --color-brand-dark: #0B0829;
+  --color-brand-dark-light: #1A1840;
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);

@@ -35,23 +35,15 @@
 - [x] Usunac API functions swap z api.ts
 - [x] Wyczyścic powiadomienia typu SWAP_*
 
-### 1.2 Poprawki UI/UX
-- [ ] Poprawic Pulpit (dashboard glowny) — aktualnie prawie pusty
-  - Karta powitalna z imieniem i rola
-  - Najblizsze zmiany pracownika (dzis / jutro)
-  - Szybkie statystyki: ile zmian w tym tygodniu, godziny, dostepnosc
-  - Sekcja ogloszen zespolu (nowa funkcja)
-  - Ostatnie powiadomienia (3-5 najnowszych)
-- [ ] Lepszy podział menu bocznego:
-  - Sekcja "Glowne": Pulpit, Grafik, Dostepnosc
-  - Sekcja "Zespol": Pracownicy, Ogloszenia
-  - Sekcja "Konto": Moj Profil, Ustawienia
-  - Sekcja "Premium" (z ikonka korony): Raporty, Eksport, Szablony
-  - Aktywna strona podswietlona w menu
-- [ ] Responsywnosc — menu mobilne (hamburger) z bottom navigation
-- [ ] Lepsze loading states i empty states na kazdej stronie
-- [ ] Poprawic wyglad kartek zmian w kalendarzu (wiecej informacji, czytelnosc)
-- [ ] Dodac tooltips i podpowiedzi dla nowych uzytkownikow
+### 1.2 Poprawki UI/UX ✅ DONE
+- [x] Paleta kolorow brand: #FF8400, #8FACDB, #F9DFC6, #0B0829 (delikatna, jasna)
+- [x] Poprawic Pulpit — statystyki, nadchodzace zmiany, powiadomienia, karta profilu
+- [x] Lepszy podział menu bocznego: Menu / Zespol / Premium (z PRO badge)
+- [x] Aktywna strona podswietlona w menu (usePathname)
+- [x] Responsywnosc — mobilne bottom navigation
+- [x] Lepsze empty states na Pulpicie
+- [x] Poprawic wyglad kartek zmian w kalendarzu (wiecej informacji, czytelnosc)
+- [x] Dodac tooltips i podpowiedzi dla nowych uzytkownikow
 
 ### 1.3 Ogloszenia zespolowe (Announcements)
 - [ ] Model `Announcement` w Prisma: id, teamId, authorId, title, content, priority (normal/important/urgent), createdAt, expiresAt

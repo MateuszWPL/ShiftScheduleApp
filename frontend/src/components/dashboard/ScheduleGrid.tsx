@@ -12,16 +12,19 @@ import {
   type User,
 } from "@/lib/api";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import {
   ChevronLeft,
   ChevronRight,
   AlertTriangle,
   Plus,
   Trash2,
+  Clock,
+  ShoppingBag,
+  Pencil,
+  Info,
 } from "lucide-react";
 import { toast } from "sonner";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 
 function toLocalDateKey(d: Date): string {
   const y = d.getFullYear();
@@ -94,34 +97,17 @@ function isToday(d: Date): boolean {
   );
 }
 
-/**
- * Parse ISO time without timezone shift
- */
 function parseShiftTime(isoStr: string): string {
   const match = isoStr.match(/T(\d{2}:\d{2})/);
-  return match ? match[1] : new Date(isoStr).toLocaleTimeString("pl-PL", {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  return match ? match[1] : "??";
 }
 
-function getShiftCardClasses(
-  shift: Shift,
-  isMine: boolean,
-  isOnMarketplace: boolean
-): string {
-  const base = "text-xs rounded-lg border p-1.5 transition-all";
-
-  if (shift.status === "DRAFT") {
-    return `${base} border-dashed border-amber-300 bg-amber-50/60 opacity-80`;
-  }
-  if (isOnMarketplace) {
-    return `${base} border-orange-300 bg-orange-50`;
-  }
-  if (isMine) {
-    return `${base} border-blue-200 bg-blue-50`;
-  }
-  return `${base} border-slate-200 bg-slate-50 hover:border-slate-300`;
+function getShiftDuration(startIso: string, endIso: string): string {
+  const start = new Date(startIso).getTime();
+  const end = new Date(endIso).getTime();
+  const hours = Math.round((end - start) / 3600000 * 10) / 10;
+  if (hours === Math.floor(hours)) return `${hours}h`;
+  return `${hours}h`;
 }
 
 export interface AvailabilityDropData {
@@ -137,11 +123,8 @@ export interface ScheduleGridProps {
   onWeekChange: (monday: Date) => void;
   currentUserId: string;
   currentUserRole: string;
-  /** Called when admin clicks an empty cell to create a shift */
   onCellClick?: (employeeId: string, dateKey: string) => void;
-  /** Called when admin clicks an existing shift to edit */
   onShiftClick?: (shift: Shift) => void;
-  /** Called when availability is dropped on a cell */
   onDropAvailability?: (data: AvailabilityDropData) => void;
   onRefresh?: () => void;
 }
@@ -235,7 +218,7 @@ export function ScheduleGrid({
           endTime: data.end,
         });
       } catch {
-        // ignore invalid data
+        // ignore
       }
     },
     [onDropAvailability]
@@ -247,10 +230,23 @@ export function ScheduleGrid({
   const grid = buildGrid(shifts, employeesOnly, weekDays);
   const isLoading = membersLoading || shiftsLoading;
   const canUseMarketplace = currentUserRole === "EMPLOYEE";
-  const isAdmin =
-    currentUserRole === "OWNER" || currentUserRole === "MANAGER";
+  const isAdmin = currentUserRole === "OWNER" || currentUserRole === "MANAGER";
 
   const draftCount = shifts.filter((s) => s.status === "DRAFT").length;
+
+  // Calculate weekly hours per employee
+  const weeklyHours = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const shift of shifts) {
+      const dur = (new Date(shift.endTime).getTime() - new Date(shift.startTime).getTime()) / 3600000;
+      for (const a of shift.assignments ?? []) {
+        if (a.userId) {
+          map.set(a.userId, (map.get(a.userId) || 0) + dur);
+        }
+      }
+    }
+    return map;
+  }, [shifts]);
 
   const prevWeek = () => {
     const prev = new Date(monday);
@@ -275,70 +271,80 @@ export function ScheduleGrid({
 
   return (
     <div className="space-y-3">
-      {/* Header bar */}
+      {/* Header */}
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="icon" onClick={prevWeek} aria-label="Poprzedni tydzień">
-            <ChevronLeft className="h-4 w-4" />
+          <Button variant="outline" size="icon" onClick={prevWeek} className="border-brand-warm/60 hover:bg-brand-warm-light" aria-label="Poprzedni tydzień">
+            <ChevronLeft className="h-4 w-4 text-brand-dark/50" />
           </Button>
-          <span className="font-medium text-slate-700 min-w-[200px] text-center">
+          <span className="font-semibold text-brand-dark min-w-[200px] text-center text-sm">
             {weekLabel}
           </span>
-          <Button variant="outline" size="icon" onClick={nextWeek} aria-label="Następny tydzień">
-            <ChevronRight className="h-4 w-4" />
+          <Button variant="outline" size="icon" onClick={nextWeek} className="border-brand-warm/60 hover:bg-brand-warm-light" aria-label="Następny tydzień">
+            <ChevronRight className="h-4 w-4 text-brand-dark/50" />
           </Button>
-          <Button variant="ghost" size="sm" onClick={goToday} className="text-xs text-slate-500 ml-1">
+          <Button variant="ghost" size="sm" onClick={goToday} className="text-xs text-brand hover:text-brand-light hover:bg-brand-muted ml-1">
             Dziś
           </Button>
         </div>
         <div className="flex items-center gap-2">
           {isAdmin && draftCount > 0 && (
-            <Badge variant="outline" className="border-amber-300 text-amber-700 bg-amber-50 gap-1">
+            <span className="flex items-center gap-1.5 text-xs font-medium text-amber-600 bg-amber-50 border border-amber-200 rounded-full px-2.5 py-1">
               <AlertTriangle className="h-3 w-3" />
               {draftCount} szkic{draftCount === 1 ? "" : draftCount < 5 ? "e" : "ów"}
-            </Badge>
+            </span>
           )}
         </div>
       </div>
 
-      {/* Legend */}
-      {isAdmin && (
-        <div className="flex items-center gap-4 text-xs text-slate-500">
-          <span className="flex items-center gap-1.5">
-            <span className="inline-block w-3 h-3 rounded border-dashed border border-amber-300 bg-amber-50/60" />
-            Szkic (DRAFT)
-          </span>
-          <span className="flex items-center gap-1.5">
-            <span className="inline-block w-3 h-3 rounded border border-slate-200 bg-slate-50" />
-            Opublikowana
-          </span>
-          <span className="flex items-center gap-1.5">
-            <span className="inline-block w-3 h-3 rounded border border-orange-300 bg-orange-50" />
-            Na giełdzie
-          </span>
-          {onCellClick && (
-            <span className="text-blue-500 ml-2">
-              Kliknij pustą komórkę, aby dodać zmianę
-            </span>
+      {/* Legend + hints */}
+      <div className="flex items-center justify-between flex-wrap gap-2">
+        <div className="flex items-center gap-3 text-[11px] text-brand-dark/40">
+          {isAdmin && (
+            <>
+              <span className="flex items-center gap-1">
+                <span className="w-2.5 h-2.5 rounded-sm border-dashed border border-amber-300 bg-amber-50/60" />
+                Szkic
+              </span>
+              <span className="flex items-center gap-1">
+                <span className="w-2.5 h-2.5 rounded-sm bg-brand-blue-muted border border-brand-blue/30" />
+                Opublikowana
+              </span>
+              <span className="flex items-center gap-1">
+                <span className="w-2.5 h-2.5 rounded-sm bg-brand-muted border border-brand/30" />
+                Na giełdzie
+              </span>
+            </>
           )}
         </div>
-      )}
+        {isAdmin && onCellClick && (
+          <span className="flex items-center gap-1 text-[11px] text-brand-dark/30">
+            <Info className="h-3 w-3" />
+            Kliknij pustą komórkę lub przeciągnij dostępność, aby dodać zmianę
+          </span>
+        )}
+      </div>
 
       {/* Grid */}
-      <div className="border border-slate-200 rounded-lg bg-white overflow-x-auto overflow-y-auto max-h-[70vh] shadow-sm">
+      <div className="border border-brand-warm/50 rounded-xl bg-white overflow-x-auto overflow-y-auto max-h-[70vh] shadow-sm">
         {isLoading ? (
-          <div className="p-8 text-center text-slate-500 animate-pulse">
-            Ładowanie grafiku...
+          <div className="p-12 text-center">
+            <div className="inline-flex items-center gap-2 text-brand-dark/40 text-sm">
+              <div className="w-4 h-4 border-2 border-brand/30 border-t-brand rounded-full animate-spin" />
+              Ładowanie grafiku...
+            </div>
           </div>
         ) : employeesOnly.length === 0 ? (
-          <div className="p-8 text-center text-slate-500">
-            Brak pracowników w zespole. Zaproś członków, aby zobaczyć grafik.
+          <div className="p-12 text-center">
+            <Users className="h-10 w-10 mx-auto mb-3 text-brand-dark/15" />
+            <p className="text-sm font-medium text-brand-dark/50">Brak pracowników w zespole</p>
+            <p className="text-xs text-brand-dark/30 mt-1">Zaproś członków, aby zobaczyć grafik.</p>
           </div>
         ) : (
           <table className="w-full border-collapse text-sm">
-            <thead className="bg-slate-50 sticky top-0 z-10">
+            <thead className="bg-brand-warm-light/50 sticky top-0 z-10">
               <tr>
-                <th className="text-left p-2 border-b border-slate-200 font-semibold text-slate-700 min-w-[140px]">
+                <th className="text-left p-2.5 border-b border-brand-warm/40 font-semibold text-brand-dark/70 min-w-[160px] text-xs uppercase tracking-wider">
                   Pracownik
                 </th>
                 {weekDays.map((d) => {
@@ -346,13 +352,15 @@ export function ScheduleGrid({
                   return (
                     <th
                       key={toLocalDateKey(d)}
-                      className={`p-2 border-b border-l border-slate-200 font-medium min-w-[110px] ${
-                        todayCol ? "bg-blue-50 text-blue-700" : "text-slate-600"
+                      className={`p-2 border-b border-l border-brand-warm/30 font-medium min-w-[120px] text-center ${
+                        todayCol ? "bg-brand-muted/50" : ""
                       }`}
                     >
-                      <div>{d.toLocaleDateString("pl-PL", { weekday: "short" })}</div>
-                      <div className="text-xs">
-                        {d.toLocaleDateString("pl-PL", { day: "numeric", month: "numeric" })}
+                      <div className={`text-xs uppercase tracking-wide ${todayCol ? "text-brand font-semibold" : "text-brand-dark/40"}`}>
+                        {d.toLocaleDateString("pl-PL", { weekday: "short" })}
+                      </div>
+                      <div className={`text-sm font-semibold ${todayCol ? "text-brand" : "text-brand-dark/70"}`}>
+                        {d.getDate()}
                       </div>
                     </th>
                   );
@@ -360,155 +368,204 @@ export function ScheduleGrid({
               </tr>
             </thead>
             <tbody>
-              {employeesOnly.map((member) => (
-                <tr key={member.id} className="border-b border-slate-100 hover:bg-slate-50/30">
-                  <td className="p-2 border-r border-slate-100 font-medium text-slate-800 sticky left-0 bg-white z-[1]">
-                    <div className="flex items-center gap-2">
-                      <div className="w-7 h-7 rounded-full bg-slate-200 flex items-center justify-center text-xs font-semibold text-slate-600 flex-shrink-0">
-                        {(member.nickname || member.name || "?")
-                          .charAt(0)
-                          .toUpperCase()}
+              {employeesOnly.map((member) => {
+                const hours = weeklyHours.get(member.id) || 0;
+                return (
+                  <tr key={member.id} className="border-b border-brand-warm/20 hover:bg-brand-warm-light/20 transition-colors">
+                    <td className="p-2.5 border-r border-brand-warm/20 sticky left-0 bg-white z-[1]">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-8 h-8 rounded-full bg-brand-blue-muted flex items-center justify-center text-xs font-bold text-brand-blue flex-shrink-0">
+                          {(member.nickname || member.name || "?").charAt(0).toUpperCase()}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium text-brand-dark truncate max-w-[100px]">
+                            {member.nickname || member.name}
+                          </p>
+                          {hours > 0 && (
+                            <p className="text-[10px] text-brand-dark/30 flex items-center gap-0.5">
+                              <Clock className="h-2.5 w-2.5" />
+                              {Math.round(hours * 10) / 10}h / tydzień
+                            </p>
+                          )}
+                        </div>
                       </div>
-                      <span className="truncate max-w-[100px]">
-                        {member.nickname || member.name}
-                      </span>
-                    </div>
-                  </td>
-                  {weekDays.map((day) => {
-                    const dateKey = toLocalDateKey(day);
-                    const key = `${member.id}-${dateKey}`;
-                    const slots = grid.get(key) ?? [];
-                    const todayCol = isToday(day);
-                    const isEmpty = slots.length === 0;
-                    const isDragOver = dragOverCell === key;
+                    </td>
+                    {weekDays.map((day) => {
+                      const dateKey = toLocalDateKey(day);
+                      const key = `${member.id}-${dateKey}`;
+                      const slots = grid.get(key) ?? [];
+                      const todayCol = isToday(day);
+                      const isEmpty = slots.length === 0;
+                      const isDragOverCell = dragOverCell === key;
 
-                    return (
-                      <td
-                        key={key}
-                        className={`p-1 border-l border-slate-100 align-top min-w-[110px] transition-colors ${
-                          todayCol ? "bg-blue-50/30" : ""
-                        } ${
-                          isAdmin && isEmpty
-                            ? "cursor-pointer hover:bg-blue-50/40 group/cell"
-                            : ""
-                        } ${isDragOver ? "!bg-emerald-50 ring-2 ring-inset ring-emerald-300" : ""}`}
-                        onClick={() => {
-                          if (isAdmin && isEmpty && onCellClick) {
-                            onCellClick(member.id, dateKey);
-                          }
-                        }}
-                        onDragOver={(e) => handleDragOver(e, key)}
-                        onDragLeave={handleDragLeave}
-                        onDrop={(e) => handleDrop(e, member.id, dateKey)}
-                      >
-                        <div className="space-y-1 min-h-[36px]">
-                          {/* Empty cell: show "+" hint for admins */}
-                          {isAdmin && isEmpty && onCellClick && !isDragOver && (
-                            <div className="flex items-center justify-center h-[36px] opacity-0 group-hover/cell:opacity-100 transition-opacity">
-                              <Plus className="h-4 w-4 text-blue-400" />
-                            </div>
-                          )}
-                          {isDragOver && isEmpty && (
-                            <div className="flex items-center justify-center h-[36px] text-emerald-500 text-xs font-medium">
-                              Upuść tutaj
-                            </div>
-                          )}
+                      return (
+                        <td
+                          key={key}
+                          className={`p-1 border-l border-brand-warm/20 align-top min-w-[120px] transition-colors ${
+                            todayCol ? "bg-brand-muted/20" : ""
+                          } ${
+                            isAdmin && isEmpty ? "cursor-pointer hover:bg-brand-muted/30 group/cell" : ""
+                          } ${isDragOverCell ? "!bg-emerald-50 ring-2 ring-inset ring-emerald-300" : ""}`}
+                          onClick={() => {
+                            if (isAdmin && isEmpty && onCellClick) {
+                              onCellClick(member.id, dateKey);
+                            }
+                          }}
+                          onDragOver={(e) => handleDragOver(e, key)}
+                          onDragLeave={handleDragLeave}
+                          onDrop={(e) => handleDrop(e, member.id, dateKey)}
+                        >
+                          <div className="space-y-1 min-h-[44px] flex flex-col justify-center">
+                            {isAdmin && isEmpty && onCellClick && !isDragOverCell && (
+                              <div className="flex items-center justify-center h-[44px] opacity-0 group-hover/cell:opacity-100 transition-opacity">
+                                <div className="w-7 h-7 rounded-lg border-2 border-dashed border-brand/20 flex items-center justify-center">
+                                  <Plus className="h-3.5 w-3.5 text-brand/40" />
+                                </div>
+                              </div>
+                            )}
+                            {isDragOverCell && isEmpty && (
+                              <div className="flex items-center justify-center h-[44px] text-emerald-500 text-[11px] font-medium">
+                                Upuść tutaj
+                              </div>
+                            )}
 
-                          {slots.map(({ assignment, shift }) => {
-                            const timeStr = `${parseShiftTime(shift.startTime)}–${parseShiftTime(shift.endTime)}`;
-                            const isMine = assignment.userId === currentUserId;
-                            const isOnMarketplace = assignment.isUpForGrabs;
-                            const isDraft = shift.status === "DRAFT";
-                            const canClaim = canUseMarketplace && isOnMarketplace && !isMine;
-                            const canRelease = canUseMarketplace && isMine && !isOnMarketplace && !isDraft;
+                            {slots.map(({ assignment, shift }) => {
+                              const startTime = parseShiftTime(shift.startTime);
+                              const endTime = parseShiftTime(shift.endTime);
+                              const duration = getShiftDuration(shift.startTime, shift.endTime);
+                              const isMine = assignment.userId === currentUserId;
+                              const isOnMarketplace = assignment.isUpForGrabs;
+                              const isDraft = shift.status === "DRAFT";
+                              const canClaim = canUseMarketplace && isOnMarketplace && !isMine;
+                              const canRelease = canUseMarketplace && isMine && !isOnMarketplace && !isDraft;
 
-                            return (
-                              <div
-                                key={assignment.id}
-                                className={`${getShiftCardClasses(shift, isMine, isOnMarketplace)} ${
-                                  isAdmin && onShiftClick ? "cursor-pointer hover:shadow-sm" : ""
-                                } group/shift relative`}
-                                onClick={(e) => {
-                                  if (isAdmin && onShiftClick) {
-                                    e.stopPropagation();
-                                    onShiftClick(shift);
-                                  }
-                                }}
-                              >
-                                <div className="flex items-center justify-between gap-1">
-                                  <span className="font-semibold text-slate-800 truncate">
-                                    {shift.roleName}
-                                  </span>
-                                  <div className="flex items-center gap-0.5">
-                                    {isDraft && isAdmin && (
-                                      <Badge
-                                        variant="outline"
-                                        className="text-[10px] px-1 py-0 border-amber-300 text-amber-600 bg-amber-50"
-                                      >
-                                        szkic
-                                      </Badge>
-                                    )}
-                                    {isAdmin && (
-                                      <button
-                                        className="opacity-0 group-hover/shift:opacity-100 transition-opacity p-0.5 rounded hover:bg-red-100 text-red-400 hover:text-red-600"
-                                        title="Usuń zmianę"
+                              // Card styles based on status
+                              let cardClasses = "rounded-lg p-2 transition-all text-xs relative group/shift";
+                              let barColor = "bg-brand-blue";
+
+                              if (isDraft) {
+                                cardClasses += " border border-dashed border-amber-300/70 bg-amber-50/40";
+                                barColor = "bg-amber-400";
+                              } else if (isOnMarketplace) {
+                                cardClasses += " border border-brand/20 bg-brand-muted/50";
+                                barColor = "bg-brand";
+                              } else if (isMine) {
+                                cardClasses += " border border-brand-blue/20 bg-brand-blue-muted/50";
+                                barColor = "bg-brand-blue";
+                              } else {
+                                cardClasses += " border border-brand-warm/40 bg-white";
+                                barColor = "bg-brand-blue/60";
+                              }
+
+                              if (isAdmin && onShiftClick) {
+                                cardClasses += " cursor-pointer hover:shadow-md hover:-translate-y-px";
+                              }
+
+                              return (
+                                <div
+                                  key={assignment.id}
+                                  className={cardClasses}
+                                  title={isAdmin ? "Kliknij, aby edytować" : undefined}
+                                  onClick={(e) => {
+                                    if (isAdmin && onShiftClick) {
+                                      e.stopPropagation();
+                                      onShiftClick(shift);
+                                    }
+                                  }}
+                                >
+                                  {/* Left color bar */}
+                                  <div className={`absolute left-0 top-1.5 bottom-1.5 w-[3px] rounded-full ${barColor}`} />
+
+                                  <div className="pl-2">
+                                    {/* Header row: role + actions */}
+                                    <div className="flex items-start justify-between gap-1">
+                                      <span className="font-semibold text-brand-dark leading-tight">
+                                        {shift.roleName}
+                                      </span>
+                                      <div className="flex items-center gap-0.5 flex-shrink-0">
+                                        {isDraft && isAdmin && (
+                                          <span className="text-[9px] font-semibold text-amber-600 bg-amber-100 px-1.5 py-0 rounded">
+                                            SZKIC
+                                          </span>
+                                        )}
+                                        {isOnMarketplace && !canClaim && (
+                                          <ShoppingBag className="h-3 w-3 text-brand/60" />
+                                        )}
+                                        {isAdmin && (
+                                          <button
+                                            className="opacity-0 group-hover/shift:opacity-100 transition-opacity p-0.5 rounded hover:bg-red-50 text-brand-dark/20 hover:text-red-500"
+                                            title="Usuń zmianę"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              if (confirm("Czy na pewno chcesz usunąć tę zmianę?")) {
+                                                deleteMutation.mutate(shift.id);
+                                              }
+                                            }}
+                                          >
+                                            <Trash2 className="h-3 w-3" />
+                                          </button>
+                                        )}
+                                        {isAdmin && onShiftClick && (
+                                          <Pencil className="h-3 w-3 text-brand-dark/15 opacity-0 group-hover/shift:opacity-100 transition-opacity" />
+                                        )}
+                                      </div>
+                                    </div>
+
+                                    {/* Time row */}
+                                    <div className="flex items-center gap-1.5 mt-0.5">
+                                      <span className="text-brand-dark/50 text-[11px]">
+                                        {startTime}–{endTime}
+                                      </span>
+                                      <span className="text-[10px] font-medium text-brand-dark/30 bg-brand-dark/5 px-1 rounded">
+                                        {duration}
+                                      </span>
+                                    </div>
+
+                                    {/* Employee actions */}
+                                    {canClaim && (
+                                      <Button
+                                        size="sm"
+                                        className="mt-1.5 w-full h-6 text-[11px] bg-brand hover:bg-brand-light text-white"
+                                        disabled={claimMutation.isPending}
                                         onClick={(e) => {
                                           e.stopPropagation();
-                                          if (confirm("Czy na pewno chcesz usunąć tę zmianę?")) {
-                                            deleteMutation.mutate(shift.id);
-                                          }
+                                          claimMutation.mutate(assignment.id);
                                         }}
                                       >
-                                        <Trash2 className="h-3 w-3" />
-                                      </button>
+                                        Przejmij zmianę
+                                      </Button>
+                                    )}
+                                    {canRelease && (
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        className="mt-1.5 w-full h-6 text-[11px] border-brand-dark/10 text-brand-dark/50 hover:text-brand hover:border-brand/30"
+                                        disabled={releaseMutation.isPending}
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          releaseMutation.mutate(assignment.id);
+                                        }}
+                                      >
+                                        Oddaj na giełdę
+                                      </Button>
+                                    )}
+                                    {isMine && isOnMarketplace && (
+                                      <span className="text-brand text-[10px] mt-1 flex items-center gap-0.5">
+                                        <ShoppingBag className="h-2.5 w-2.5" />
+                                        Na giełdzie
+                                      </span>
                                     )}
                                   </div>
                                 </div>
-                                <div className="text-slate-500 text-[11px]">
-                                  {timeStr}
-                                </div>
-
-                                {canClaim && (
-                                  <Button
-                                    size="sm"
-                                    className="mt-1 w-full h-6 text-xs"
-                                    disabled={claimMutation.isPending}
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      claimMutation.mutate(assignment.id);
-                                    }}
-                                  >
-                                    Biorę
-                                  </Button>
-                                )}
-                                {canRelease && (
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    className="mt-1 w-full h-6 text-xs"
-                                    disabled={releaseMutation.isPending}
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      releaseMutation.mutate(assignment.id);
-                                    }}
-                                  >
-                                    Oddaj na giełdę
-                                  </Button>
-                                )}
-                                {isMine && isOnMarketplace && (
-                                  <span className="text-amber-600 text-[10px] mt-0.5 block">
-                                    Na giełdzie
-                                  </span>
-                                )}
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </td>
-                    );
-                  })}
-                </tr>
-              ))}
+                              );
+                            })}
+                          </div>
+                        </td>
+                      );
+                    })}
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         )}
