@@ -11,11 +11,9 @@ import { AuthController } from './auth.controller';
   imports: [
     PassportModule,
     JwtModule.register({
-      // Secret będzie używany tylko do weryfikacji (NextAuth generuje tokeny)
-      // W praktyce NextAuth używa własnego secret, więc musimy użyć tego samego
-      secret: process.env.JWT_SECRET || process.env.NEXTAUTH_SECRET || 'your-secret-key-change-in-production',
+      secret: process.env.JWT_SECRET || process.env.NEXTAUTH_SECRET,
       signOptions: {
-        expiresIn: '7d', // Token ważny 7 dni
+        expiresIn: '7d',
       },
     }),
     PrismaModule,

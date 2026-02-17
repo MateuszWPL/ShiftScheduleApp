@@ -4,21 +4,28 @@ import {
   InternalServerErrorException,
   NotFoundException,
   ForbiddenException,
+  Logger,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { EmailService } from '../email/email.service';
-import { MembershipStatus, Role, ShiftStatus } from '@prisma/client';
+import { ShiftValidationService } from './shift-validation.service';
+import { MembershipStatus, Role, ShiftStatus, SwapStatus } from '@prisma/client';
 import { nanoid } from 'nanoid';
 import { DEFAULT_USER_NAME, DEFAULT_USER_NICKNAME } from '../constants/user-defaults';
 
 @Injectable()
 export class ShiftsService {
+  private readonly logger = new Logger(ShiftsService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly emailService: EmailService,
+    private readonly shiftValidation: ShiftValidationService,
   ) {}
 
-  /** Lista zmian zespołu (grafik). Opcjonalny filtr dat from/to. */
+  /** Lista zmian zespołu (grafik). Opcjonalny filtr dat from/to. 
+   *  Pracownicy widzą tylko PUBLISHED/COMPLETED. Manager/Owner widzi też DRAFT.
+   */
   async findAll(
     userId: string,
     query?: { from?: string; to?: string },
@@ -31,13 +38,17 @@ export class ShiftsService {
       return [];
     }
 
-    const where: {
-      teamId: string;
-      startTime?: { lte?: Date };
-      endTime?: { gte?: Date };
-    } = {
+    const isManager = activeMembership.role === Role.OWNER || activeMembership.role === Role.MANAGER;
+
+    const where: Record<string, any> = {
       teamId: activeMembership.teamId,
     };
+
+    // Employees only see published/completed shifts (not drafts)
+    if (!isManager) {
+      where.status = { in: [ShiftStatus.PUBLISHED, ShiftStatus.COMPLETED] };
+    }
+
     // Zakres dat: zmiany zachodzące w [from, to] (start przed końcem okresu, koniec po początku)
     if (query?.from) {
       where.endTime = { gte: new Date(query.from) };
@@ -141,6 +152,35 @@ export class ShiftsService {
     });
   }
 
+  /** Walidacja przypisania pracownika do zmiany (sprawdza dostępność, konflikty, dobę pracowniczą). */
+  async validateAssignmentForShift(
+    requesterId: string,
+    shiftId: string,
+    targetUserId: string,
+  ) {
+    const membership = await this.prisma.teamMembership.findFirst({
+      where: { userId: requesterId, status: MembershipStatus.ACTIVE },
+    });
+    if (!membership) {
+      throw new BadRequestException('Brak aktywnego członkostwa.');
+    }
+
+    const shift = await this.prisma.shift.findFirst({
+      where: { id: shiftId, teamId: membership.teamId },
+    });
+    if (!shift) {
+      throw new NotFoundException('Zmiana nie istnieje.');
+    }
+
+    return this.shiftValidation.validateAssignment(
+      targetUserId,
+      membership.teamId,
+      shift.startTime,
+      shift.endTime,
+      shiftId,
+    );
+  }
+
   /** Dodanie jednej pozycji do zmiany (przypisanie pracownika lub wolna pozycja na giełdzie). */
   async addAssignment(
     requesterId: string,
@@ -162,6 +202,24 @@ export class ShiftsService {
     });
     if (!shift) {
       throw new NotFoundException('Zmiana nie istnieje lub nie należy do Twojego zespołu.');
+    }
+
+    // Validate assignment if assigning to a specific user
+    if (data.userId) {
+      const validation = await this.shiftValidation.validateAssignment(
+        data.userId,
+        membership.teamId,
+        shift.startTime,
+        shift.endTime,
+        shiftId,
+      );
+      if (!validation.valid) {
+        throw new BadRequestException({
+          message: 'Nie można przypisać pracownika do zmiany.',
+          errors: validation.errors,
+          warnings: validation.warnings,
+        });
+      }
     }
 
     return this.prisma.shiftAssignment.create({
@@ -236,7 +294,7 @@ export class ShiftsService {
     });
   }
 
-  /** Lista pozycji na giełdzie (assignments z isUpForGrabs). */
+  /** Lista pozycji na giełdzie (assignments z isUpForGrabs). Tylko z opublikowanych zmian. */
   async getMarketplace(userId: string) {
     const membership = await this.prisma.teamMembership.findFirst({
       where: { userId, status: MembershipStatus.ACTIVE },
@@ -248,7 +306,10 @@ export class ShiftsService {
     return this.prisma.shiftAssignment.findMany({
       where: {
         isUpForGrabs: true,
-        shift: { teamId: membership.teamId },
+        shift: {
+          teamId: membership.teamId,
+          status: ShiftStatus.PUBLISHED,
+        },
       },
       include: {
         shift: true,
@@ -275,7 +336,7 @@ export class ShiftsService {
   }
   
 
-  /** Przejęcie pozycji z giełdy (pessimistic lock). */
+  /** Przejęcie pozycji z giełdy (pessimistic lock) z walidacją. */
   async claimAssignment(assignmentId: string, userId: string) {
     try {
       return await this.prisma.$transaction(async (tx) => {
@@ -301,13 +362,33 @@ export class ShiftsService {
 
         const shift = await tx.shift.findUnique({
           where: { id: assignment.shiftId },
-          select: { teamId: true },
+          select: { teamId: true, startTime: true, endTime: true, status: true },
         });
         if (!shift || shift.teamId !== membership.teamId) {
           throw new ForbiddenException('Nie możesz przejąć pozycji z innego zespołu.');
         }
+        if (shift.status !== ShiftStatus.PUBLISHED) {
+          throw new BadRequestException('Można przejmować pozycje tylko z opublikowanych zmian.');
+        }
         if (!assignment.isUpForGrabs) {
           throw new BadRequestException('Ta pozycja nie jest dostępna na giełdzie.');
+        }
+
+        // Validate the claim: check conflicts and rest period
+        const validation = await this.shiftValidation.validateAssignment(
+          userId,
+          membership.teamId,
+          shift.startTime,
+          shift.endTime,
+          assignment.shiftId,
+        );
+
+        if (!validation.valid) {
+          throw new BadRequestException({
+            message: 'Nie możesz przejąć tej zmiany.',
+            errors: validation.errors,
+            warnings: validation.warnings,
+          });
         }
 
         return tx.shiftAssignment.update({
@@ -350,6 +431,98 @@ export class ShiftsService {
         include: { shift: true, user: true },
       });
     });
+  }
+
+  /**
+   * Publikacja zmian – zmiana statusu z DRAFT na PUBLISHED.
+   * Waliduje przypisania przed publikacją.
+   * Accepts array of shift IDs or a date range (publishes all drafts in range).
+   */
+  async publishShifts(
+    requesterId: string,
+    data: { shiftIds?: string[]; from?: string; to?: string },
+  ) {
+    const membership = await this.prisma.teamMembership.findFirst({
+      where: { userId: requesterId, status: MembershipStatus.ACTIVE },
+    });
+    if (!membership) {
+      throw new BadRequestException('Brak aktywnego członkostwa.');
+    }
+    if (membership.role !== Role.OWNER && membership.role !== Role.MANAGER) {
+      throw new ForbiddenException('Tylko Owner/Manager może publikować grafik.');
+    }
+
+    let shiftIds: string[];
+
+    if (data.shiftIds && data.shiftIds.length > 0) {
+      shiftIds = data.shiftIds;
+    } else if (data.from && data.to) {
+      const drafts = await this.prisma.shift.findMany({
+        where: {
+          teamId: membership.teamId,
+          status: ShiftStatus.DRAFT,
+          startTime: { gte: new Date(data.from) },
+          endTime: { lte: new Date(data.to) },
+        },
+        select: { id: true },
+      });
+      shiftIds = drafts.map((s) => s.id);
+    } else {
+      throw new BadRequestException('Podaj shiftIds lub zakres dat (from/to).');
+    }
+
+    if (shiftIds.length === 0) {
+      return { published: 0, warnings: [] };
+    }
+
+    // Validate all assignments before publishing
+    const allWarnings: string[] = [];
+
+    for (const shiftId of shiftIds) {
+      const shift = await this.prisma.shift.findFirst({
+        where: { id: shiftId, teamId: membership.teamId, status: ShiftStatus.DRAFT },
+      });
+      if (!shift) continue;
+
+      const validationResults = await this.shiftValidation.validateShiftForPublish(
+        shiftId,
+        membership.teamId,
+        shift.startTime,
+        shift.endTime,
+      );
+
+      for (const vr of validationResults) {
+        if (!vr.result.valid) {
+          allWarnings.push(
+            `${vr.userName}: ${vr.result.errors.join('; ')}`,
+          );
+        }
+        if (vr.result.warnings.length > 0) {
+          allWarnings.push(
+            `${vr.userName}: ${vr.result.warnings.join('; ')}`,
+          );
+        }
+      }
+    }
+
+    // Publish shifts (even with warnings — manager decides)
+    const result = await this.prisma.shift.updateMany({
+      where: {
+        id: { in: shiftIds },
+        teamId: membership.teamId,
+        status: ShiftStatus.DRAFT,
+      },
+      data: { status: ShiftStatus.PUBLISHED },
+    });
+
+    this.logger.log(
+      `Published ${result.count} shifts for team ${membership.teamId} by user ${requesterId}`,
+    );
+
+    return {
+      published: result.count,
+      warnings: allWarnings,
+    };
   }
 
   async syncUserByEmail(email: string, name: string) {
@@ -814,5 +987,278 @@ export class ShiftsService {
     }
 
     return result;
+  }
+
+  // ── Swap Request Logic ──────────────────────────────────────────────
+
+  /**
+   * Pracownik A tworzy prośbę o zamianę zmiany.
+   * Status: PENDING_ACCEPT (czeka na akceptację pracownika B).
+   */
+  async createSwapRequest(
+    requesterId: string,
+    assignmentId: string,
+    data: { targetUserId?: string; reason?: string },
+  ) {
+    const membership = await this.prisma.teamMembership.findFirst({
+      where: { userId: requesterId, status: MembershipStatus.ACTIVE },
+    });
+    if (!membership) {
+      throw new BadRequestException('Brak aktywnego członkostwa.');
+    }
+
+    const assignment = await this.prisma.shiftAssignment.findFirst({
+      where: { id: assignmentId, userId: requesterId },
+      include: { shift: true },
+    });
+    if (!assignment) {
+      throw new NotFoundException('Przypisanie nie istnieje lub nie należy do Ciebie.');
+    }
+    if (assignment.shift.teamId !== membership.teamId) {
+      throw new ForbiddenException('Nie możesz zamieniać zmian z innego zespołu.');
+    }
+
+    // Check for existing pending swap request for this assignment
+    const existingSwap = await this.prisma.swapRequest.findFirst({
+      where: {
+        assignmentId,
+        status: { in: [SwapStatus.PENDING_ACCEPT, SwapStatus.ACCEPTED, SwapStatus.PENDING_APPROVAL] },
+      },
+    });
+    if (existingSwap) {
+      throw new BadRequestException('Istnieje już aktywna prośba o zamianę dla tej zmiany.');
+    }
+
+    return this.prisma.swapRequest.create({
+      data: {
+        assignmentId,
+        requesterId,
+        targetUserId: data.targetUserId ?? null,
+        teamId: membership.teamId,
+        status: SwapStatus.PENDING_ACCEPT,
+        reason: data.reason,
+      },
+      include: {
+        assignment: {
+          include: { shift: true },
+        },
+        requester: { select: { id: true, name: true, nickname: true } },
+        targetUser: { select: { id: true, name: true, nickname: true } },
+      },
+    });
+  }
+
+  /**
+   * Pracownik B akceptuje prośbę o zamianę — oferuje swoją zmianę.
+   * Status: PENDING_APPROVAL (czeka na zatwierdzenie Managera).
+   */
+  async acceptSwapRequest(
+    userId: string,
+    swapId: string,
+    data: { targetAssignmentId: string },
+  ) {
+    const swap = await this.prisma.swapRequest.findUnique({
+      where: { id: swapId },
+      include: {
+        assignment: { include: { shift: true } },
+      },
+    });
+    if (!swap) {
+      throw new NotFoundException('Prośba o zamianę nie istnieje.');
+    }
+    if (swap.status !== SwapStatus.PENDING_ACCEPT) {
+      throw new BadRequestException('Ta prośba nie czeka na akceptację.');
+    }
+
+    const membership = await this.prisma.teamMembership.findFirst({
+      where: { userId, teamId: swap.teamId, status: MembershipStatus.ACTIVE },
+    });
+    if (!membership) {
+      throw new ForbiddenException('Brak aktywnego członkostwa w zespole.');
+    }
+
+    // If swap is targeted, verify this is the right user
+    if (swap.targetUserId && swap.targetUserId !== userId) {
+      throw new ForbiddenException('Ta prośba jest skierowana do innego pracownika.');
+    }
+
+    // Verify the offered assignment belongs to the accepting user
+    const targetAssignment = await this.prisma.shiftAssignment.findFirst({
+      where: { id: data.targetAssignmentId, userId },
+      include: { shift: true },
+    });
+    if (!targetAssignment) {
+      throw new BadRequestException('Wybrane przypisanie nie istnieje lub nie należy do Ciebie.');
+    }
+
+    return this.prisma.swapRequest.update({
+      where: { id: swapId },
+      data: {
+        status: SwapStatus.PENDING_APPROVAL,
+        targetUserId: userId,
+        targetAssignmentId: data.targetAssignmentId,
+      },
+      include: {
+        assignment: { include: { shift: true, user: true } },
+        targetAssignment: { include: { shift: true, user: true } },
+        requester: { select: { id: true, name: true, nickname: true } },
+        targetUser: { select: { id: true, name: true, nickname: true } },
+      },
+    });
+  }
+
+  /**
+   * Manager zatwierdza zamianę — atomowa zamiana userIds w obu przypisaniach.
+   */
+  async approveSwapRequest(managerId: string, swapId: string) {
+    const managerMembership = await this.prisma.teamMembership.findFirst({
+      where: { userId: managerId, status: MembershipStatus.ACTIVE },
+    });
+    if (!managerMembership) {
+      throw new BadRequestException('Brak aktywnego członkostwa.');
+    }
+    if (managerMembership.role !== Role.OWNER && managerMembership.role !== Role.MANAGER) {
+      throw new ForbiddenException('Tylko Owner/Manager może zatwierdzać zamiany.');
+    }
+
+    const swap = await this.prisma.swapRequest.findUnique({
+      where: { id: swapId },
+      include: {
+        assignment: { include: { shift: true } },
+        targetAssignment: { include: { shift: true } },
+      },
+    });
+    if (!swap) {
+      throw new NotFoundException('Prośba o zamianę nie istnieje.');
+    }
+    if (swap.teamId !== managerMembership.teamId) {
+      throw new ForbiddenException('Nie możesz zatwierdzać zamian z innego zespołu.');
+    }
+    if (swap.status !== SwapStatus.PENDING_APPROVAL) {
+      throw new BadRequestException('Ta prośba nie czeka na zatwierdzenie.');
+    }
+    if (!swap.targetAssignmentId || !swap.targetUserId) {
+      throw new BadRequestException('Brak drugiego przypisania do zamiany.');
+    }
+
+    // Atomic swap
+    return this.prisma.$transaction(async (tx) => {
+      const reqUserId = swap.assignment.userId;
+      const tgtUserId = swap.targetUserId!;
+
+      await tx.shiftAssignment.update({
+        where: { id: swap.assignmentId },
+        data: { userId: tgtUserId },
+      });
+
+      await tx.shiftAssignment.update({
+        where: { id: swap.targetAssignmentId! },
+        data: { userId: reqUserId },
+      });
+
+      return tx.swapRequest.update({
+        where: { id: swapId },
+        data: {
+          status: SwapStatus.APPROVED,
+          resolvedAt: new Date(),
+          resolvedBy: managerId,
+        },
+        include: {
+          assignment: { include: { shift: true, user: true } },
+          targetAssignment: { include: { shift: true, user: true } },
+          requester: { select: { id: true, name: true, nickname: true } },
+          targetUser: { select: { id: true, name: true, nickname: true } },
+        },
+      });
+    });
+  }
+
+  /** Manager lub twórca odrzuca/anuluje prośbę o zamianę. */
+  async rejectSwapRequest(userId: string, swapId: string) {
+    const swap = await this.prisma.swapRequest.findUnique({
+      where: { id: swapId },
+    });
+    if (!swap) {
+      throw new NotFoundException('Prośba o zamianę nie istnieje.');
+    }
+
+    const membership = await this.prisma.teamMembership.findFirst({
+      where: { userId, teamId: swap.teamId, status: MembershipStatus.ACTIVE },
+    });
+    if (!membership) {
+      throw new ForbiddenException('Brak aktywnego członkostwa.');
+    }
+
+    const isManager = membership.role === Role.OWNER || membership.role === Role.MANAGER;
+    const isRequester = swap.requesterId === userId;
+
+    if (!isManager && !isRequester) {
+      throw new ForbiddenException('Nie masz uprawnień do odrzucenia tej prośby.');
+    }
+
+    if (swap.status === SwapStatus.APPROVED || swap.status === SwapStatus.REJECTED || swap.status === SwapStatus.CANCELLED) {
+      throw new BadRequestException('Ta prośba jest już rozwiązana.');
+    }
+
+    const newStatus = isRequester && !isManager ? SwapStatus.CANCELLED : SwapStatus.REJECTED;
+
+    return this.prisma.swapRequest.update({
+      where: { id: swapId },
+      data: {
+        status: newStatus,
+        resolvedAt: new Date(),
+        resolvedBy: userId,
+      },
+      include: {
+        assignment: { include: { shift: true } },
+        requester: { select: { id: true, name: true, nickname: true } },
+        targetUser: { select: { id: true, name: true, nickname: true } },
+      },
+    });
+  }
+
+  /** Lista próśb o zamianę (dla pracownika lub managera). */
+  async getSwapRequests(userId: string) {
+    const membership = await this.prisma.teamMembership.findFirst({
+      where: { userId, status: MembershipStatus.ACTIVE },
+    });
+    if (!membership) {
+      return [];
+    }
+
+    const isManager = membership.role === Role.OWNER || membership.role === Role.MANAGER;
+
+    const where = isManager
+      ? { teamId: membership.teamId, status: { in: [SwapStatus.PENDING_ACCEPT, SwapStatus.ACCEPTED, SwapStatus.PENDING_APPROVAL] } }
+      : {
+          teamId: membership.teamId,
+          status: { in: [SwapStatus.PENDING_ACCEPT, SwapStatus.ACCEPTED, SwapStatus.PENDING_APPROVAL] },
+          OR: [
+            { requesterId: userId },
+            { targetUserId: userId },
+            { targetUserId: null },
+          ],
+        };
+
+    return this.prisma.swapRequest.findMany({
+      where: where as any,
+      include: {
+        assignment: {
+          include: {
+            shift: true,
+            user: { select: { id: true, name: true, nickname: true } },
+          },
+        },
+        targetAssignment: {
+          include: {
+            shift: true,
+            user: { select: { id: true, name: true, nickname: true } },
+          },
+        },
+        requester: { select: { id: true, name: true, nickname: true } },
+        targetUser: { select: { id: true, name: true, nickname: true } },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
   }
 }

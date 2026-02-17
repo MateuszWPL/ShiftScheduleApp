@@ -610,3 +610,127 @@ export async function resetPassword(token: string, password: string) {
   }
   return res.json();
 }
+
+// --- Publish shifts ---
+export interface PublishShiftsInput {
+  shiftIds?: string[];
+  from?: string;
+  to?: string;
+}
+
+export interface PublishShiftsResult {
+  published: number;
+  warnings: string[];
+}
+
+export async function publishShifts(data: PublishShiftsInput): Promise<PublishShiftsResult> {
+  const res = await authenticatedFetch(`${API_URL}/shifts/publish`, {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.message || "Błąd publikacji grafiku");
+  }
+  return res.json();
+}
+
+// --- Validate assignment ---
+export interface ValidationResult {
+  valid: boolean;
+  warnings: string[];
+  errors: string[];
+}
+
+export async function validateAssignment(
+  shiftId: string,
+  userId: string
+): Promise<ValidationResult> {
+  const res = await authenticatedFetch(
+    `${API_URL}/shifts/${shiftId}/validate-assignment/${userId}`
+  );
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.message || "Błąd walidacji");
+  }
+  return res.json();
+}
+
+// --- Swap Requests ---
+export interface SwapRequest {
+  id: string;
+  assignmentId: string;
+  requesterId: string;
+  targetUserId: string | null;
+  targetAssignmentId: string | null;
+  teamId: string;
+  status: "PENDING_ACCEPT" | "ACCEPTED" | "PENDING_APPROVAL" | "APPROVED" | "REJECTED" | "CANCELLED";
+  reason: string | null;
+  createdAt: string;
+  assignment: ShiftAssignment & { shift: Shift; user?: ShiftUser | null };
+  targetAssignment?: (ShiftAssignment & { shift: Shift; user?: ShiftUser | null }) | null;
+  requester: ShiftUser;
+  targetUser: ShiftUser | null;
+}
+
+export async function getSwapRequests(): Promise<SwapRequest[]> {
+  const res = await authenticatedFetch(`${API_URL}/shifts/swaps`);
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.message || "Błąd pobierania próśb o zamianę");
+  }
+  return res.json();
+}
+
+export async function createSwapRequest(data: {
+  assignmentId: string;
+  targetUserId?: string;
+  reason?: string;
+}): Promise<SwapRequest> {
+  const res = await authenticatedFetch(`${API_URL}/shifts/swaps`, {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.message || "Błąd tworzenia prośby o zamianę");
+  }
+  return res.json();
+}
+
+export async function acceptSwapRequest(
+  swapId: string,
+  targetAssignmentId: string
+): Promise<SwapRequest> {
+  const res = await authenticatedFetch(`${API_URL}/shifts/swaps/${swapId}/accept`, {
+    method: "POST",
+    body: JSON.stringify({ targetAssignmentId }),
+  });
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.message || "Błąd akceptacji zamiany");
+  }
+  return res.json();
+}
+
+export async function approveSwapRequest(swapId: string): Promise<SwapRequest> {
+  const res = await authenticatedFetch(`${API_URL}/shifts/swaps/${swapId}/approve`, {
+    method: "POST",
+  });
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.message || "Błąd zatwierdzania zamiany");
+  }
+  return res.json();
+}
+
+export async function rejectSwapRequest(swapId: string): Promise<SwapRequest> {
+  const res = await authenticatedFetch(`${API_URL}/shifts/swaps/${swapId}/reject`, {
+    method: "POST",
+  });
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.message || "Błąd odrzucania zamiany");
+  }
+  return res.json();
+}

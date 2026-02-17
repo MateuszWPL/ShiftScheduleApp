@@ -6,13 +6,21 @@ import {
   getTeamMembers,
   claimAssignment,
   releaseAssignment,
+  createSwapRequest,
   type Shift,
   type ShiftAssignment,
   type User,
 } from "@/lib/api";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import {
+  ChevronLeft,
+  ChevronRight,
+  ArrowRightLeft,
+  AlertTriangle,
+} from "lucide-react";
 import { toast } from "sonner";
+import { useState } from "react";
 
 function toLocalDateKey(d: Date): string {
   const y = d.getFullYear();
@@ -25,7 +33,7 @@ function getWeekMonday(d: Date): Date {
   const x = new Date(d);
   x.setHours(0, 0, 0, 0);
   const day = x.getDay();
-  const diff = day === 0 ? -6 : 1 - day; // poniedziałek = 1
+  const diff = day === 0 ? -6 : 1 - day;
   x.setDate(x.getDate() + diff);
   return x;
 }
@@ -76,6 +84,34 @@ function buildGrid(
   return grid;
 }
 
+function isToday(d: Date): boolean {
+  const now = new Date();
+  return (
+    d.getFullYear() === now.getFullYear() &&
+    d.getMonth() === now.getMonth() &&
+    d.getDate() === now.getDate()
+  );
+}
+
+/** Get status color scheme for shift cards */
+function getShiftCardClasses(shift: Shift, isMine: boolean, isOnMarketplace: boolean): string {
+  const base = "text-xs rounded-lg border p-2 transition-all";
+
+  if (shift.status === "DRAFT") {
+    return `${base} border-dashed border-amber-300 bg-amber-50/60 opacity-80`;
+  }
+
+  if (isOnMarketplace) {
+    return `${base} border-orange-300 bg-orange-50`;
+  }
+
+  if (isMine) {
+    return `${base} border-blue-200 bg-blue-50`;
+  }
+
+  return `${base} border-slate-200 bg-slate-50`;
+}
+
 interface ScheduleGridProps {
   weekStart: Date;
   onWeekChange: (monday: Date) => void;
@@ -97,6 +133,8 @@ export function ScheduleGrid({
   const to = new Date(monday);
   to.setDate(to.getDate() + 7);
   const toStr = to.toISOString();
+
+  const [swapRequestingId, setSwapRequestingId] = useState<string | null>(null);
 
   const { data: members = [], isLoading: membersLoading } = useQuery({
     queryKey: ["team-members"],
@@ -128,10 +166,30 @@ export function ScheduleGrid({
     onError: (e: Error) => toast.error(e.message),
   });
 
-  const employeesOnly = members.filter((m) => (m as { role?: string }).role === "EMPLOYEE");
+  const swapMutation = useMutation({
+    mutationFn: (assignmentId: string) =>
+      createSwapRequest({ assignmentId }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["swap-requests"] });
+      toast.success("Prośba o zamianę utworzona", {
+        description: "Inni pracownicy zobaczą Twoją prośbę.",
+      });
+      setSwapRequestingId(null);
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const employeesOnly = members.filter(
+    (m) => (m as { role?: string }).role === "EMPLOYEE"
+  );
   const grid = buildGrid(shifts, employeesOnly, weekDays);
   const isLoading = membersLoading || shiftsLoading;
   const canUseMarketplace = currentUserRole === "EMPLOYEE";
+  const isAdmin =
+    currentUserRole === "OWNER" || currentUserRole === "MANAGER";
+
+  // Count drafts this week
+  const draftCount = shifts.filter((s) => s.status === "DRAFT").length;
 
   const prevWeek = () => {
     const prev = new Date(monday);
@@ -144,89 +202,256 @@ export function ScheduleGrid({
     onWeekChange(next);
   };
 
-  const weekLabel = `${weekDays[0].toLocaleDateString("pl-PL", { day: "numeric", month: "short" })} – ${weekDays[6].toLocaleDateString("pl-PL", { day: "numeric", month: "short", year: "numeric" })}`;
+  const goToday = () => onWeekChange(new Date());
+
+  const weekLabel = `${weekDays[0].toLocaleDateString("pl-PL", {
+    day: "numeric",
+    month: "short",
+  })} – ${weekDays[6].toLocaleDateString("pl-PL", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  })}`;
 
   return (
     <div className="space-y-3">
+      {/* Header bar */}
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="icon" onClick={prevWeek} aria-label="Poprzedni tydzień">
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={prevWeek}
+            aria-label="Poprzedni tydzień"
+          >
             <ChevronLeft className="h-4 w-4" />
           </Button>
-          <span className="font-medium text-slate-700 min-w-[200px] text-center">{weekLabel}</span>
-          <Button variant="outline" size="icon" onClick={nextWeek} aria-label="Następny tydzień">
+          <span className="font-medium text-slate-700 min-w-[200px] text-center">
+            {weekLabel}
+          </span>
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={nextWeek}
+            aria-label="Następny tydzień"
+          >
             <ChevronRight className="h-4 w-4" />
           </Button>
+          <Button variant="ghost" size="sm" onClick={goToday} className="text-xs text-slate-500 ml-1">
+            Dziś
+          </Button>
+        </div>
+
+        <div className="flex items-center gap-2">
+          {isAdmin && draftCount > 0 && (
+            <Badge
+              variant="outline"
+              className="border-amber-300 text-amber-700 bg-amber-50 gap-1"
+            >
+              <AlertTriangle className="h-3 w-3" />
+              {draftCount} szkic{draftCount === 1 ? "" : draftCount < 5 ? "e" : "ów"}
+            </Badge>
+          )}
         </div>
       </div>
 
-      <div className="border border-slate-200 rounded-lg bg-white overflow-x-auto overflow-y-auto max-h-[70vh]">
+      {/* Legend */}
+      {isAdmin && (
+        <div className="flex items-center gap-4 text-xs text-slate-500">
+          <span className="flex items-center gap-1.5">
+            <span className="inline-block w-3 h-3 rounded border-dashed border border-amber-300 bg-amber-50/60" />
+            Szkic (DRAFT)
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span className="inline-block w-3 h-3 rounded border border-slate-200 bg-slate-50" />
+            Opublikowana
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span className="inline-block w-3 h-3 rounded border border-orange-300 bg-orange-50" />
+            Na giełdzie
+          </span>
+        </div>
+      )}
+
+      {/* Grid */}
+      <div className="border border-slate-200 rounded-lg bg-white overflow-x-auto overflow-y-auto max-h-[70vh] shadow-sm">
         {isLoading ? (
-          <div className="p-8 text-center text-slate-500">Ładowanie grafiku...</div>
+          <div className="p-8 text-center text-slate-500">
+            <div className="animate-pulse">Ładowanie grafiku...</div>
+          </div>
+        ) : employeesOnly.length === 0 ? (
+          <div className="p-8 text-center text-slate-500">
+            Brak pracowników w zespole. Zaproś członków, aby zobaczyć grafik.
+          </div>
         ) : (
           <table className="w-full border-collapse text-sm">
-            <thead className="bg-slate-100 sticky top-0 z-10">
+            <thead className="bg-slate-50 sticky top-0 z-10">
               <tr>
                 <th className="text-left p-2 border-b border-slate-200 font-semibold text-slate-700 min-w-[140px]">
                   Pracownik
                 </th>
-                {weekDays.map((d) => (
-                  <th
-                    key={toLocalDateKey(d)}
-                    className="p-2 border-b border-l border-slate-200 font-medium text-slate-600 min-w-[100px]"
-                  >
-                    {d.toLocaleDateString("pl-PL", { weekday: "short", day: "numeric", month: "numeric" })}
-                  </th>
-                ))}
+                {weekDays.map((d) => {
+                  const todayCol = isToday(d);
+                  return (
+                    <th
+                      key={toLocalDateKey(d)}
+                      className={`p-2 border-b border-l border-slate-200 font-medium min-w-[110px] ${
+                        todayCol
+                          ? "bg-blue-50 text-blue-700"
+                          : "text-slate-600"
+                      }`}
+                    >
+                      <div>
+                        {d.toLocaleDateString("pl-PL", {
+                          weekday: "short",
+                        })}
+                      </div>
+                      <div className="text-xs">
+                        {d.toLocaleDateString("pl-PL", {
+                          day: "numeric",
+                          month: "numeric",
+                        })}
+                      </div>
+                    </th>
+                  );
+                })}
               </tr>
             </thead>
             <tbody>
               {employeesOnly.map((member) => (
-                <tr key={member.id} className="border-b border-slate-100 hover:bg-slate-50/50">
+                <tr
+                  key={member.id}
+                  className="border-b border-slate-100 hover:bg-slate-50/30"
+                >
                   <td className="p-2 border-r border-slate-100 font-medium text-slate-800 sticky left-0 bg-white z-[1]">
-                    {member.nickname || member.name}
+                    <div className="flex items-center gap-2">
+                      <div className="w-7 h-7 rounded-full bg-slate-200 flex items-center justify-center text-xs font-semibold text-slate-600 flex-shrink-0">
+                        {(member.nickname || member.name || "?").charAt(0).toUpperCase()}
+                      </div>
+                      <span className="truncate max-w-[100px]">
+                        {member.nickname || member.name}
+                      </span>
+                    </div>
                   </td>
                   {weekDays.map((day) => {
                     const key = `${member.id}-${toLocalDateKey(day)}`;
                     const slots = grid.get(key) ?? [];
+                    const todayCol = isToday(day);
                     return (
                       <td
                         key={key}
-                        className="p-1 border-l border-slate-100 align-top min-w-[100px]"
+                        className={`p-1 border-l border-slate-100 align-top min-w-[110px] ${
+                          todayCol ? "bg-blue-50/30" : ""
+                        }`}
                       >
                         <div className="space-y-1">
                           {slots.map(({ assignment, shift }) => {
-                            const timeStr = `${new Date(shift.startTime).toLocaleTimeString("pl-PL", { hour: "2-digit", minute: "2-digit" })}–${new Date(shift.endTime).toLocaleTimeString("pl-PL", { hour: "2-digit", minute: "2-digit" })}`;
-                            const isMine = assignment.userId === currentUserId;
-                            const canClaim = canUseMarketplace && assignment.isUpForGrabs && !isMine;
-                            const canRelease = canUseMarketplace && isMine && !assignment.isUpForGrabs;
+                            const timeStr = `${new Date(
+                              shift.startTime
+                            ).toLocaleTimeString("pl-PL", {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })}–${new Date(shift.endTime).toLocaleTimeString(
+                              "pl-PL",
+                              { hour: "2-digit", minute: "2-digit" }
+                            )}`;
+                            const isMine =
+                              assignment.userId === currentUserId;
+                            const isOnMarketplace = assignment.isUpForGrabs;
+                            const isDraft = shift.status === "DRAFT";
+                            const canClaim =
+                              canUseMarketplace &&
+                              isOnMarketplace &&
+                              !isMine;
+                            const canRelease =
+                              canUseMarketplace &&
+                              isMine &&
+                              !isOnMarketplace &&
+                              !isDraft;
+                            const canSwap =
+                              canUseMarketplace &&
+                              isMine &&
+                              !isOnMarketplace &&
+                              !isDraft;
 
                             return (
                               <div
                                 key={assignment.id}
-                                className="text-xs rounded border border-slate-200 bg-slate-50 p-1.5"
+                                className={getShiftCardClasses(
+                                  shift,
+                                  isMine,
+                                  isOnMarketplace
+                                )}
                               >
-                                <div className="font-medium text-slate-800">{shift.roleName}</div>
-                                <div className="text-slate-600">{timeStr}</div>
-                                {(canRelease || canClaim) && (
+                                <div className="flex items-center justify-between gap-1">
+                                  <span className="font-semibold text-slate-800 truncate">
+                                    {shift.roleName}
+                                  </span>
+                                  {isDraft && isAdmin && (
+                                    <Badge
+                                      variant="outline"
+                                      className="text-[10px] px-1 py-0 border-amber-300 text-amber-600 bg-amber-50"
+                                    >
+                                      szkic
+                                    </Badge>
+                                  )}
+                                </div>
+                                <div className="text-slate-500 text-[11px]">
+                                  {timeStr}
+                                </div>
+
+                                {/* Action buttons for employees */}
+                                {canClaim && (
                                   <Button
                                     size="sm"
-                                    variant={canClaim ? "default" : "outline"}
-                                    className="mt-1 w-full h-7 text-xs"
-                                    disabled={
-                                      (canClaim && claimMutation.isPending) ||
-                                      (canRelease && releaseMutation.isPending)
+                                    className="mt-1 w-full h-6 text-xs"
+                                    disabled={claimMutation.isPending}
+                                    onClick={() =>
+                                      claimMutation.mutate(assignment.id)
                                     }
-                                    onClick={() => {
-                                      if (canClaim) claimMutation.mutate(assignment.id);
-                                      else if (canRelease) releaseMutation.mutate(assignment.id);
-                                    }}
                                   >
-                                    {canClaim ? "Biorę" : "Oddaj"}
+                                    Biorę
                                   </Button>
                                 )}
-                                {isMine && assignment.isUpForGrabs && (
-                                  <span className="text-amber-600 text-xs">Na giełdzie</span>
+                                {canRelease && (
+                                  <div className="flex gap-1 mt-1">
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      className="flex-1 h-6 text-xs"
+                                      disabled={releaseMutation.isPending}
+                                      onClick={() =>
+                                        releaseMutation.mutate(assignment.id)
+                                      }
+                                    >
+                                      Oddaj
+                                    </Button>
+                                    {canSwap && (
+                                      <Button
+                                        size="sm"
+                                        variant="ghost"
+                                        className="h-6 w-6 p-0"
+                                        title="Poproś o zamianę"
+                                        disabled={swapMutation.isPending}
+                                        onClick={() => {
+                                          if (
+                                            swapRequestingId === assignment.id
+                                          ) {
+                                            setSwapRequestingId(null);
+                                          } else {
+                                            swapMutation.mutate(assignment.id);
+                                          }
+                                        }}
+                                      >
+                                        <ArrowRightLeft className="h-3 w-3" />
+                                      </Button>
+                                    )}
+                                  </div>
+                                )}
+                                {isMine && isOnMarketplace && (
+                                  <span className="text-amber-600 text-[10px] mt-0.5 block">
+                                    Na giełdzie
+                                  </span>
                                 )}
                               </div>
                             );
