@@ -17,11 +17,8 @@ const TYPE_ICONS: Record<string, string> = {
   SHIFT_PUBLISHED: "📢",
   SHIFT_DELETED: "🗑️",
   SHIFT_ON_MARKETPLACE: "🏪",
-  SWAP_REQUEST: "🔄",
-  SWAP_ACCEPTED: "✅",
-  SWAP_APPROVED: "🤝",
-  SWAP_REJECTED: "❌",
   MEMBERSHIP_APPROVED: "👥",
+  ANNOUNCEMENT: "📣",
 };
 
 function timeAgo(dateStr: string): string {

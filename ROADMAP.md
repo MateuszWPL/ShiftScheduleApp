@@ -28,12 +28,12 @@
 ## FAZA 1 — Poprawki i stabilizacja (MVP)
 > Priorytet: WYSOKI | Cel: Aplikacja gotowa do uzycia
 
-### 1.1 Usuniecie nieuzywanych funkcji
-- [ ] Usunac cala logike Swap Requests (backend: service, controller, DTO)
-- [ ] Usunac model SwapRequest ze schema.prisma + migracja
-- [ ] Usunac frontend: SwapRequestsSection z grafik/page.tsx
-- [ ] Usunac API functions swap z api.ts
-- [ ] Wyczyścic powiadomienia typu SWAP_*
+### 1.1 Usuniecie nieuzywanych funkcji ✅ DONE
+- [x] Usunac cala logike Swap Requests (backend: service, controller, DTO)
+- [x] Usunac model SwapRequest ze schema.prisma + migracja
+- [x] Usunac frontend: SwapRequestsSection z grafik/page.tsx
+- [x] Usunac API functions swap z api.ts
+- [x] Wyczyścic powiadomienia typu SWAP_*
 
 ### 1.2 Poprawki UI/UX
 - [ ] Poprawic Pulpit (dashboard glowny) — aktualnie prawie pusty

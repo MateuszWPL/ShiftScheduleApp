@@ -6,7 +6,6 @@ import {
   getTeamMembers,
   claimAssignment,
   releaseAssignment,
-  createSwapRequest,
   deleteShift,
   type Shift,
   type ShiftAssignment,
@@ -17,7 +16,6 @@ import { Badge } from "@/components/ui/badge";
 import {
   ChevronLeft,
   ChevronRight,
-  ArrowRightLeft,
   AlertTriangle,
   Plus,
   Trash2,
@@ -192,16 +190,6 @@ export function ScheduleGrid({
       queryClient.invalidateQueries({ queryKey: ["shifts"] });
       queryClient.invalidateQueries({ queryKey: ["marketplace"] });
       toast.success("Pozycja oddana na giełdę");
-    },
-    onError: (e: Error) => toast.error(e.message),
-  });
-
-  const swapMutation = useMutation({
-    mutationFn: (assignmentId: string) =>
-      createSwapRequest({ assignmentId }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["swap-requests"] });
-      toast.success("Prośba o zamianę utworzona");
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -494,33 +482,18 @@ export function ScheduleGrid({
                                   </Button>
                                 )}
                                 {canRelease && (
-                                  <div className="flex gap-1 mt-1">
-                                    <Button
-                                      size="sm"
-                                      variant="outline"
-                                      className="flex-1 h-6 text-xs"
-                                      disabled={releaseMutation.isPending}
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        releaseMutation.mutate(assignment.id);
-                                      }}
-                                    >
-                                      Oddaj
-                                    </Button>
-                                    <Button
-                                      size="sm"
-                                      variant="ghost"
-                                      className="h-6 w-6 p-0"
-                                      title="Poproś o zamianę"
-                                      disabled={swapMutation.isPending}
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        swapMutation.mutate(assignment.id);
-                                      }}
-                                    >
-                                      <ArrowRightLeft className="h-3 w-3" />
-                                    </Button>
-                                  </div>
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="mt-1 w-full h-6 text-xs"
+                                    disabled={releaseMutation.isPending}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      releaseMutation.mutate(assignment.id);
+                                    }}
+                                  >
+                                    Oddaj na giełdę
+                                  </Button>
                                 )}
                                 {isMine && isOnMarketplace && (
                                   <span className="text-amber-600 text-[10px] mt-0.5 block">

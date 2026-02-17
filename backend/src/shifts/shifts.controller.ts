@@ -14,7 +14,6 @@ import { UpdateProfileDto } from './dto/update-profile.dto';
 import { UpdateEmployeeDto } from './dto/update-employee.dto';
 import { SyncUserDto } from './dto/sync-user.dto';
 import { PublishShiftsDto } from './dto/publish-shifts.dto';
-import { CreateSwapRequestDto, AcceptSwapRequestDto, SwapIdParamDto } from './dto/swap-request.dto';
 import {
   ShiftIdParamDto,
   TargetIdParamDto,
@@ -149,48 +148,6 @@ export class ShiftsController {
     @CurrentUser() user: User,
   ) {
     return this.shiftsService.releaseAssignment(params.assignmentId, user.userId);
-  }
-
-  // ── Swap Requests ──────────────────────────────────────────────
-
-  /** Lista próśb o zamianę zmian. */
-  @SkipThrottle()
-  @Get('swaps')
-  getSwapRequests(@CurrentUser() user: User) {
-    return this.shiftsService.getSwapRequests(user.userId);
-  }
-
-  /** Utwórz prośbę o zamianę zmiany. */
-  @Post('swaps')
-  createSwapRequest(@Body() body: CreateSwapRequestDto, @CurrentUser() user: User) {
-    return this.shiftsService.createSwapRequest(user.userId, body.assignmentId, {
-      targetUserId: body.targetUserId,
-      reason: body.reason,
-    });
-  }
-
-  /** Pracownik akceptuje prośbę o zamianę (oferuje swoją zmianę). */
-  @Post('swaps/:swapId/accept')
-  acceptSwapRequest(
-    @Param() params: SwapIdParamDto,
-    @Body() body: AcceptSwapRequestDto,
-    @CurrentUser() user: User,
-  ) {
-    return this.shiftsService.acceptSwapRequest(user.userId, params.swapId, {
-      targetAssignmentId: body.targetAssignmentId,
-    });
-  }
-
-  /** Manager zatwierdza zamianę (atomowa zamiana). */
-  @Post('swaps/:swapId/approve')
-  approveSwapRequest(@Param() params: SwapIdParamDto, @CurrentUser() user: User) {
-    return this.shiftsService.approveSwapRequest(user.userId, params.swapId);
-  }
-
-  /** Odrzuć/anuluj prośbę o zamianę. */
-  @Post('swaps/:swapId/reject')
-  rejectSwapRequest(@Param() params: SwapIdParamDto, @CurrentUser() user: User) {
-    return this.shiftsService.rejectSwapRequest(user.userId, params.swapId);
   }
 
   @SkipThrottle()

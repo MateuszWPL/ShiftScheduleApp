@@ -7,15 +7,11 @@ import {
   getMarketplace,
   publishShifts,
   getShifts,
-  getSwapRequests,
   getTeamAvailability,
-  approveSwapRequest,
-  rejectSwapRequest,
   createShift,
   addAssignment,
   type Shift,
   type ShiftAssignment,
-  type SwapRequest,
   type AvailabilitySlot,
 } from "@/lib/api";
 import { useDashboardUser } from "@/components/providers/DashboardUserContext";
@@ -27,9 +23,6 @@ import { toast } from "sonner";
 import {
   Send,
   AlertTriangle,
-  ArrowRightLeft,
-  Check,
-  X,
   Clock,
   Users,
   GripVertical,
@@ -115,104 +108,6 @@ function GieldaSection({
                   Biorę
                 </Button>
               )}
-            </li>
-          );
-        })}
-      </ul>
-    </div>
-  );
-}
-
-// ── Swap Requests Section ──────────────────────────────────
-function SwapRequestsSection({
-  currentUserId,
-  currentUserRole,
-}: {
-  currentUserId: string;
-  currentUserRole: string;
-}) {
-  const queryClient = useQueryClient();
-  const isAdmin = currentUserRole === "OWNER" || currentUserRole === "MANAGER";
-
-  const { data: swapRequests = [] } = useQuery({
-    queryKey: ["swap-requests"],
-    queryFn: getSwapRequests,
-  });
-
-  const approveMut = useMutation({
-    mutationFn: approveSwapRequest,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["swap-requests"] });
-      queryClient.invalidateQueries({ queryKey: ["shifts"] });
-      toast.success("Zamiana zatwierdzona");
-    },
-    onError: (e: Error) => toast.error(e.message),
-  });
-
-  const rejectMut = useMutation({
-    mutationFn: rejectSwapRequest,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["swap-requests"] });
-      toast.success("Prośba odrzucona");
-    },
-    onError: (e: Error) => toast.error(e.message),
-  });
-
-  if (swapRequests.length === 0) return null;
-
-  const statusLabels: Record<string, { label: string; color: string }> = {
-    PENDING_ACCEPT: { label: "Czeka na akceptację", color: "border-yellow-300 text-yellow-700 bg-yellow-50" },
-    ACCEPTED: { label: "Zaakceptowana", color: "border-blue-300 text-blue-700 bg-blue-50" },
-    PENDING_APPROVAL: { label: "Czeka na zatwierdzenie", color: "border-purple-300 text-purple-700 bg-purple-50" },
-  };
-
-  return (
-    <div className="bg-white border border-slate-200 rounded-lg p-4 shadow-sm">
-      <div className="flex items-center gap-2 mb-3">
-        <ArrowRightLeft className="h-4 w-4 text-blue-500" />
-        <h3 className="font-semibold text-slate-800">Zamiany zmian ({swapRequests.length})</h3>
-      </div>
-      <ul className="space-y-2">
-        {swapRequests.map((swap: SwapRequest) => {
-          const shift = swap.assignment?.shift;
-          if (!shift) return null;
-          const requesterName = swap.requester?.nickname || swap.requester?.name || "?";
-          const targetName = swap.targetUser?.nickname || swap.targetUser?.name;
-          const statusInfo = statusLabels[swap.status] || statusLabels.PENDING_ACCEPT;
-
-          return (
-            <li key={swap.id} className="flex items-center justify-between gap-3 py-2.5 px-3 rounded-lg border border-slate-100 bg-slate-50/50 text-sm">
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="font-semibold text-slate-800">{requesterName}</span>
-                  <ArrowRightLeft className="h-3 w-3 text-slate-400" />
-                  <span className="text-slate-600">{targetName || "Ktokolwiek"}</span>
-                  <Badge variant="outline" className={`text-[10px] ${statusInfo.color}`}>
-                    {statusInfo.label}
-                  </Badge>
-                </div>
-                <div className="text-slate-500 text-xs mt-0.5">
-                  {shift.roleName}
-                  {swap.reason && <span className="text-slate-400 ml-1">— "{swap.reason}"</span>}
-                </div>
-              </div>
-              <div className="flex items-center gap-1">
-                {isAdmin && swap.status === "PENDING_APPROVAL" && (
-                  <>
-                    <Button size="sm" className="h-7 text-xs gap-1" disabled={approveMut.isPending} onClick={() => approveMut.mutate(swap.id)}>
-                      <Check className="h-3 w-3" />Zatwierdź
-                    </Button>
-                    <Button size="sm" variant="outline" className="h-7 text-xs" disabled={rejectMut.isPending} onClick={() => rejectMut.mutate(swap.id)}>
-                      <X className="h-3 w-3" />
-                    </Button>
-                  </>
-                )}
-                {swap.requesterId === currentUserId && (swap.status === "PENDING_ACCEPT" || swap.status === "ACCEPTED") && (
-                  <Button size="sm" variant="ghost" className="h-7 text-xs text-red-600" disabled={rejectMut.isPending} onClick={() => rejectMut.mutate(swap.id)}>
-                    Anuluj
-                  </Button>
-                )}
-              </div>
             </li>
           );
         })}
@@ -545,11 +440,6 @@ export default function GrafikPage() {
 
       {/* Availability panel - managers only */}
       {isAdmin && <AvailabilityPanel weekStart={weekStart} />}
-
-      <SwapRequestsSection
-        currentUserId={dbUser?.id ?? ""}
-        currentUserRole={dbUser?.role ?? "EMPLOYEE"}
-      />
 
       <GieldaSection
         currentUserId={dbUser?.id ?? ""}
