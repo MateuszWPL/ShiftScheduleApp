@@ -46,12 +46,12 @@
 - [x] Dodac tooltips i podpowiedzi dla nowych uzytkownikow
 
 ### 1.3 Ogloszenia zespolowe (Announcements)
-- [ ] Model `Announcement` w Prisma: id, teamId, authorId, title, content, priority (normal/important/urgent), createdAt, expiresAt
-- [ ] Backend: CRUD dla ogloszen (tylko OWNER/MANAGER moze tworzyc)
-- [ ] Frontend: Sekcja ogloszen na Pulpicie (karty z priorytetem, kolorowe ramki)
-- [ ] Formularz tworzenia ogloszenia (tytul, tresc, priorytet, czas wygasniecia)
-- [ ] Powiadomienie wewnetrzne do wszystkich czlonkow zespolu (1 powiadomienie, nie spam)
-- [ ] Oznaczanie ogloszenia jako przeczytane
+- [x] Model `Announcement` + `AnnouncementRead` w Prisma z priorytetami (NORMAL/IMPORTANT/URGENT) i wygasaniem
+- [x] Backend: CRUD dla ogloszen (tylko OWNER/MANAGER moze tworzyc/usuwac)
+- [x] Frontend: Sekcja ogloszen na Pulpicie (karty z priorytetem, kolorowe ramki, badge nieprzeczytanych)
+- [x] Strona /announcements z formularzem tworzenia (tytul, tresc, priorytet, czas wygasniecia)
+- [x] Powiadomienie wewnetrzne do wszystkich czlonkow zespolu (1 powiadomienie, nie spam)
+- [x] Oznaczanie ogloszenia jako przeczytane (przycisk "oczko")
 
 ### 1.4 Ustawienia firmy
 - [ ] Strona /settings z zakladkami:

@@ -71,7 +71,7 @@ export function DashboardLayout({ children, userRole, userName, userAvatar, onLo
 
   const teamNav: NavItem[] = [
     { href: "/team", label: "Pracownicy", icon: <Users className="h-4 w-4" /> },
-    { href: "/announcements", label: "Ogłoszenia", icon: <Megaphone className="h-4 w-4" />, show: isAdmin },
+    { href: "/announcements", label: "Ogłoszenia", icon: <Megaphone className="h-4 w-4" /> },
   ];
 
   const premiumNav: NavItem[] = [
@@ -101,7 +101,7 @@ export function DashboardLayout({ children, userRole, userName, userAvatar, onLo
   };
 
   return (
-    <div className="flex h-screen bg-brand-warm-light/50 overflow-hidden">
+    <div className="flex h-screen bg-slate-50 overflow-hidden">
       {/* Desktop sidebar */}
       <aside className="w-64 bg-white border-r border-brand-warm/60 flex flex-col hidden md:flex">
         {/* Logo area */}

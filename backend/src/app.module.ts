@@ -10,6 +10,7 @@ import { UsersModule } from './users/users.module';
 import { CloudinaryModule } from './cloudinary/cloudinary.module';
 import { AvailabilityModule } from './availability/availability.module';
 import { NotificationsModule } from './notifications/notifications.module';
+import { AnnouncementsModule } from './announcements/announcements.module';
 import { RequestLoggerMiddleware } from './common/middleware/request-logger.middleware';
 
 @Module({
@@ -27,6 +28,7 @@ import { RequestLoggerMiddleware } from './common/middleware/request-logger.midd
     CloudinaryModule,
     AvailabilityModule,
     NotificationsModule,
+    AnnouncementsModule,
   ],
   controllers: [AppController],
   providers: [

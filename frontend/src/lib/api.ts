@@ -706,3 +706,67 @@ export async function markAllNotificationsRead(): Promise<void> {
     method: "POST",
   });
 }
+
+// --- Announcements ---
+export interface AnnouncementAuthor {
+  id: string;
+  name: string;
+  nickname?: string | null;
+  avatarUrl?: string | null;
+}
+
+export interface Announcement {
+  id: string;
+  teamId: string;
+  title: string;
+  content: string;
+  priority: "NORMAL" | "IMPORTANT" | "URGENT";
+  expiresAt: string | null;
+  createdAt: string;
+  author: AnnouncementAuthor;
+  isRead: boolean;
+}
+
+export interface CreateAnnouncementInput {
+  title: string;
+  content: string;
+  priority?: "NORMAL" | "IMPORTANT" | "URGENT";
+  expiresAt?: string;
+}
+
+export async function getAnnouncements(): Promise<Announcement[]> {
+  const res = await authenticatedFetch(`${API_URL}/announcements`);
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.message || "Błąd pobierania ogłoszeń");
+  }
+  return res.json();
+}
+
+export async function createAnnouncement(data: CreateAnnouncementInput): Promise<Announcement> {
+  const res = await authenticatedFetch(`${API_URL}/announcements`, {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.message || "Błąd tworzenia ogłoszenia");
+  }
+  return res.json();
+}
+
+export async function deleteAnnouncement(announcementId: string): Promise<void> {
+  const res = await authenticatedFetch(`${API_URL}/announcements/${announcementId}`, {
+    method: "DELETE",
+  });
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.message || "Błąd usuwania ogłoszenia");
+  }
+}
+
+export async function markAnnouncementRead(announcementId: string): Promise<void> {
+  await authenticatedFetch(`${API_URL}/announcements/${announcementId}/read`, {
+    method: "POST",
+  });
+}

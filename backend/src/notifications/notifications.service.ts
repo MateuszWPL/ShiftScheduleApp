@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { NotificationType, MembershipStatus, Role } from '@prisma/client';
+import { NotificationType, MembershipStatus, Role, AnnouncementPriority } from '@prisma/client';
 
 @Injectable()
 export class NotificationsService {
@@ -136,6 +136,47 @@ export class NotificationsService {
       });
     } catch (e) {
       this.logger.error('Failed to create marketplace notifications', e);
+    }
+  }
+
+  /** Notify all team members about a new announcement (1 notification, no spam) */
+  async notifyAnnouncement(
+    teamId: string,
+    excludeAuthorId: string,
+    title: string,
+    priority: AnnouncementPriority,
+  ) {
+    try {
+      const members = await this.prisma.teamMembership.findMany({
+        where: {
+          teamId,
+          status: MembershipStatus.ACTIVE,
+          userId: { not: excludeAuthorId },
+        },
+        select: { userId: true },
+      });
+
+      if (members.length === 0) return;
+
+      const priorityLabel =
+        priority === AnnouncementPriority.URGENT
+          ? '🔴 Pilne'
+          : priority === AnnouncementPriority.IMPORTANT
+            ? '🟡 Ważne'
+            : '';
+      const prefix = priorityLabel ? `${priorityLabel}: ` : '';
+
+      await this.prisma.notification.createMany({
+        data: members.map((m) => ({
+          userId: m.userId,
+          teamId,
+          type: NotificationType.ANNOUNCEMENT,
+          title: 'Nowe ogłoszenie',
+          message: `${prefix}${title}`,
+        })),
+      });
+    } catch (e) {
+      this.logger.error('Failed to create announcement notifications', e);
     }
   }
 

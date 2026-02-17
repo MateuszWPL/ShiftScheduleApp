@@ -32,6 +32,8 @@ model User {
   availabilitySlots      AvailabilitySlot[]
   memberships            TeamMembership[]
   notifications          Notification[]
+  announcements          Announcement[]      @relation("AnnouncementAuthor")
+  announcementReads      AnnouncementRead[]
   team                   Team?               @relation(fields: [teamId], references: [id])
 }
 
@@ -44,6 +46,7 @@ model Team {
   availabilitySlots  AvailabilitySlot[]
   memberships        TeamMembership[]
   notifications      Notification[]
+  announcements      Announcement[]
   users              User[]
 }
 
@@ -108,6 +111,41 @@ model TeamMembership {
   user        User             @relation(fields: [userId], references: [id])
 
   @@unique([userId, teamId])
+}
+
+/// Ogłoszenia zespołowe (tworzą Owner/Manager, widoczne dla całego zespołu)
+model Announcement {
+  id        String             @id @default(uuid())
+  teamId    String
+  authorId  String
+  title     String
+  content   String
+  priority  AnnouncementPriority @default(NORMAL)
+  expiresAt DateTime?
+  createdAt DateTime           @default(now())
+  team      Team               @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  author    User               @relation("AnnouncementAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+  reads     AnnouncementRead[]
+
+  @@index([teamId, createdAt])
+}
+
+/// Odczytanie ogłoszenia przez użytkownika
+model AnnouncementRead {
+  id             String       @id @default(uuid())
+  announcementId String
+  userId         String
+  readAt         DateTime     @default(now())
+  announcement   Announcement @relation(fields: [announcementId], references: [id], onDelete: Cascade)
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([announcementId, userId])
+}
+
+enum AnnouncementPriority {
+  NORMAL
+  IMPORTANT
+  URGENT
 }
 
 /// Powiadomienia wewnętrzne w aplikacji

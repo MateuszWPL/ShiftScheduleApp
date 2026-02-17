@@ -10,8 +10,11 @@ import {
   getShifts,
   getNotifications,
   getMyAvailability,
+  getAnnouncements,
+  markAnnouncementRead,
   type Shift,
   type Notification,
+  type Announcement,
 } from "@/lib/api";
 import {
   Calendar,
@@ -22,8 +25,14 @@ import {
   Copy,
   Check,
   Users,
+  Megaphone,
+  AlertTriangle,
+  AlertCircle,
+  Info,
+  Eye,
 } from "lucide-react";
 import Link from "next/link";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 function getWeekMonday(): Date {
   const d = new Date();
@@ -81,6 +90,19 @@ export default function PulpitPage() {
     queryKey: ["availability-me", monday.toISOString(), weekEnd.toISOString()],
     queryFn: () => getMyAvailability({ from: monday.toISOString(), to: weekEnd.toISOString() }),
     enabled: dbUser?.role === "EMPLOYEE",
+  });
+
+  const { data: announcements = [] } = useQuery({
+    queryKey: ["announcements"],
+    queryFn: getAnnouncements,
+  });
+
+  const queryClient = useQueryClient();
+  const readAnnouncementMutation = useMutation({
+    mutationFn: markAnnouncementRead,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["announcements"] });
+    },
   });
 
   if (!dbUser) return null;
@@ -250,6 +272,70 @@ export default function PulpitPage() {
               </div>
             )}
           </div>
+
+          {/* Announcements */}
+          {announcements.length > 0 && (
+            <div className="bg-white rounded-xl border border-brand-warm/50 overflow-hidden">
+              <div className="flex items-center justify-between px-5 py-3 border-b border-brand-warm/30">
+                <div className="flex items-center gap-2">
+                  <Megaphone className="h-4 w-4 text-brand" />
+                  <h2 className="font-semibold text-brand-dark text-sm">Ogłoszenia</h2>
+                  {announcements.filter((a: Announcement) => !a.isRead).length > 0 && (
+                    <span className="text-[10px] font-bold bg-brand text-white px-1.5 py-0.5 rounded-full min-w-[18px] text-center">
+                      {announcements.filter((a: Announcement) => !a.isRead).length}
+                    </span>
+                  )}
+                </div>
+                <Link href="/announcements" className="text-xs text-brand hover:text-brand-light font-medium flex items-center gap-0.5">
+                  Wszystkie <ChevronRight className="h-3 w-3" />
+                </Link>
+              </div>
+              <div className="divide-y divide-brand-warm/20">
+                {announcements.slice(0, 3).map((a: Announcement) => {
+                  const priorityIcon = a.priority === "URGENT"
+                    ? <AlertTriangle className="h-3 w-3 text-red-500" />
+                    : a.priority === "IMPORTANT"
+                    ? <AlertCircle className="h-3 w-3 text-amber-500" />
+                    : null;
+
+                  return (
+                    <div
+                      key={a.id}
+                      className={`px-5 py-3 flex items-start gap-3 ${!a.isRead ? "bg-brand-muted/20" : ""}`}
+                    >
+                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5 ${
+                        a.priority === "URGENT" ? "bg-red-50" :
+                        a.priority === "IMPORTANT" ? "bg-amber-50" : "bg-brand-blue-muted"
+                      }`}>
+                        {a.priority === "URGENT" ? <AlertTriangle className="h-4 w-4 text-red-500" /> :
+                         a.priority === "IMPORTANT" ? <AlertCircle className="h-4 w-4 text-amber-500" /> :
+                         <Megaphone className="h-4 w-4 text-brand-blue" />}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-1.5">
+                          <p className={`text-sm truncate ${!a.isRead ? "font-semibold text-brand-dark" : "font-medium text-brand-dark/70"}`}>
+                            {a.title}
+                          </p>
+                          {!a.isRead && <span className="w-1.5 h-1.5 rounded-full bg-brand flex-shrink-0" />}
+                        </div>
+                        <p className="text-xs text-brand-dark/40 mt-0.5 line-clamp-1">{a.content}</p>
+                        <p className="text-[10px] text-brand-dark/25 mt-1">{timeAgo(a.createdAt)} · {a.author.nickname || a.author.name}</p>
+                      </div>
+                      {!a.isRead && (
+                        <button
+                          onClick={() => readAnnouncementMutation.mutate(a.id)}
+                          className="p-1 rounded-lg text-brand-dark/20 hover:text-brand-blue hover:bg-brand-blue-muted/50 transition-colors flex-shrink-0"
+                          title="Oznacz jako przeczytane"
+                        >
+                          <Eye className="h-3.5 w-3.5" />
+                        </button>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
           {/* Pending members (admin only) */}
           {isAdmin && <PendingList currentUserRole={dbUser?.role} />}
