@@ -22,6 +22,7 @@ import {
   ShoppingBag,
   Pencil,
   Info,
+  Users,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useState, useCallback, useMemo } from "react";
