@@ -7,6 +7,7 @@ import {
   claimAssignment,
   releaseAssignment,
   createSwapRequest,
+  deleteShift,
   type Shift,
   type ShiftAssignment,
   type User,
@@ -19,9 +20,10 @@ import {
   ArrowRightLeft,
   AlertTriangle,
   Plus,
+  Trash2,
 } from "lucide-react";
 import { toast } from "sonner";
-import { useState } from "react";
+import { useState, useCallback } from "react";
 
 function toLocalDateKey(d: Date): string {
   const y = d.getFullYear();
@@ -124,6 +126,14 @@ function getShiftCardClasses(
   return `${base} border-slate-200 bg-slate-50 hover:border-slate-300`;
 }
 
+export interface AvailabilityDropData {
+  employeeId: string;
+  employeeName: string;
+  dateKey: string;
+  startTime: string;
+  endTime: string;
+}
+
 export interface ScheduleGridProps {
   weekStart: Date;
   onWeekChange: (monday: Date) => void;
@@ -133,6 +143,8 @@ export interface ScheduleGridProps {
   onCellClick?: (employeeId: string, dateKey: string) => void;
   /** Called when admin clicks an existing shift to edit */
   onShiftClick?: (shift: Shift) => void;
+  /** Called when availability is dropped on a cell */
+  onDropAvailability?: (data: AvailabilityDropData) => void;
   onRefresh?: () => void;
 }
 
@@ -143,6 +155,7 @@ export function ScheduleGrid({
   currentUserRole,
   onCellClick,
   onShiftClick,
+  onDropAvailability,
 }: ScheduleGridProps) {
   const queryClient = useQueryClient();
   const monday = getWeekMonday(weekStart);
@@ -151,6 +164,7 @@ export function ScheduleGrid({
   const to = new Date(monday);
   to.setDate(to.getDate() + 7);
   const toStr = to.toISOString();
+  const [dragOverCell, setDragOverCell] = useState<string | null>(null);
 
   const { data: members = [], isLoading: membersLoading } = useQuery({
     queryKey: ["team-members"],
@@ -191,6 +205,53 @@ export function ScheduleGrid({
     },
     onError: (e: Error) => toast.error(e.message),
   });
+
+  const deleteMutation = useMutation({
+    mutationFn: deleteShift,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["shifts"] });
+      queryClient.invalidateQueries({ queryKey: ["marketplace"] });
+      toast.success("Zmiana usunięta");
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const handleDragOver = useCallback(
+    (e: React.DragEvent, cellKey: string) => {
+      if (!onDropAvailability) return;
+      e.preventDefault();
+      e.dataTransfer.dropEffect = "copy";
+      setDragOverCell(cellKey);
+    },
+    [onDropAvailability]
+  );
+
+  const handleDragLeave = useCallback(() => {
+    setDragOverCell(null);
+  }, []);
+
+  const handleDrop = useCallback(
+    (e: React.DragEvent, employeeId: string, dateKey: string) => {
+      e.preventDefault();
+      setDragOverCell(null);
+      if (!onDropAvailability) return;
+      try {
+        const raw = e.dataTransfer.getData("application/availability");
+        if (!raw) return;
+        const data = JSON.parse(raw);
+        onDropAvailability({
+          employeeId,
+          employeeName: data.employeeName || "",
+          dateKey,
+          startTime: data.start,
+          endTime: data.end,
+        });
+      } catch {
+        // ignore invalid data
+      }
+    },
+    [onDropAvailability]
+  );
 
   const employeesOnly = members.filter(
     (m) => (m as { role?: string }).role === "EMPLOYEE"
@@ -331,28 +392,37 @@ export function ScheduleGrid({
                     const slots = grid.get(key) ?? [];
                     const todayCol = isToday(day);
                     const isEmpty = slots.length === 0;
+                    const isDragOver = dragOverCell === key;
 
                     return (
                       <td
                         key={key}
-                        className={`p-1 border-l border-slate-100 align-top min-w-[110px] ${
+                        className={`p-1 border-l border-slate-100 align-top min-w-[110px] transition-colors ${
                           todayCol ? "bg-blue-50/30" : ""
                         } ${
                           isAdmin && isEmpty
                             ? "cursor-pointer hover:bg-blue-50/40 group/cell"
                             : ""
-                        }`}
+                        } ${isDragOver ? "!bg-emerald-50 ring-2 ring-inset ring-emerald-300" : ""}`}
                         onClick={() => {
                           if (isAdmin && isEmpty && onCellClick) {
                             onCellClick(member.id, dateKey);
                           }
                         }}
+                        onDragOver={(e) => handleDragOver(e, key)}
+                        onDragLeave={handleDragLeave}
+                        onDrop={(e) => handleDrop(e, member.id, dateKey)}
                       >
                         <div className="space-y-1 min-h-[36px]">
                           {/* Empty cell: show "+" hint for admins */}
-                          {isAdmin && isEmpty && onCellClick && (
+                          {isAdmin && isEmpty && onCellClick && !isDragOver && (
                             <div className="flex items-center justify-center h-[36px] opacity-0 group-hover/cell:opacity-100 transition-opacity">
                               <Plus className="h-4 w-4 text-blue-400" />
+                            </div>
+                          )}
+                          {isDragOver && isEmpty && (
+                            <div className="flex items-center justify-center h-[36px] text-emerald-500 text-xs font-medium">
+                              Upuść tutaj
                             </div>
                           )}
 
@@ -369,7 +439,7 @@ export function ScheduleGrid({
                                 key={assignment.id}
                                 className={`${getShiftCardClasses(shift, isMine, isOnMarketplace)} ${
                                   isAdmin && onShiftClick ? "cursor-pointer hover:shadow-sm" : ""
-                                }`}
+                                } group/shift relative`}
                                 onClick={(e) => {
                                   if (isAdmin && onShiftClick) {
                                     e.stopPropagation();
@@ -381,14 +451,30 @@ export function ScheduleGrid({
                                   <span className="font-semibold text-slate-800 truncate">
                                     {shift.roleName}
                                   </span>
-                                  {isDraft && isAdmin && (
-                                    <Badge
-                                      variant="outline"
-                                      className="text-[10px] px-1 py-0 border-amber-300 text-amber-600 bg-amber-50"
-                                    >
-                                      szkic
-                                    </Badge>
-                                  )}
+                                  <div className="flex items-center gap-0.5">
+                                    {isDraft && isAdmin && (
+                                      <Badge
+                                        variant="outline"
+                                        className="text-[10px] px-1 py-0 border-amber-300 text-amber-600 bg-amber-50"
+                                      >
+                                        szkic
+                                      </Badge>
+                                    )}
+                                    {isAdmin && (
+                                      <button
+                                        className="opacity-0 group-hover/shift:opacity-100 transition-opacity p-0.5 rounded hover:bg-red-100 text-red-400 hover:text-red-600"
+                                        title="Usuń zmianę"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          if (confirm("Czy na pewno chcesz usunąć tę zmianę?")) {
+                                            deleteMutation.mutate(shift.id);
+                                          }
+                                        }}
+                                      >
+                                        <Trash2 className="h-3 w-3" />
+                                      </button>
+                                    )}
+                                  </div>
                                 </div>
                                 <div className="text-slate-500 text-[11px]">
                                   {timeStr}

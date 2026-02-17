@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import {
   claimAssignment,
@@ -11,13 +11,15 @@ import {
   getTeamAvailability,
   approveSwapRequest,
   rejectSwapRequest,
+  createShift,
+  addAssignment,
   type Shift,
   type ShiftAssignment,
   type SwapRequest,
   type AvailabilitySlot,
 } from "@/lib/api";
 import { useDashboardUser } from "@/components/providers/DashboardUserContext";
-import { ScheduleGrid } from "@/components/dashboard/ScheduleGrid";
+import { ScheduleGrid, type AvailabilityDropData } from "@/components/dashboard/ScheduleGrid";
 import { CreateShiftDialog } from "@/components/dashboard/CreateShiftDialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -30,6 +32,7 @@ import {
   X,
   Clock,
   Users,
+  GripVertical,
 } from "lucide-react";
 
 function getWeekMonday(d: Date): Date {
@@ -218,7 +221,7 @@ function SwapRequestsSection({
   );
 }
 
-// ── Employee Availability Panel ──────────────────────────
+// ── Employee Availability Panel (with Drag & Drop) ──────
 function AvailabilityPanel({
   weekStart,
 }: {
@@ -237,16 +240,26 @@ function AvailabilityPanel({
 
   const DAY_SHORT = ["Pon", "Wt", "Śr", "Czw", "Pt", "Sob", "Nd"];
 
+  const weekDays = useMemo(() => {
+    const days: Date[] = [];
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(monday);
+      d.setDate(d.getDate() + i);
+      days.push(d);
+    }
+    return days;
+  }, [monday]);
+
   // Group by user
   const byUser = useMemo(() => {
-    const map = new Map<string, { name: string; slots: { dayIdx: number; start: string; end: string }[] }>();
+    const map = new Map<string, { name: string; userId: string; slots: { dayIdx: number; dateKey: string; start: string; end: string }[] }>();
 
     for (const slot of teamAvailability) {
       const userId = slot.userId;
       const userName = slot.user?.nickname || slot.user?.name || "?";
 
       if (!map.has(userId)) {
-        map.set(userId, { name: userName, slots: [] });
+        map.set(userId, { name: userName, userId, slots: [] });
       }
 
       const dateStr = slot.startDateTime.slice(0, 10);
@@ -265,6 +278,7 @@ function AvailabilityPanel({
         const endMatch = slot.endDateTime.match(/T(\d{2}:\d{2})/);
         map.get(userId)!.slots.push({
           dayIdx,
+          dateKey: dateStr,
           start: startMatch?.[1] ?? "??",
           end: endMatch?.[1] ?? "??",
         });
@@ -273,6 +287,21 @@ function AvailabilityPanel({
 
     return map;
   }, [teamAvailability, monday]);
+
+  const handleDragStart = (
+    e: React.DragEvent,
+    userId: string,
+    employeeName: string,
+    dateKey: string,
+    start: string,
+    end: string
+  ) => {
+    e.dataTransfer.setData(
+      "application/availability",
+      JSON.stringify({ userId, employeeName, dateKey, start, end })
+    );
+    e.dataTransfer.effectAllowed = "copy";
+  };
 
   if (isLoading) {
     return (
@@ -299,6 +328,7 @@ function AvailabilityPanel({
       <div className="flex items-center gap-2 mb-3">
         <Users className="h-4 w-4 text-blue-500" />
         <h3 className="font-semibold text-slate-800">Dostępność pracowników</h3>
+        <span className="text-xs text-slate-400 ml-2">Przeciągnij blok na kalendarz, aby utworzyć zmianę</span>
       </div>
       <div className="overflow-x-auto">
         <table className="w-full text-xs border-collapse">
@@ -315,8 +345,8 @@ function AvailabilityPanel({
             </tr>
           </thead>
           <tbody>
-            {Array.from(byUser.entries()).map(([userId, data]) => (
-              <tr key={userId} className="border-b border-slate-100">
+            {Array.from(byUser.entries()).map(([mapUserId, data]) => (
+              <tr key={mapUserId} className="border-b border-slate-100">
                 <td className="p-1.5 text-slate-700 font-medium">{data.name}</td>
                 {Array.from({ length: 7 }, (_, dayIdx) => {
                   const daySlots = data.slots.filter((s) => s.dayIdx === dayIdx);
@@ -327,9 +357,15 @@ function AvailabilityPanel({
                           {daySlots.map((s, si) => (
                             <div
                               key={si}
-                              className="bg-blue-100 text-blue-700 rounded px-1 py-0.5 text-[10px] font-medium"
+                              draggable
+                              onDragStart={(e) =>
+                                handleDragStart(e, data.userId, data.name, s.dateKey, s.start, s.end)
+                              }
+                              className="bg-blue-100 text-blue-700 rounded px-1 py-0.5 text-[10px] font-medium cursor-grab active:cursor-grabbing hover:bg-blue-200 transition-colors flex items-center gap-0.5 select-none"
+                              title="Przeciągnij na kalendarz, aby utworzyć zmianę"
                             >
-                              <Clock className="inline h-2.5 w-2.5 mr-0.5" />
+                              <GripVertical className="h-2.5 w-2.5 text-blue-400 flex-shrink-0" />
+                              <Clock className="inline h-2.5 w-2.5 mr-0.5 flex-shrink-0" />
                               {s.start}–{s.end}
                             </div>
                           ))}
@@ -421,6 +457,37 @@ export default function GrafikPage() {
     setIsShiftDialogOpen(true);
   };
 
+  // Handle dropping availability onto calendar grid
+  const dropShiftMutation = useMutation({
+    mutationFn: async (data: AvailabilityDropData) => {
+      const startISO = `${data.dateKey}T${data.startTime}:00`;
+      const endISO = `${data.dateKey}T${data.endTime}:00`;
+      const shift = await createShift({
+        startTime: startISO,
+        endTime: endISO,
+        roleName: "Zmiana",
+        status: "DRAFT",
+      });
+      await addAssignment(shift.id, {
+        userId: data.employeeId,
+        isUpForGrabs: false,
+      });
+      return shift;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["shifts"] });
+      toast.success("Utworzono zmianę (szkic) z dostępności");
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const handleDropAvailability = useCallback(
+    (data: AvailabilityDropData) => {
+      dropShiftMutation.mutate(data);
+    },
+    [dropShiftMutation]
+  );
+
   const handleCloseDialog = () => {
     setIsShiftDialogOpen(false);
     setEditShift(null);
@@ -473,6 +540,7 @@ export default function GrafikPage() {
         currentUserRole={dbUser?.role ?? "EMPLOYEE"}
         onCellClick={isAdmin ? handleCellClick : undefined}
         onShiftClick={isAdmin ? handleShiftClick : undefined}
+        onDropAvailability={isAdmin ? handleDropAvailability : undefined}
       />
 
       {/* Availability panel - managers only */}

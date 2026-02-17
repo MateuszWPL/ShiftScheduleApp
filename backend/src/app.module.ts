@@ -9,6 +9,7 @@ import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { CloudinaryModule } from './cloudinary/cloudinary.module';
 import { AvailabilityModule } from './availability/availability.module';
+import { NotificationsModule } from './notifications/notifications.module';
 import { RequestLoggerMiddleware } from './common/middleware/request-logger.middleware';
 
 @Module({
@@ -25,6 +26,7 @@ import { RequestLoggerMiddleware } from './common/middleware/request-logger.midd
     UsersModule,
     CloudinaryModule,
     AvailabilityModule,
+    NotificationsModule,
   ],
   controllers: [AppController],
   providers: [

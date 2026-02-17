@@ -33,6 +33,7 @@ model User {
   memberships            TeamMembership[]
   swapRequestsMade       SwapRequest[]       @relation("SwapRequester")
   swapRequestsReceived   SwapRequest[]       @relation("SwapTarget")
+  notifications          Notification[]
   team                   Team?               @relation(fields: [teamId], references: [id])
 }
 
@@ -45,6 +46,7 @@ model Team {
   availabilitySlots  AvailabilitySlot[]
   memberships        TeamMembership[]
   swapRequests       SwapRequest[]
+  notifications      Notification[]
   users              User[]
 }
 
@@ -136,6 +138,36 @@ model SwapRequest {
   @@index([teamId, status])
   @@index([requesterId])
   @@index([targetUserId])
+}
+
+/// Powiadomienia wewnętrzne w aplikacji
+model Notification {
+  id        String           @id @default(uuid())
+  userId    String
+  teamId    String
+  type      NotificationType
+  title     String
+  message   String
+  read      Boolean          @default(false)
+  meta      String?
+  createdAt DateTime         @default(now())
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  team      Team             @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  @@index([userId, read, createdAt])
+  @@index([teamId])
+}
+
+enum NotificationType {
+  SHIFT_ASSIGNED
+  SHIFT_PUBLISHED
+  SHIFT_DELETED
+  SHIFT_ON_MARKETPLACE
+  SWAP_REQUEST
+  SWAP_ACCEPTED
+  SWAP_APPROVED
+  SWAP_REJECTED
+  MEMBERSHIP_APPROVED
 }
 
 enum SwapStatus {

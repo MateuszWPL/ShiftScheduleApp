@@ -734,3 +734,54 @@ export async function rejectSwapRequest(swapId: string): Promise<SwapRequest> {
   }
   return res.json();
 }
+
+// --- Delete shift ---
+export async function deleteShift(shiftId: string): Promise<void> {
+  const res = await authenticatedFetch(`${API_URL}/shifts/${shiftId}`, {
+    method: "DELETE",
+  });
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.message || "Błąd usuwania zmiany");
+  }
+}
+
+// --- In-app notifications ---
+export interface Notification {
+  id: string;
+  userId: string;
+  teamId: string;
+  type: string;
+  title: string;
+  message: string;
+  read: boolean;
+  meta: string | null;
+  createdAt: string;
+}
+
+export async function getNotifications(): Promise<Notification[]> {
+  const res = await authenticatedFetch(`${API_URL}/notifications`);
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.message || "Błąd pobierania powiadomień");
+  }
+  return res.json();
+}
+
+export async function getUnreadNotificationCount(): Promise<number> {
+  const res = await authenticatedFetch(`${API_URL}/notifications/unread-count`);
+  if (!res.ok) return 0;
+  return res.json();
+}
+
+export async function markNotificationRead(notificationId: string): Promise<void> {
+  await authenticatedFetch(`${API_URL}/notifications/${notificationId}/read`, {
+    method: "POST",
+  });
+}
+
+export async function markAllNotificationsRead(): Promise<void> {
+  await authenticatedFetch(`${API_URL}/notifications/read-all`, {
+    method: "POST",
+  });
+}

@@ -9,9 +9,19 @@ import {
 import { PrismaService } from '../prisma/prisma.service';
 import { EmailService } from '../email/email.service';
 import { ShiftValidationService } from './shift-validation.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import { MembershipStatus, Role, ShiftStatus, SwapStatus } from '@prisma/client';
 import { nanoid } from 'nanoid';
 import { DEFAULT_USER_NAME, DEFAULT_USER_NICKNAME } from '../constants/user-defaults';
+
+function formatShiftDate(d: Date): string {
+  return d.toLocaleDateString('pl-PL', { weekday: 'short', day: 'numeric', month: 'short' });
+}
+
+function formatShiftTime(start: Date, end: Date): string {
+  const fmt = (d: Date) => d.toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' });
+  return `${fmt(start)}–${fmt(end)}`;
+}
 
 @Injectable()
 export class ShiftsService {
@@ -21,6 +31,7 @@ export class ShiftsService {
     private readonly prisma: PrismaService,
     private readonly emailService: EmailService,
     private readonly shiftValidation: ShiftValidationService,
+    private readonly notifications: NotificationsService,
   ) {}
 
   /** Lista zmian zespołu (grafik). Opcjonalny filtr dat from/to. 
@@ -119,6 +130,45 @@ export class ShiftsService {
       data: updateData,
       include: { assignments: { include: { user: true } } },
     });
+  }
+
+  /** Usunięcie zmiany (Owner/Manager). */
+  async deleteShift(requesterId: string, shiftId: string) {
+    const membership = await this.prisma.teamMembership.findFirst({
+      where: { userId: requesterId, status: MembershipStatus.ACTIVE },
+    });
+    if (!membership) {
+      throw new BadRequestException('Brak aktywnego członkostwa.');
+    }
+    if (membership.role !== Role.OWNER && membership.role !== Role.MANAGER) {
+      throw new ForbiddenException('Tylko Owner/Manager może usuwać zmiany.');
+    }
+
+    const shift = await this.prisma.shift.findFirst({
+      where: { id: shiftId, teamId: membership.teamId },
+      include: {
+        assignments: { include: { user: { select: { id: true, name: true } } } },
+      },
+    });
+    if (!shift) {
+      throw new NotFoundException('Zmiana nie istnieje.');
+    }
+
+    // Notify assigned employees (fire-and-forget, only for published shifts)
+    if (shift.status === ShiftStatus.PUBLISHED) {
+      for (const a of shift.assignments) {
+        if (a.userId) {
+          this.notifications
+            .notifyShiftDeleted(a.userId, membership.teamId, shift.roleName, formatShiftDate(shift.startTime))
+            .catch(() => {});
+        }
+      }
+    }
+
+    await this.prisma.shift.delete({ where: { id: shiftId } });
+
+    this.logger.log(`Shift ${shiftId} deleted by user ${requesterId}`);
+    return { success: true };
   }
 
   /** Tworzenie zmiany (bez przypisań). Przypisania dodaje się przez addAssignment. */
@@ -222,7 +272,7 @@ export class ShiftsService {
       }
     }
 
-    return this.prisma.shiftAssignment.create({
+    const created = await this.prisma.shiftAssignment.create({
       data: {
         shiftId,
         userId: data.userId ?? null,
@@ -233,6 +283,34 @@ export class ShiftsService {
         user: true,
       },
     });
+
+    // Notify employee when assigned (only for published shifts to avoid draft spam)
+    if (data.userId && shift.status === ShiftStatus.PUBLISHED) {
+      this.notifications
+        .notifyShiftAssigned(
+          data.userId,
+          membership.teamId,
+          shift.roleName,
+          formatShiftDate(shift.startTime),
+          formatShiftTime(shift.startTime, shift.endTime),
+        )
+        .catch(() => {});
+    }
+
+    // Notify employees when shift put on marketplace
+    if (data.isUpForGrabs && shift.status === ShiftStatus.PUBLISHED) {
+      this.notifications
+        .notifyShiftOnMarketplace(
+          membership.teamId,
+          requesterId,
+          shift.roleName,
+          formatShiftDate(shift.startTime),
+          formatShiftTime(shift.startTime, shift.endTime),
+        )
+        .catch(() => {});
+    }
+
+    return created;
   }
 
   /** Usunięcie przypisania (tylko Owner/Manager). */
@@ -518,6 +596,13 @@ export class ShiftsService {
     this.logger.log(
       `Published ${result.count} shifts for team ${membership.teamId} by user ${requesterId}`,
     );
+
+    // Notify employees about new published schedule (one notification, not per-shift)
+    if (result.count > 0) {
+      this.notifications
+        .notifySchedulePublished(membership.teamId, result.count)
+        .catch(() => {});
+    }
 
     return {
       published: result.count,

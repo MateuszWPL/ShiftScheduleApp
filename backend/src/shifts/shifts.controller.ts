@@ -73,6 +73,14 @@ export class ShiftsController {
     });
   }
 
+  @Delete(':id')
+  deleteShift(
+    @Param() params: ShiftIdParamDto,
+    @CurrentUser() user: User,
+  ) {
+    return this.shiftsService.deleteShift(user.userId, params.id);
+  }
+
   /** Publikacja zmian (DRAFT → PUBLISHED). */
   @Post('publish')
   publishShifts(@Body() body: PublishShiftsDto, @CurrentUser() user: User) {
