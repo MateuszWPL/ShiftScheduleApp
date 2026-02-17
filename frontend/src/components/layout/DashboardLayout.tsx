@@ -32,7 +32,7 @@ export function DashboardLayout({ children, userRole, userName, userAvatar, onLo
             <h1 className="text-xl font-bold text-white tracking-wider">ShiftApp <span className="text-blue-500">B2B</span></h1>
             <p className="text-xs text-slate-500 mt-1 uppercase">{roleLabel}</p>
           </div>
-          <NotificationBell />
+          <NotificationBell align="left" />
         </div>
 
         <nav className="flex-1 p-4 space-y-2">

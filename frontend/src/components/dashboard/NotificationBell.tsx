@@ -35,7 +35,7 @@ function timeAgo(dateStr: string): string {
   return `${days}d temu`;
 }
 
-export function NotificationBell() {
+export function NotificationBell({ align = "right" }: { align?: "left" | "right" }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const queryClient = useQueryClient();
@@ -96,7 +96,7 @@ export function NotificationBell() {
       </button>
 
       {open && (
-        <div className="absolute right-0 top-full mt-2 w-[360px] bg-white rounded-xl shadow-2xl border border-slate-200 z-50 overflow-hidden">
+        <div className={`absolute top-full mt-2 w-[360px] bg-white rounded-xl shadow-2xl border border-slate-200 z-50 overflow-hidden ${align === "left" ? "left-0" : "right-0"}`}>
           <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 bg-slate-50">
             <h3 className="font-semibold text-slate-800 text-sm">Powiadomienia</h3>
             <div className="flex items-center gap-1">
