@@ -64,11 +64,11 @@
 - [x] Auto-tworzenie TeamSettings przy pierwszym odczycie
 
 ### 1.5 Poprawki powiadomien email
-- [ ] Email przy publikacji grafiku (zbiorczy, 1 email na tydzien, nie na zmiane)
-- [ ] Email przy przypisaniu do zmiany (opcjonalnie, zalezne od ustawien)
-- [ ] Email przy nowym ogloszeniu (tylko priorytet "urgent")
-- [ ] Unsubscribe link w kazdym emailu
-- [ ] Unikanie spamu: batch + debounce (np. publikacja 10 zmian = 1 email)
+- [x] Email przy publikacji grafiku (zbiorczy, 1 email na tydzien, nie na zmiane)
+- [x] Email przy przypisaniu do zmiany (opcjonalnie, zalezne od ustawien)
+- [x] Email przy nowym ogloszeniu (tylko priorytet "urgent")
+- [x] Unsubscribe link w kazdym emailu
+- [x] Unikanie spamu: batch + debounce (np. publikacja 10 zmian = 1 email)
 
 ---
 

@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { NotificationsService } from '../notifications/notifications.service';
+import { EmailService } from '../email/email.service';
 import {
   MembershipStatus,
   Role,
@@ -20,6 +21,7 @@ export class AnnouncementsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly notifications: NotificationsService,
+    private readonly emailService: EmailService,
   ) {}
 
   /** Get active announcements for user's team */
@@ -89,14 +91,26 @@ export class AnnouncementsService {
     });
 
     // Fire-and-forget: send 1 notification to all team members (excluding author)
+    const effectivePriority = dto.priority ?? AnnouncementPriority.NORMAL;
     this.notifications
       .notifyAnnouncement(
         membership.teamId,
         userId,
         dto.title,
-        dto.priority ?? AnnouncementPriority.NORMAL,
+        effectivePriority,
       )
       .catch(() => {});
+
+    // Send email only for URGENT announcements (respects settings)
+    if (effectivePriority === AnnouncementPriority.URGENT) {
+      this.sendUrgentAnnouncementEmails(
+        membership.teamId,
+        userId,
+        dto.title,
+        dto.content,
+        announcement.author.name,
+      ).catch(() => {});
+    }
 
     this.logger.log(
       `Announcement "${dto.title}" created by ${userId} in team ${membership.teamId}`,
@@ -170,6 +184,46 @@ export class AnnouncementsService {
     });
 
     return { success: true };
+  }
+
+  /** Send urgent announcement email to all team members */
+  private async sendUrgentAnnouncementEmails(
+    teamId: string,
+    excludeAuthorId: string,
+    title: string,
+    content: string,
+    authorName: string,
+  ) {
+    try {
+      const settings = await this.prisma.teamSettings.findUnique({ where: { teamId } });
+      if (settings && !settings.notifyAnnouncements) return;
+
+      const members = await this.prisma.teamMembership.findMany({
+        where: {
+          teamId,
+          status: MembershipStatus.ACTIVE,
+          userId: { not: excludeAuthorId },
+        },
+        include: {
+          user: { select: { email: true, name: true } },
+        },
+      });
+
+      for (const m of members) {
+        if (!m.user.email) continue;
+        this.emailService
+          .sendUrgentAnnouncementEmail(
+            m.user.email,
+            m.user.name,
+            title,
+            content,
+            authorName,
+          )
+          .catch(() => {});
+      }
+    } catch (e) {
+      this.logger.error('Failed to send urgent announcement emails', e);
+    }
   }
 
   private async getActiveMembership(userId: string) {

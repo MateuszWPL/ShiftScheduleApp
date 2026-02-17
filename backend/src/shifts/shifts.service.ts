@@ -295,6 +295,15 @@ export class ShiftsService {
           formatShiftTime(shift.startTime, shift.endTime),
         )
         .catch(() => {});
+
+      // Email notification (fire-and-forget, respects settings)
+      this.sendShiftAssignedEmail(
+        data.userId,
+        membership.teamId,
+        shift.roleName,
+        shift.startTime,
+        shift.endTime,
+      ).catch(() => {});
     }
 
     // Notify employees when shift put on marketplace
@@ -602,12 +611,88 @@ export class ShiftsService {
       this.notifications
         .notifySchedulePublished(membership.teamId, result.count)
         .catch(() => {});
+
+      // Send batch email per employee (fire-and-forget, respects TeamSettings)
+      this.sendPublishEmails(membership.teamId, shiftIds).catch(() => {});
     }
 
     return {
       published: result.count,
       warnings: allWarnings,
     };
+  }
+
+  /** Send 1 batch email per employee listing their published shifts */
+  private async sendPublishEmails(teamId: string, shiftIds: string[]) {
+    try {
+      // Check team notification settings
+      const settings = await this.prisma.teamSettings.findUnique({ where: { teamId } });
+      if (settings && !settings.notifyShiftPublished) return;
+
+      const publishedShifts = await this.prisma.shift.findMany({
+        where: { id: { in: shiftIds }, teamId, status: ShiftStatus.PUBLISHED },
+        include: {
+          assignments: {
+            include: { user: { select: { id: true, name: true, email: true } } },
+          },
+        },
+      });
+
+      // Group shifts by employee
+      const byEmployee = new Map<string, { email: string; name: string; shifts: { roleName: string; date: string; time: string }[] }>();
+      for (const shift of publishedShifts) {
+        for (const a of shift.assignments) {
+          if (!a.userId || !a.user?.email) continue;
+          if (!byEmployee.has(a.userId)) {
+            byEmployee.set(a.userId, { email: a.user.email, name: a.user.name, shifts: [] });
+          }
+          byEmployee.get(a.userId)!.shifts.push({
+            roleName: shift.roleName,
+            date: formatShiftDate(shift.startTime),
+            time: formatShiftTime(shift.startTime, shift.endTime),
+          });
+        }
+      }
+
+      // Send one email per employee
+      for (const [, emp] of byEmployee) {
+        this.emailService
+          .sendSchedulePublishedEmail(emp.email, emp.name, emp.shifts)
+          .catch(() => {});
+      }
+    } catch (e) {
+      this.logger.error('Failed to send publish emails', e);
+    }
+  }
+
+  /** Send email when employee is assigned to a published shift */
+  private async sendShiftAssignedEmail(
+    userId: string,
+    teamId: string,
+    roleName: string,
+    startTime: Date,
+    endTime: Date,
+  ) {
+    try {
+      const settings = await this.prisma.teamSettings.findUnique({ where: { teamId } });
+      if (settings && !settings.notifyShiftAssigned) return;
+
+      const user = await this.prisma.user.findUnique({
+        where: { id: userId },
+        select: { email: true, name: true },
+      });
+      if (!user?.email) return;
+
+      await this.emailService.sendShiftAssignedEmail(
+        user.email,
+        user.name,
+        roleName,
+        formatShiftDate(startTime),
+        formatShiftTime(startTime, endTime),
+      );
+    } catch (e) {
+      this.logger.error('Failed to send shift assigned email', e);
+    }
   }
 
   async syncUserByEmail(email: string, name: string) {

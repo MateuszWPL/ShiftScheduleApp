@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
-import { Lock, User as UserIcon, Phone, Mail, Upload, X, Info } from "lucide-react";
+import { Lock, User as UserIcon, Phone, Mail, Upload, X, Info, Camera } from "lucide-react";
 
 export default function ProfilePage() {
   const { dbUser, currentUser, invalidateQueries } = useDashboardUser();
@@ -90,34 +90,41 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-brand-muted flex items-center justify-center">
-            <UserIcon className="h-5 w-5 text-brand" />
+    <div className="max-w-2xl mx-auto space-y-4 sm:space-y-6 px-2 sm:px-0">
+      {/* Header */}
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-brand-muted flex items-center justify-center flex-shrink-0">
+            <UserIcon className="h-4 w-4 sm:h-5 sm:w-5 text-brand" />
           </div>
-          <div>
-            <h1 className="text-xl font-bold text-brand-dark">Mój Profil</h1>
-            <p className="text-xs text-brand-dark/40">Zarządzaj danymi swojego konta</p>
+          <div className="min-w-0">
+            <h1 className="text-lg sm:text-xl font-bold text-brand-dark truncate">Mój Profil</h1>
+            <p className="text-[11px] sm:text-xs text-brand-dark/40 hidden sm:block">Zarządzaj danymi swojego konta</p>
           </div>
         </div>
         {!isEditing && (
-          <Button onClick={() => setIsEditing(true)} className="bg-brand hover:bg-brand-light text-white">
+          <Button
+            onClick={() => setIsEditing(true)}
+            className="bg-brand hover:bg-brand-light text-white flex-shrink-0"
+            size="sm"
+          >
             Edytuj
           </Button>
         )}
       </div>
 
-      <div className="bg-white border border-brand-warm/40 rounded-xl p-6 shadow-sm">
-        <div className="flex items-start gap-6">
-          <div className="flex-shrink-0">
+      {/* Avatar card */}
+      <div className="bg-white border border-brand-warm/40 rounded-xl p-4 sm:p-6 shadow-sm">
+        <div className="flex flex-col items-center sm:flex-row sm:items-start gap-4 sm:gap-6">
+          {/* Avatar */}
+          <div className="flex-shrink-0 relative">
             <Avatar
               src={avatarPreview || getAvatarUrl(user.avatarUrl) || undefined}
               name={user.name}
               size="xl"
             />
             {isEditing && (
-              <div className="mt-4 space-y-2">
+              <>
                 <input
                   ref={fileInputRef}
                   type="file"
@@ -126,46 +133,81 @@ export default function ProfilePage() {
                   className="hidden"
                   id="avatar-upload"
                 />
-                <label htmlFor="avatar-upload">
-                  <Button type="button" size="sm" variant="outline" className="w-full cursor-pointer border-brand-warm/60 hover:bg-brand-warm-light" asChild>
-                    <span><Upload className="h-4 w-4 mr-2" /> Wybierz zdjęcie</span>
-                  </Button>
+                <label
+                  htmlFor="avatar-upload"
+                  className="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-brand text-white flex items-center justify-center cursor-pointer shadow-md hover:bg-brand-light transition-colors"
+                  title="Zmień zdjęcie"
+                >
+                  <Camera className="h-4 w-4" />
                 </label>
-                {selectedFile && (
-                  <div className="space-y-2 mt-2">
-                    <p className="text-xs text-brand-dark/50 truncate">{selectedFile.name}</p>
-                    <div className="flex gap-2">
-                      <Button
-                        size="sm"
-                        onClick={() => uploadAvatarMutation.mutate(selectedFile)}
-                        disabled={uploadAvatarMutation.isPending}
-                        className="flex-1 bg-brand hover:bg-brand-light text-white"
-                      >
-                        {uploadAvatarMutation.isPending ? "Wgrywanie..." : "Wgraj"}
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="text-brand-dark/30 hover:text-brand-dark"
-                        onClick={() => {
-                          setAvatarPreview(null);
-                          setSelectedFile(null);
-                          if (fileInputRef.current) fileInputRef.current.value = "";
-                        }}
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                )}
-              </div>
+              </>
             )}
           </div>
 
-          <div className="flex-1 space-y-5">
+          {/* Upload controls (show below avatar on mobile when file selected) */}
+          {isEditing && selectedFile && (
+            <div className="w-full sm:hidden space-y-2 -mt-1">
+              <p className="text-xs text-brand-dark/50 truncate text-center">{selectedFile.name}</p>
+              <div className="flex gap-2 justify-center">
+                <Button
+                  size="sm"
+                  onClick={() => uploadAvatarMutation.mutate(selectedFile)}
+                  disabled={uploadAvatarMutation.isPending}
+                  className="bg-brand hover:bg-brand-light text-white"
+                >
+                  {uploadAvatarMutation.isPending ? "Wgrywanie..." : "Wgraj zdjęcie"}
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="text-brand-dark/30 hover:text-brand-dark"
+                  onClick={() => {
+                    setAvatarPreview(null);
+                    setSelectedFile(null);
+                    if (fileInputRef.current) fileInputRef.current.value = "";
+                  }}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* Info / form */}
+          <div className="flex-1 w-full space-y-4 sm:space-y-5">
+            {/* Desktop upload controls */}
+            {isEditing && selectedFile && (
+              <div className="hidden sm:block space-y-2">
+                <p className="text-xs text-brand-dark/50 truncate">{selectedFile.name}</p>
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    onClick={() => uploadAvatarMutation.mutate(selectedFile)}
+                    disabled={uploadAvatarMutation.isPending}
+                    className="bg-brand hover:bg-brand-light text-white"
+                  >
+                    {uploadAvatarMutation.isPending ? "Wgrywanie..." : "Wgraj zdjęcie"}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="text-brand-dark/30 hover:text-brand-dark"
+                    onClick={() => {
+                      setAvatarPreview(null);
+                      setSelectedFile(null);
+                      if (fileInputRef.current) fileInputRef.current.value = "";
+                    }}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {/* Name */}
             <div>
-              <label className="text-xs font-medium text-brand-dark/40 flex items-center gap-1.5 uppercase tracking-wider">
-                <UserIcon className="h-3.5 w-3.5" /> Imię i Nazwisko
+              <label className="text-[11px] sm:text-xs font-medium text-brand-dark/40 flex items-center gap-1.5 uppercase tracking-wider">
+                <UserIcon className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> Imię i Nazwisko
               </label>
               {isEditing ? (
                 <Input
@@ -176,24 +218,28 @@ export default function ProfilePage() {
                   className="mt-1.5 border-brand-warm/60 focus:border-brand focus:ring-brand/20"
                 />
               ) : (
-                <p className="text-lg font-semibold text-brand-dark mt-1">{user.name}</p>
+                <p className="text-base sm:text-lg font-semibold text-brand-dark mt-1">{user.name}</p>
               )}
             </div>
+
+            {/* Email */}
             {user.email && (
               <div>
-                <label className="text-xs font-medium text-brand-dark/40 flex items-center gap-1.5 uppercase tracking-wider">
-                  <Mail className="h-3.5 w-3.5" /> Email
+                <label className="text-[11px] sm:text-xs font-medium text-brand-dark/40 flex items-center gap-1.5 uppercase tracking-wider">
+                  <Mail className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> Email
                 </label>
-                <div className="mt-1 flex items-center gap-2">
-                  <p className="text-lg text-brand-dark">{user.email}</p>
-                  <Lock className="h-3.5 w-3.5 text-brand-dark/20" />
+                <div className="mt-1 flex items-center gap-2 min-w-0">
+                  <p className="text-sm sm:text-lg text-brand-dark truncate">{user.email}</p>
+                  <Lock className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-brand-dark/20 flex-shrink-0" />
                 </div>
                 <p className="text-[10px] text-brand-dark/30 mt-0.5">Email nie może być zmieniony</p>
               </div>
             )}
+
+            {/* Phone */}
             <div>
-              <label className="text-xs font-medium text-brand-dark/40 flex items-center gap-1.5 uppercase tracking-wider">
-                <Phone className="h-3.5 w-3.5" /> Numer telefonu
+              <label className="text-[11px] sm:text-xs font-medium text-brand-dark/40 flex items-center gap-1.5 uppercase tracking-wider">
+                <Phone className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> Numer telefonu
               </label>
               {isEditing ? (
                 <Input
@@ -204,16 +250,20 @@ export default function ProfilePage() {
                   className="mt-1.5 border-brand-warm/60 focus:border-brand focus:ring-brand/20"
                 />
               ) : (
-                <p className="text-lg text-brand-dark mt-1">{"phoneNumber" in user ? (user.phoneNumber || "Nie podano") : "Nie podano"}</p>
+                <p className="text-sm sm:text-lg text-brand-dark mt-1">
+                  {"phoneNumber" in user ? (user.phoneNumber || "Nie podano") : "Nie podano"}
+                </p>
               )}
             </div>
+
+            {/* Skills */}
             {isEmployee && (
               <div>
-                <label className="text-xs font-medium text-brand-dark/40 uppercase tracking-wider">Umiejętności</label>
+                <label className="text-[11px] sm:text-xs font-medium text-brand-dark/40 uppercase tracking-wider">Umiejętności</label>
                 <div className="mt-2 flex flex-wrap gap-1.5">
                   {user.skills?.length ? (
                     user.skills.map((skill: string, idx: number) => (
-                      <span key={idx} className="text-xs bg-brand-blue-muted text-brand-blue px-2.5 py-1 rounded-full font-medium">
+                      <span key={idx} className="text-[11px] sm:text-xs bg-brand-blue-muted text-brand-blue px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full font-medium">
                         {skill}
                       </span>
                     ))
@@ -222,23 +272,25 @@ export default function ProfilePage() {
                   )}
                 </div>
                 <p className="text-[10px] text-brand-dark/30 mt-1.5 flex items-center gap-1">
-                  <Info className="h-3 w-3" />
+                  <Info className="h-3 w-3 flex-shrink-0" />
                   Tylko administrator może zmienić umiejętności
                 </p>
               </div>
             )}
+
+            {/* Save / Cancel */}
             {isEditing && (
-              <div className="flex gap-2 pt-4 border-t border-brand-warm/20">
+              <div className="flex flex-col sm:flex-row gap-2 pt-4 border-t border-brand-warm/20">
                 <Button
                   onClick={() => updateProfileMutation.mutate()}
                   disabled={updateProfileMutation.isPending}
-                  className="bg-brand hover:bg-brand-light text-white"
+                  className="bg-brand hover:bg-brand-light text-white w-full sm:w-auto"
                 >
-                  Zapisz zmiany
+                  {updateProfileMutation.isPending ? "Zapisywanie..." : "Zapisz zmiany"}
                 </Button>
                 <Button
                   variant="ghost"
-                  className="text-brand-dark/50 hover:text-brand-dark"
+                  className="text-brand-dark/50 hover:text-brand-dark w-full sm:w-auto"
                   onClick={() => {
                     setIsEditing(false);
                     setName(user.name || "");
@@ -251,6 +303,27 @@ export default function ProfilePage() {
                 </Button>
               </div>
             )}
+          </div>
+        </div>
+      </div>
+
+      {/* Role badge - always visible */}
+      <div className="bg-white border border-brand-warm/40 rounded-xl p-4 shadow-sm">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-[11px] sm:text-xs font-medium text-brand-dark/40 uppercase tracking-wider">Rola w zespole</p>
+            <p className="text-sm sm:text-base font-semibold text-brand-dark mt-1">
+              {user.role === "OWNER" ? "Właściciel" : user.role === "MANAGER" ? "Menedżer" : "Pracownik"}
+            </p>
+          </div>
+          <div className={`px-3 py-1 rounded-full text-xs font-medium ${
+            user.role === "OWNER"
+              ? "bg-amber-50 text-amber-700 border border-amber-200"
+              : user.role === "MANAGER"
+              ? "bg-blue-50 text-blue-700 border border-blue-200"
+              : "bg-green-50 text-green-700 border border-green-200"
+          }`}>
+            {user.role === "OWNER" ? "Owner" : user.role === "MANAGER" ? "Manager" : "Employee"}
           </div>
         </div>
       </div>

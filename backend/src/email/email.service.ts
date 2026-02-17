@@ -10,6 +10,200 @@ export class EmailService {
     this.resend = new Resend(process.env.RESEND_API_KEY);
   }
 
+  private get frontendUrl(): string {
+    return (
+      process.env.FRONTEND_URL ||
+      process.env.NEXT_PUBLIC_FRONTEND_URL ||
+      'http://localhost:3000'
+    ).replace(/\/$/, '');
+  }
+
+  private get fromAddress(): string {
+    return process.env.RESEND_FROM || 'Staffer.pl <no-reply@staffer.pl>';
+  }
+
+  /** Reusable email footer with unsubscribe hint */
+  private emailFooter(unsubscribeNote = true): string {
+    const unsub = unsubscribeNote
+      ? `<p style="text-align: center; color: #9ca3af; font-size: 11px; margin-top: 8px;">
+           Aby zmienić preferencje powiadomień email, przejdź do
+           <a href="${this.frontendUrl}/settings" style="color: #8FACDB;">Ustawień</a>
+           w aplikacji.
+         </p>`
+      : '';
+    return `
+      ${unsub}
+      <p style="text-align: center; color: #9ca3af; font-size: 12px; margin-top: 16px;">
+        Staffer.pl — Bezpieczne zarządzanie zmianami i zespołami.
+      </p>
+    `;
+  }
+
+  /** Wrap content in the standard email layout */
+  private wrapEmail(content: string, showUnsubscribe = true): string {
+    return `
+      <div style="font-family: Arial, sans-serif; max-width: 640px; margin: 0 auto; background: #f9fafb; padding: 32px; color: #111;">
+        <div style="text-align: center; margin-bottom: 24px;">
+          <img src="https://dummyimage.com/160x48/8FACDB/ffffff&text=Staffer.pl" alt="Staffer.pl" style="max-width: 160px; height: auto;" />
+        </div>
+        <div style="background: #ffffff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 28px;">
+          ${content}
+        </div>
+        ${this.emailFooter(showUnsubscribe)}
+      </div>
+    `;
+  }
+
+  private async send(to: string, subject: string, html: string, text: string, logLabel: string) {
+    if (!process.env.RESEND_API_KEY) {
+      this.logger.warn('RESEND_API_KEY is missing. Skipping email send.');
+      return;
+    }
+    try {
+      const result = await this.resend.emails.send({
+        from: this.fromAddress,
+        to,
+        subject,
+        html,
+        text,
+      });
+      const emailId = result?.data?.id;
+      this.logger.log(`${logLabel} sent to ${to}${emailId ? ` (id=${emailId})` : ''}`);
+    } catch (error) {
+      this.logger.error(`Błąd wysyłania ${logLabel} do ${to}: ${error?.message ?? error}`);
+    }
+  }
+
+  // ── Schedule notifications ──────────────────────────────────
+
+  /** Batch email: schedule published — lists all assigned shifts in one email */
+  async sendSchedulePublishedEmail(
+    email: string,
+    name: string,
+    shifts: { roleName: string; date: string; time: string }[],
+  ) {
+    const shiftRows = shifts
+      .map(
+        (s) =>
+          `<tr>
+            <td style="padding: 8px 12px; border-bottom: 1px solid #e5e7eb; color: #333;">${s.roleName}</td>
+            <td style="padding: 8px 12px; border-bottom: 1px solid #e5e7eb; color: #555;">${s.date}</td>
+            <td style="padding: 8px 12px; border-bottom: 1px solid #e5e7eb; color: #555;">${s.time}</td>
+          </tr>`,
+      )
+      .join('');
+
+    const content = `
+      <h1 style="color: #FF8400; font-size: 22px; margin: 0 0 12px;">Nowy grafik opublikowany</h1>
+      <p style="margin: 0 0 12px; line-height: 1.6;">
+        Cześć ${name}, został opublikowany nowy grafik z <strong>${shifts.length}</strong> zmian${shifts.length === 1 ? 'ą' : shifts.length < 5 ? 'ami' : 'ami'} dla Ciebie:
+      </p>
+      <table style="width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 14px;">
+        <thead>
+          <tr style="background: #f3f4f6;">
+            <th style="padding: 8px 12px; text-align: left; border-bottom: 2px solid #e5e7eb; color: #555;">Stanowisko</th>
+            <th style="padding: 8px 12px; text-align: left; border-bottom: 2px solid #e5e7eb; color: #555;">Data</th>
+            <th style="padding: 8px 12px; text-align: left; border-bottom: 2px solid #e5e7eb; color: #555;">Godziny</th>
+          </tr>
+        </thead>
+        <tbody>${shiftRows}</tbody>
+      </table>
+      <p style="text-align: center; margin: 24px 0;">
+        <a href="${this.frontendUrl}/grafik"
+           style="background-color: #FF8400; color: white; padding: 14px 28px;
+                  text-decoration: none; border-radius: 8px; font-weight: 600; display: inline-block;">
+          Zobacz grafik
+        </a>
+      </p>
+    `;
+
+    const shiftList = shifts.map((s) => `  - ${s.roleName}: ${s.date}, ${s.time}`).join('\n');
+    const text = `Cześć ${name},\n\nZostał opublikowany nowy grafik z ${shifts.length} zmianami:\n\n${shiftList}\n\nZobacz grafik: ${this.frontendUrl}/grafik\n\nAby zmienić preferencje powiadomień, przejdź do Ustawień w aplikacji.\n\nStaffer.pl`;
+
+    await this.send(
+      email,
+      'Nowy grafik opublikowany - Staffer.pl',
+      this.wrapEmail(content),
+      text,
+      'Schedule published email',
+    );
+  }
+
+  /** Email: you were assigned to a shift */
+  async sendShiftAssignedEmail(
+    email: string,
+    name: string,
+    roleName: string,
+    date: string,
+    time: string,
+  ) {
+    const content = `
+      <h1 style="color: #FF8400; font-size: 22px; margin: 0 0 12px;">Nowa zmiana</h1>
+      <p style="margin: 0 0 12px; line-height: 1.6;">
+        Cześć ${name}, zostałeś przypisany do nowej zmiany:
+      </p>
+      <div style="background: #f3f4f6; border-left: 4px solid #FF8400; padding: 16px; margin: 20px 0; border-radius: 8px;">
+        <p style="margin: 0 0 4px; font-weight: 600; color: #333; font-size: 16px;">${roleName}</p>
+        <p style="margin: 0; color: #555; font-size: 14px;">${date} &middot; ${time}</p>
+      </div>
+      <p style="text-align: center; margin: 24px 0;">
+        <a href="${this.frontendUrl}/grafik"
+           style="background-color: #FF8400; color: white; padding: 14px 28px;
+                  text-decoration: none; border-radius: 8px; font-weight: 600; display: inline-block;">
+          Zobacz grafik
+        </a>
+      </p>
+    `;
+
+    const text = `Cześć ${name},\n\nZostałeś przypisany do zmiany: ${roleName} (${date}, ${time}).\n\nZobacz grafik: ${this.frontendUrl}/grafik\n\nStaffer.pl`;
+
+    await this.send(
+      email,
+      `Nowa zmiana: ${roleName} (${date}) - Staffer.pl`,
+      this.wrapEmail(content),
+      text,
+      'Shift assigned email',
+    );
+  }
+
+  /** Email: urgent announcement */
+  async sendUrgentAnnouncementEmail(
+    email: string,
+    name: string,
+    announcementTitle: string,
+    announcementContent: string,
+    authorName: string,
+  ) {
+    const content = `
+      <h1 style="color: #dc2626; font-size: 22px; margin: 0 0 12px;">🔴 Pilne ogłoszenie</h1>
+      <p style="margin: 0 0 12px; line-height: 1.6;">
+        Cześć ${name}, menedżer opublikował pilne ogłoszenie:
+      </p>
+      <div style="background: #fef2f2; border-left: 4px solid #dc2626; padding: 16px; margin: 20px 0; border-radius: 8px;">
+        <p style="margin: 0 0 8px; font-weight: 700; color: #333; font-size: 16px;">${announcementTitle}</p>
+        <p style="margin: 0; color: #555; font-size: 14px; line-height: 1.6; white-space: pre-line;">${announcementContent}</p>
+        <p style="margin: 8px 0 0; color: #999; font-size: 12px;">— ${authorName}</p>
+      </div>
+      <p style="text-align: center; margin: 24px 0;">
+        <a href="${this.frontendUrl}/announcements"
+           style="background-color: #FF8400; color: white; padding: 14px 28px;
+                  text-decoration: none; border-radius: 8px; font-weight: 600; display: inline-block;">
+          Zobacz ogłoszenia
+        </a>
+      </p>
+    `;
+
+    const text = `Cześć ${name},\n\nPilne ogłoszenie od ${authorName}:\n\n${announcementTitle}\n${announcementContent}\n\nZobacz ogłoszenia: ${this.frontendUrl}/announcements\n\nStaffer.pl`;
+
+    await this.send(
+      email,
+      `🔴 Pilne: ${announcementTitle} - Staffer.pl`,
+      this.wrapEmail(content),
+      text,
+      'Urgent announcement email',
+    );
+  }
+
   async sendVerificationEmail(email: string, name: string, token: string) {
     if (!process.env.RESEND_API_KEY) {
       this.logger.warn('RESEND_API_KEY is missing. Skipping email send.');
