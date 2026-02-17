@@ -770,3 +770,73 @@ export async function markAnnouncementRead(announcementId: string): Promise<void
     method: "POST",
   });
 }
+
+// --- Team Settings ---
+export interface TeamSettingsData {
+  companyName: string | null;
+  logoUrl: string | null;
+  defaultOpenHour: number;
+  defaultCloseHour: number;
+  minShiftDurationMin: number;
+  maxShiftDurationMin: number;
+  notifyShiftAssigned: boolean;
+  notifyShiftPublished: boolean;
+  notifyMarketplace: boolean;
+  notifyAnnouncements: boolean;
+}
+
+export interface TeamInfo {
+  id: string;
+  name: string;
+  inviteCode: string;
+  createdAt: string;
+}
+
+export interface TeamSettingsResponse {
+  team: TeamInfo;
+  settings: TeamSettingsData;
+}
+
+export async function getTeamSettings(): Promise<TeamSettingsResponse> {
+  const res = await authenticatedFetch(`${API_URL}/team-settings`);
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.message || "Błąd pobierania ustawień");
+  }
+  return res.json();
+}
+
+export async function updateTeamSettings(data: Partial<TeamSettingsData>): Promise<TeamSettingsResponse> {
+  const res = await authenticatedFetch(`${API_URL}/team-settings`, {
+    method: "PATCH",
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.message || "Błąd aktualizacji ustawień");
+  }
+  return res.json();
+}
+
+export async function updateTeamName(name: string): Promise<TeamSettingsResponse> {
+  const res = await authenticatedFetch(`${API_URL}/team-settings/team-name`, {
+    method: "PATCH",
+    body: JSON.stringify({ name }),
+  });
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.message || "Błąd aktualizacji nazwy");
+  }
+  return res.json();
+}
+
+export async function regenerateInviteCode(): Promise<{ inviteCode: string }> {
+  const res = await authenticatedFetch(`${API_URL}/team-settings/regenerate-invite`, {
+    method: "POST",
+  });
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.message || "Błąd regeneracji kodu");
+  }
+  return res.json();
+}

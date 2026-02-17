@@ -47,7 +47,26 @@ model Team {
   memberships        TeamMembership[]
   notifications      Notification[]
   announcements      Announcement[]
+  settings           TeamSettings?
   users              User[]
+}
+
+/// Ustawienia zespołu/firmy — 1:1 z Team
+model TeamSettings {
+  id                    String   @id @default(uuid())
+  teamId                String   @unique
+  companyName           String?
+  logoUrl               String?
+  defaultOpenHour       Int      @default(6)
+  defaultCloseHour      Int      @default(22)
+  minShiftDurationMin   Int      @default(240)
+  maxShiftDurationMin   Int      @default(720)
+  notifyShiftAssigned   Boolean  @default(true)
+  notifyShiftPublished  Boolean  @default(true)
+  notifyMarketplace     Boolean  @default(true)
+  notifyAnnouncements   Boolean  @default(true)
+  updatedAt             DateTime @updatedAt
+  team                  Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
 }
 
 /// Dostępność pracownika: przedział czasowy, w którym może pracować (min. 4h na slot).

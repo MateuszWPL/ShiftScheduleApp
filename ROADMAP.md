@@ -54,14 +54,14 @@
 - [x] Oznaczanie ogloszenia jako przeczytane (przycisk "oczko")
 
 ### 1.4 Ustawienia firmy
-- [ ] Strona /settings z zakladkami:
-  - Dane firmy (nazwa zespolu, logo)
-  - Kod zaproszenia (widoczny, mozliwosc regeneracji)
-  - Preferencje powiadomien (ktore powiadomienia email wlaczone)
-  - Godziny pracy firmy (domyslne godziny otwarcia)
-  - Minimalna dlugosc zmiany (domyslnie 4h, konfigurowalne)
-- [ ] Backend: endpoint do aktualizacji ustawien zespolu
-- [ ] Zapisywanie ustawien w modelu Team lub nowy model TeamSettings
+- [x] Nowy model `TeamSettings` (1:1 z Team): companyName, logoUrl, godziny otwarcia/zamkniecia, min/max dlugosc zmiany, preferencje powiadomien
+- [x] Strona /settings z zakladkami:
+  - [x] Firma (nazwa zespolu, nazwa firmy)
+  - [x] Zaproszenia (widoczny kod, kopiowanie, regeneracja — tylko OWNER)
+  - [x] Grafik (domyslne godziny otwarcia/zamkniecia, min/max dlugosc zmiany)
+  - [x] Powiadomienia (toggle: przypisanie, publikacja, gielda, ogloszenia)
+- [x] Backend: GET/PATCH team-settings, PATCH team-name, POST regenerate-invite
+- [x] Auto-tworzenie TeamSettings przy pierwszym odczycie
 
 ### 1.5 Poprawki powiadomien email
 - [ ] Email przy publikacji grafiku (zbiorczy, 1 email na tydzien, nie na zmiane)

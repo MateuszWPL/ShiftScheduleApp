@@ -11,6 +11,7 @@ import { CloudinaryModule } from './cloudinary/cloudinary.module';
 import { AvailabilityModule } from './availability/availability.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { AnnouncementsModule } from './announcements/announcements.module';
+import { TeamSettingsModule } from './team-settings/team-settings.module';
 import { RequestLoggerMiddleware } from './common/middleware/request-logger.middleware';
 
 @Module({
@@ -29,6 +30,7 @@ import { RequestLoggerMiddleware } from './common/middleware/request-logger.midd
     AvailabilityModule,
     NotificationsModule,
     AnnouncementsModule,
+    TeamSettingsModule,
   ],
   controllers: [AppController],
   providers: [
