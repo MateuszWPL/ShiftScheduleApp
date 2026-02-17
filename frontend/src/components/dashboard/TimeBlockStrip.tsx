@@ -4,6 +4,7 @@ import { useCallback, useRef, useState, useEffect } from "react";
 
 const MINUTES_PER_DAY = 24 * 60;
 const SNAP = 15;
+const HOURS = Array.from({ length: 25 }, (_, i) => i);
 
 function snap(minutes: number): number {
   return Math.round(minutes / SNAP) * SNAP;
@@ -17,6 +18,12 @@ function minToPercent(min: number): number {
   return (min / MINUTES_PER_DAY) * 100;
 }
 
+function formatTime(min: number): string {
+  const h = Math.floor(min / 60);
+  const m = min % 60;
+  return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+}
+
 export interface TimeBlock {
   id?: string;
   startMin: number;
@@ -24,47 +31,67 @@ export interface TimeBlock {
 }
 
 interface TimeBlockStripProps {
-  /** Etykieta dnia (np. "Pon 10.02") */
-  label: string;
-  /** Zapisane bloki (do wyświetlenia, z id do usunięcia) */
+  /** Etykieta dnia (np. "Pon 10.02") — shown externally in table mode */
+  label?: string;
+  /** Show label inside component */
+  showLabel?: boolean;
+  /** Zapisane bloki */
   blocks?: TimeBlock[];
   /** Minimalna długość bloku (minuty) */
   minBlockMinutes: number;
-  /** Tryb pojedynczego bloku (np. zmiana) – brak wielu bloków, jeden edytowalny */
+  /** Tryb pojedynczego bloku */
   singleBlock?: boolean;
-  /** Wartość w trybie singleBlock: jeden blok */
+  /** Wartość w trybie singleBlock */
   value?: { startMin: number; endMin: number } | null;
   /** Zmiana w trybie singleBlock */
   onChange?: (v: { startMin: number; endMin: number } | null) => void;
-  /** Draft (nowy blok) w trybie wielu bloków */
-  draft?: { startMin: number; endMin: number } | null;
-  /** Zmiana draftu */
-  onDraftChange?: (draft: { startMin: number; endMin: number } | null) => void;
-  /** Potwierdzenie draftu (dodanie slotu) */
-  onConfirmDraft?: () => void;
+  /** Draft bloki w trybie wielu bloków (managed externally) */
+  drafts?: TimeBlock[];
+  /** Callback when a new draft block is created via drag */
+  onDraftCreate?: (block: { startMin: number; endMin: number }) => void;
   /** Usunięcie zapisanego bloku */
   onDeleteBlock?: (id: string) => void;
-  /** Czy wyłączone (np. ładowanie) */
+  /** Strip height */
+  height?: number;
+  /** Czy wyłączone */
   disabled?: boolean;
+  /** Show hour labels */
+  showHourLabels?: boolean;
+  /** Compact mode (no padding for table rows) */
+  compact?: boolean;
 }
 
 export function TimeBlockStrip({
   label,
+  showLabel = false,
   blocks = [],
   minBlockMinutes,
   singleBlock = false,
   value = null,
   onChange,
-  draft = null,
-  onDraftChange,
-  onConfirmDraft,
+  drafts = [],
+  onDraftCreate,
   onDeleteBlock,
+  height = 44,
   disabled = false,
+  showHourLabels = true,
+  compact = false,
 }: TimeBlockStripProps) {
   const stripRef = useRef<HTMLDivElement>(null);
-  const [dragging, setDragging] = useState<"move" | "resize-left" | "resize-right" | null>(null);
-  const [dragStartX, setDragStartX] = useState(0);
-  const dragInitialRef = useRef<{ startMin: number; endMin: number }>({ startMin: 0, endMin: 0 });
+
+  // Drag state
+  const [dragMode, setDragMode] = useState<
+    "create" | "move" | "resize-left" | "resize-right" | null
+  >(null);
+  const [dragStartMin, setDragStartMin] = useState(0);
+  const [createPreview, setCreatePreview] = useState<{
+    startMin: number;
+    endMin: number;
+  } | null>(null);
+  const dragInitialRef = useRef<{ startMin: number; endMin: number }>({
+    startMin: 0,
+    endMin: 0,
+  });
   const justFinishedDragRef = useRef(false);
 
   const getMinutesFromEvent = useCallback(
@@ -72,189 +99,288 @@ export function TimeBlockStrip({
       const el = stripRef.current;
       if (!el) return 0;
       const rect = el.getBoundingClientRect();
-      const x = ("clientX" in e ? e.clientX : (e as MouseEvent).clientX) - rect.left;
+      const x =
+        ("clientX" in e ? e.clientX : (e as MouseEvent).clientX) - rect.left;
       const pct = Math.max(0, Math.min(1, x / rect.width));
       return clamp(snap(pct * MINUTES_PER_DAY));
     },
-    [],
+    []
   );
 
-  const handleStripClick = useCallback(
+  // Mousedown on empty strip area → start creating
+  const handleStripMouseDown = useCallback(
     (e: React.MouseEvent) => {
       if (disabled) return;
-      if (justFinishedDragRef.current) {
-        justFinishedDragRef.current = false;
-        return;
-      }
+      if (e.button !== 0) return;
       const minutes = getMinutesFromEvent(e);
+
       if (singleBlock) {
-        const start = minutes;
-        const end = clamp(snap(minutes + minBlockMinutes));
-        onChange?.({ startMin: start, endMin: end });
-        return;
+        // In single block mode, start creating immediately
+        setDragMode("create");
+        setDragStartMin(minutes);
+        setCreatePreview({ startMin: minutes, endMin: minutes });
+        onChange?.({ startMin: minutes, endMin: clamp(minutes + minBlockMinutes) });
+      } else {
+        // Multi-block mode: start drag-to-create
+        setDragMode("create");
+        setDragStartMin(minutes);
+        setCreatePreview({ startMin: minutes, endMin: minutes });
       }
-      const end = clamp(snap(minutes + minBlockMinutes));
-      onDraftChange?.({ startMin: minutes, endMin: end });
     },
-    [disabled, getMinutesFromEvent, minBlockMinutes, singleBlock, onChange, onDraftChange],
+    [disabled, getMinutesFromEvent, singleBlock, onChange, minBlockMinutes]
   );
 
-  const handleMouseDownBlock = useCallback(
-    (e: React.MouseEvent, block: TimeBlock, kind: "move" | "resize-left" | "resize-right") => {
+  // Mousedown on existing block → drag/resize
+  const handleBlockMouseDown = useCallback(
+    (
+      e: React.MouseEvent,
+      block: { startMin: number; endMin: number },
+      kind: "move" | "resize-left" | "resize-right"
+    ) => {
       e.stopPropagation();
       if (disabled) return;
-      setDragging(kind);
-      setDragStartX(getMinutesFromEvent(e));
+      setDragMode(kind);
+      setDragStartMin(getMinutesFromEvent(e));
       dragInitialRef.current = { startMin: block.startMin, endMin: block.endMin };
     },
-    [disabled, getMinutesFromEvent],
+    [disabled, getMinutesFromEvent]
   );
 
   useEffect(() => {
-    if (!dragging) return;
+    if (!dragMode) return;
+
     const onMove = (e: MouseEvent) => {
       const currentMin = getMinutesFromEvent(e);
-      const delta = currentMin - dragStartX;
-      const init = dragInitialRef.current;
-      if (singleBlock && value) {
-        if (dragging === "move") {
-          const len = init.endMin - init.startMin;
-          const start = clamp(snap(init.startMin + delta));
-          const end = clamp(snap(start + len));
-          onChange?.({ startMin: start, endMin: Math.min(end, MINUTES_PER_DAY) });
-        } else if (dragging === "resize-left") {
-          const newStart = clamp(snap(init.startMin + delta));
-          const startMin = Math.min(newStart, init.endMin - minBlockMinutes);
-          onChange?.({ startMin, endMin: init.endMin });
-        } else if (dragging === "resize-right") {
-          const newEnd = clamp(snap(init.endMin + delta));
-          const startMin = init.startMin;
-          onChange?.({ startMin, endMin: Math.max(startMin + minBlockMinutes, Math.min(newEnd, MINUTES_PER_DAY)) });
+
+      if (dragMode === "create") {
+        const lo = Math.min(dragStartMin, currentMin);
+        const hi = Math.max(dragStartMin, currentMin);
+        const preview = { startMin: lo, endMin: hi };
+        setCreatePreview(preview);
+
+        if (singleBlock) {
+          const endMin = Math.max(hi, lo + minBlockMinutes);
+          onChange?.({ startMin: lo, endMin: clamp(endMin) });
         }
         return;
       }
-      if (dragging === "move" && draft) {
-        const len = init.endMin - init.startMin;
-        const start = clamp(snap(init.startMin + delta));
-        const end = clamp(snap(start + len));
-        onDraftChange?.({ startMin: start, endMin: Math.min(end, MINUTES_PER_DAY) });
-      } else if (dragging === "resize-left" && draft) {
-        const newStart = clamp(snap(init.startMin + delta));
-        const startMin = Math.min(newStart, init.endMin - minBlockMinutes);
-        onDraftChange?.({ startMin, endMin: init.endMin });
-      } else if (dragging === "resize-right" && draft) {
-        const newEnd = clamp(snap(init.endMin + delta));
-        onDraftChange?.({ startMin: init.startMin, endMin: Math.max(init.startMin + minBlockMinutes, Math.min(newEnd, MINUTES_PER_DAY)) });
+
+      // Move/resize existing block
+      const delta = currentMin - dragStartMin;
+      const init = dragInitialRef.current;
+
+      if (singleBlock && value) {
+        if (dragMode === "move") {
+          const len = init.endMin - init.startMin;
+          const start = clamp(snap(init.startMin + delta));
+          const end = clamp(start + len);
+          onChange?.({ startMin: start, endMin: Math.min(end, MINUTES_PER_DAY) });
+        } else if (dragMode === "resize-left") {
+          const newStart = clamp(snap(init.startMin + delta));
+          const startMin = Math.min(newStart, init.endMin - minBlockMinutes);
+          onChange?.({ startMin, endMin: init.endMin });
+        } else if (dragMode === "resize-right") {
+          const newEnd = clamp(snap(init.endMin + delta));
+          onChange?.({
+            startMin: init.startMin,
+            endMin: Math.max(init.startMin + minBlockMinutes, Math.min(newEnd, MINUTES_PER_DAY)),
+          });
+        }
       }
     };
-    const onUp = () => {
-      justFinishedDragRef.current = dragging !== null;
-      setDragging(null);
+
+    const onUp = (e: MouseEvent) => {
+      if (dragMode === "create" && !singleBlock) {
+        const currentMin = getMinutesFromEvent(e);
+        const lo = Math.min(dragStartMin, currentMin);
+        const hi = Math.max(dragStartMin, currentMin);
+        const duration = hi - lo;
+
+        if (duration >= minBlockMinutes) {
+          onDraftCreate?.({ startMin: lo, endMin: hi });
+        } else if (duration < SNAP * 2) {
+          // Tiny drag = click: create minimum block
+          const endMin = clamp(lo + minBlockMinutes);
+          onDraftCreate?.({ startMin: lo, endMin });
+        } else {
+          // Too small, snap up to minimum
+          const endMin = clamp(lo + minBlockMinutes);
+          onDraftCreate?.({ startMin: lo, endMin });
+        }
+      }
+
+      justFinishedDragRef.current = dragMode !== null;
+      setDragMode(null);
+      setCreatePreview(null);
     };
+
     window.addEventListener("mousemove", onMove);
     window.addEventListener("mouseup", onUp);
     return () => {
       window.removeEventListener("mousemove", onMove);
       window.removeEventListener("mouseup", onUp);
     };
-  }, [dragging, dragStartX, singleBlock, value, draft, onChange, onDraftChange, minBlockMinutes, getMinutesFromEvent]);
+  }, [
+    dragMode,
+    dragStartMin,
+    singleBlock,
+    value,
+    onChange,
+    onDraftCreate,
+    minBlockMinutes,
+    getMinutesFromEvent,
+  ]);
 
-  const displayBlocks = singleBlock && value ? [value] : blocks;
-  const editableBlock = singleBlock ? value : draft;
+  const editableBlock = singleBlock ? value : null;
 
   return (
-    <div className="select-none">
-      <div className="flex items-center justify-between mb-1">
-        <span className="text-sm font-medium text-slate-700">{label}</span>
-        {!singleBlock && editableBlock && onConfirmDraft && (
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              onConfirmDraft();
-            }}
-            className="text-xs text-blue-600 hover:text-blue-800 font-medium"
-          >
-            Dodaj
-          </button>
-        )}
-      </div>
+    <div className={`select-none ${compact ? "" : ""}`}>
+      {showLabel && label && (
+        <div className="flex items-center justify-between mb-1">
+          <span className="text-sm font-medium text-slate-700">{label}</span>
+        </div>
+      )}
+
       <div
         ref={stripRef}
         role="slider"
-        aria-label={`Pasmo godzin ${label}`}
-        className="relative h-10 w-full rounded-lg bg-slate-100 border border-slate-200 cursor-crosshair overflow-hidden"
-        onClick={handleStripClick}
+        aria-label={`Pasmo godzin ${label || ""}`}
+        className={`relative w-full bg-slate-50 cursor-crosshair overflow-hidden ${
+          compact ? "rounded-none" : "rounded-lg border border-slate-200"
+        }`}
+        style={{ height }}
+        onMouseDown={handleStripMouseDown}
       >
-        {/* Godziny 0-24 */}
-        {[0, 6, 12, 18, 24].map((h) => (
+        {/* Hour grid lines */}
+        {HOURS.map((h) => (
           <div
-            key={h}
-            className="absolute top-0 bottom-0 w-px bg-slate-300"
+            key={`line-${h}`}
+            className={`absolute top-0 bottom-0 ${
+              h % 6 === 0
+                ? "border-l border-slate-300"
+                : h % 3 === 0
+                ? "border-l border-slate-200"
+                : "border-l border-slate-100"
+            }`}
             style={{ left: `${(h / 24) * 100}%` }}
           />
         ))}
-        {[0, 6, 12, 18, 24].map((h) => (
-          <span
-            key={h}
-            className="absolute text-[10px] text-slate-400 -translate-x-1/2 top-0.5"
-            style={{ left: `${(h / 24) * 100}%` }}
-          >
-            {h}
-          </span>
-        ))}
-        {/* Zapisane bloki */}
-        {!singleBlock &&
-          blocks.map((b) => (
-            <div
-              key={b.id ?? `${b.startMin}-${b.endMin}`}
-              className="absolute top-1 bottom-1 rounded bg-blue-200 border border-blue-300 flex items-center justify-end pr-1"
+
+        {/* Hour labels */}
+        {showHourLabels &&
+          HOURS.filter((h) => h % 3 === 0).map((h) => (
+            <span
+              key={`label-${h}`}
+              className="absolute text-[9px] text-slate-400 pointer-events-none select-none"
               style={{
-                left: `${minToPercent(b.startMin)}%`,
-                width: `${minToPercent(b.endMin - b.startMin)}%`,
+                left: `${(h / 24) * 100}%`,
+                top: "1px",
+                transform: h === 0 ? "none" : h === 24 ? "translateX(-100%)" : "translateX(-50%)",
               }}
             >
-              <span className="text-[10px] text-blue-800 truncate">
-                {String(Math.floor(b.startMin / 60)).padStart(2, "0")}:{String(b.startMin % 60).padStart(2, "0")}–
-                {String(Math.floor(b.endMin / 60)).padStart(2, "0")}:{String(b.endMin % 60).padStart(2, "0")}
-              </span>
-              {onDeleteBlock && b.id && (
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onDeleteBlock(b.id!);
-                  }}
-                  className="ml-1 text-red-600 hover:text-red-800 text-xs font-bold"
-                  aria-label="Usuń"
-                >
-                  ×
-                </button>
-              )}
-            </div>
+              {h}:00
+            </span>
           ))}
-        {/* Edytowalny blok (draft lub single) */}
+
+        {/* Saved blocks */}
+        {blocks.map((b) => (
+          <div
+            key={b.id ?? `saved-${b.startMin}-${b.endMin}`}
+            className="absolute rounded-md bg-blue-500/80 border border-blue-600/40 flex items-center justify-between px-1 group"
+            style={{
+              left: `${minToPercent(b.startMin)}%`,
+              width: `${minToPercent(b.endMin - b.startMin)}%`,
+              top: showHourLabels ? "14px" : "2px",
+              bottom: "2px",
+            }}
+            onMouseDown={(e) => e.stopPropagation()}
+          >
+            <span className="text-[10px] text-white font-medium truncate pointer-events-none">
+              {formatTime(b.startMin)}–{formatTime(b.endMin)}
+            </span>
+            {onDeleteBlock && b.id && (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDeleteBlock(b.id!);
+                }}
+                className="ml-0.5 text-white/70 hover:text-white text-xs font-bold opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
+                aria-label="Usuń"
+              >
+                ×
+              </button>
+            )}
+          </div>
+        ))}
+
+        {/* Draft blocks (multi-block mode) */}
+        {drafts.map((d, idx) => (
+          <div
+            key={`draft-${idx}-${d.startMin}-${d.endMin}`}
+            className="absolute rounded-md bg-emerald-500/80 border-2 border-emerald-600/60 border-dashed flex items-center justify-center"
+            style={{
+              left: `${minToPercent(d.startMin)}%`,
+              width: `${minToPercent(d.endMin - d.startMin)}%`,
+              top: showHourLabels ? "14px" : "2px",
+              bottom: "2px",
+            }}
+            onMouseDown={(e) => e.stopPropagation()}
+          >
+            <span className="text-[10px] text-white font-medium pointer-events-none">
+              {formatTime(d.startMin)}–{formatTime(d.endMin)}
+            </span>
+          </div>
+        ))}
+
+        {/* Create preview (while dragging to create) */}
+        {dragMode === "create" && createPreview && !singleBlock && (
+          <div
+            className="absolute rounded-md bg-emerald-400/50 border-2 border-emerald-500/60 border-dashed"
+            style={{
+              left: `${minToPercent(createPreview.startMin)}%`,
+              width: `${minToPercent(
+                Math.max(createPreview.endMin - createPreview.startMin, 1)
+              )}%`,
+              top: showHourLabels ? "14px" : "2px",
+              bottom: "2px",
+            }}
+          />
+        )}
+
+        {/* Editable block (singleBlock mode) */}
         {editableBlock && (
           <div
-            className="absolute top-1 bottom-1 rounded bg-emerald-500 border-2 border-emerald-600 cursor-grab active:cursor-grabbing flex items-center justify-between px-1"
+            className="absolute rounded-md bg-emerald-500 border-2 border-emerald-600 cursor-grab active:cursor-grabbing flex items-center justify-between group"
             style={{
               left: `${minToPercent(editableBlock.startMin)}%`,
               width: `${minToPercent(editableBlock.endMin - editableBlock.startMin)}%`,
+              top: showHourLabels ? "14px" : "2px",
+              bottom: "2px",
             }}
-            onMouseDown={(e) => handleMouseDownBlock(e, editableBlock, "move")}
+            onMouseDown={(e) => handleBlockMouseDown(e, editableBlock, "move")}
           >
+            {/* Left resize handle */}
             <span
-              className="w-2 h-full rounded-l cursor-ew-resize shrink-0"
-              onMouseDown={(e) => handleMouseDownBlock(e, editableBlock, "resize-left")}
-            />
-            <span className="text-[10px] text-white font-medium pointer-events-none">
-              {Math.floor(editableBlock.startMin / 60)}:{String(editableBlock.startMin % 60).padStart(2, "0")} –
-              {Math.floor(editableBlock.endMin / 60)}:{String(editableBlock.endMin % 60).padStart(2, "0")}
+              className="w-2 h-full cursor-ew-resize shrink-0 flex items-center justify-center hover:bg-white/20 rounded-l-md"
+              onMouseDown={(e) =>
+                handleBlockMouseDown(e, editableBlock, "resize-left")
+              }
+            >
+              <span className="w-0.5 h-3 bg-white/60 rounded" />
             </span>
+            <span className="text-[10px] text-white font-semibold pointer-events-none whitespace-nowrap">
+              {formatTime(editableBlock.startMin)} – {formatTime(editableBlock.endMin)}
+            </span>
+            {/* Right resize handle */}
             <span
-              className="w-2 h-full rounded-r cursor-ew-resize shrink-0"
-              onMouseDown={(e) => handleMouseDownBlock(e, editableBlock, "resize-right")}
-            />
+              className="w-2 h-full cursor-ew-resize shrink-0 flex items-center justify-center hover:bg-white/20 rounded-r-md"
+              onMouseDown={(e) =>
+                handleBlockMouseDown(e, editableBlock, "resize-right")
+              }
+            >
+              <span className="w-0.5 h-3 bg-white/60 rounded" />
+            </span>
           </div>
         )}
       </div>
@@ -262,10 +388,12 @@ export function TimeBlockStrip({
   );
 }
 
-export function minutesToTime(startMin: number, endMin: number): { start: string; end: string } {
-  const pad = (n: number) => String(n).padStart(2, "0");
+export function minutesToTime(
+  startMin: number,
+  endMin: number
+): { start: string; end: string } {
   return {
-    start: `${pad(Math.floor(startMin / 60))}:${pad(startMin % 60)}`,
-    end: `${pad(Math.floor(endMin / 60))}:${pad(endMin % 60)}`,
+    start: formatTime(startMin),
+    end: formatTime(endMin),
   };
 }
