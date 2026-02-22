@@ -515,6 +515,7 @@ export default function GrafikPage() {
         isOpen={isCopyDialogOpen}
         onClose={() => setIsCopyDialogOpen(false)}
         currentWeekStart={weekStart}
+        onNavigateToWeek={setWeekStart}
       />
     </div>
   );

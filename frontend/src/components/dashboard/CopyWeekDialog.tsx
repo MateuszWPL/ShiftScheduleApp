@@ -58,11 +58,12 @@ interface CopyWeekDialogProps {
   isOpen: boolean;
   onClose: () => void;
   currentWeekStart: Date;
+  onNavigateToWeek?: (monday: Date) => void;
 }
 
 type Step = "configure" | "preview";
 
-export function CopyWeekDialog({ isOpen, onClose, currentWeekStart }: CopyWeekDialogProps) {
+export function CopyWeekDialog({ isOpen, onClose, currentWeekStart, onNavigateToWeek }: CopyWeekDialogProps) {
   const queryClient = useQueryClient();
   const [step, setStep] = useState<Step>("configure");
   const [structureOnly, setStructureOnly] = useState(false);
@@ -103,6 +104,7 @@ export function CopyWeekDialog({ isOpen, onClose, currentWeekStart }: CopyWeekDi
     onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ["shifts"] });
       toast.success(`Skopiowano ${result.copied} zmian jako szkice`);
+      onNavigateToWeek?.(targetMonday);
       handleClose();
     },
     onError: (e: Error) => toast.error(e.message),

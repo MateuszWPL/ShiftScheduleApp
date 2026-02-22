@@ -72,17 +72,37 @@ function buildGrid(
     }
   }
 
+  // "unassigned" row for shifts without employee assignments
+  for (const day of weekDays) {
+    grid.set(`__unassigned__-${toLocalDateKey(day)}`, []);
+  }
+
   for (const shift of shifts) {
     const shiftStart = new Date(shift.startTime);
     const dateKey = toLocalDateKey(shiftStart);
     if (!dayKeys.has(dateKey)) continue;
 
-    for (const a of shift.assignments ?? []) {
-      const userId = a.userId ?? "unassigned";
-      if (userId === "unassigned") continue;
-      const key = `${userId}-${dateKey}`;
+    const validAssignments = (shift.assignments ?? []).filter((a) => a.userId);
+
+    if (validAssignments.length === 0) {
+      // Shift without assignments → put in "unassigned" row
+      const key = `__unassigned__-${dateKey}`;
       if (!grid.has(key)) grid.set(key, []);
-      grid.get(key)!.push({ assignment: a, shift });
+      const fakeAssignment: ShiftAssignment = {
+        id: `unassigned-${shift.id}`,
+        shiftId: shift.id,
+        userId: null,
+        isUpForGrabs: false,
+        user: null,
+        shift,
+      };
+      grid.get(key)!.push({ assignment: fakeAssignment, shift });
+    } else {
+      for (const a of validAssignments) {
+        const key = `${a.userId}-${dateKey}`;
+        if (!grid.has(key)) grid.set(key, []);
+        grid.get(key)!.push({ assignment: a, shift });
+      }
     }
   }
 
@@ -391,6 +411,7 @@ export function ScheduleGrid({
                         </div>
                       </div>
                     </td>
+
                     {weekDays.map((day) => {
                       const dateKey = toLocalDateKey(day);
                       const key = `${member.id}-${dateKey}`;
@@ -567,6 +588,112 @@ export function ScheduleGrid({
                   </tr>
                 );
               })}
+              {/* Unassigned shifts row */}
+              {(() => {
+                const hasUnassigned = weekDays.some((day) => {
+                  const key = `__unassigned__-${toLocalDateKey(day)}`;
+                  return (grid.get(key) ?? []).length > 0;
+                });
+                if (!hasUnassigned || !isAdmin) return null;
+                return (
+                  <tr className="border-b border-brand-warm/20 bg-amber-50/30">
+                    <td className="p-2.5 border-r border-brand-warm/20 sticky left-0 bg-amber-50/50 z-[1]">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center text-xs font-bold text-amber-600 flex-shrink-0">
+                          ?
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium text-amber-700 truncate max-w-[100px]">
+                            Nieprzypisane
+                          </p>
+                          <p className="text-[10px] text-amber-500/60">
+                            Wymagają przypisania
+                          </p>
+                        </div>
+                      </div>
+                    </td>
+                    {weekDays.map((day) => {
+                      const dateKey = toLocalDateKey(day);
+                      const key = `__unassigned__-${dateKey}`;
+                      const slots = grid.get(key) ?? [];
+                      const todayCol = isToday(day);
+
+                      return (
+                        <td
+                          key={key}
+                          className={`p-1 border-l border-brand-warm/20 align-top min-w-[120px] ${
+                            todayCol ? "bg-brand-muted/20" : ""
+                          }`}
+                        >
+                          <div className="space-y-1 min-h-[44px] flex flex-col justify-center">
+                            {slots.map(({ shift }) => {
+                              const startTime = parseShiftTime(shift.startTime);
+                              const endTime = parseShiftTime(shift.endTime);
+                              const duration = getShiftDuration(shift.startTime, shift.endTime);
+                              const isDraft = shift.status === "DRAFT";
+
+                              return (
+                                <div
+                                  key={shift.id}
+                                  className={`rounded-lg p-2 text-xs relative group/shift border border-dashed border-amber-300/70 bg-amber-50/60 ${
+                                    onShiftClick ? "cursor-pointer hover:shadow-md hover:-translate-y-px" : ""
+                                  }`}
+                                  title="Kliknij, aby edytować i przypisać pracownika"
+                                  onClick={(e) => {
+                                    if (onShiftClick) {
+                                      e.stopPropagation();
+                                      onShiftClick(shift);
+                                    }
+                                  }}
+                                >
+                                  <div className="absolute left-0 top-1.5 bottom-1.5 w-[3px] rounded-full bg-amber-400" />
+                                  <div className="pl-2">
+                                    <div className="flex items-start justify-between gap-1">
+                                      <span className="font-semibold text-brand-dark leading-tight">
+                                        {shift.roleName}
+                                      </span>
+                                      <div className="flex items-center gap-0.5 flex-shrink-0">
+                                        {isDraft && (
+                                          <span className="text-[9px] font-semibold text-amber-600 bg-amber-100 px-1.5 py-0 rounded">
+                                            SZKIC
+                                          </span>
+                                        )}
+                                        <button
+                                          className="opacity-0 group-hover/shift:opacity-100 transition-opacity p-0.5 rounded hover:bg-red-50 text-brand-dark/20 hover:text-red-500"
+                                          title="Usuń zmianę"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            if (confirm("Czy na pewno chcesz usunąć tę zmianę?")) {
+                                              deleteMutation.mutate(shift.id);
+                                            }
+                                          }}
+                                        >
+                                          <Trash2 className="h-3 w-3" />
+                                        </button>
+                                        {onShiftClick && (
+                                          <Pencil className="h-3 w-3 text-brand-dark/15 opacity-0 group-hover/shift:opacity-100 transition-opacity" />
+                                        )}
+                                      </div>
+                                    </div>
+                                    <div className="flex items-center gap-1.5 mt-0.5">
+                                      <span className="text-brand-dark/50 text-[11px]">
+                                        {startTime}–{endTime}
+                                      </span>
+                                      <span className="text-[10px] font-medium text-brand-dark/30 bg-brand-dark/5 px-1 rounded">
+                                        {duration}
+                                      </span>
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </td>
+                      );
+                    })}
+                  </tr>
+                );
+              })()}
             </tbody>
           </table>
         )}
