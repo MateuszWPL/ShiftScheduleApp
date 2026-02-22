@@ -635,6 +635,51 @@ export async function publishShifts(data: PublishShiftsInput): Promise<PublishSh
   return res.json();
 }
 
+// --- Copy week ---
+export interface CopyWeekInput {
+  sourceWeekStart: string;
+  targetWeekStart: string;
+  structureOnly?: boolean;
+}
+
+export interface CopyWeekPreviewItem {
+  roleName: string;
+  startTime: string;
+  endTime: string;
+  newStartTime: string;
+  newEndTime: string;
+  assignees: { userId: string; name: string }[];
+}
+
+export interface CopyWeekResult {
+  copied: number;
+  structureOnly: boolean;
+}
+
+export async function previewCopyWeek(data: CopyWeekInput): Promise<CopyWeekPreviewItem[]> {
+  const res = await authenticatedFetch(`${API_URL}/shifts/copy-week/preview`, {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.message || "Błąd podglądu kopiowania");
+  }
+  return res.json();
+}
+
+export async function copyWeek(data: CopyWeekInput): Promise<CopyWeekResult> {
+  const res = await authenticatedFetch(`${API_URL}/shifts/copy-week`, {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.message || "Błąd kopiowania grafiku");
+  }
+  return res.json();
+}
+
 // --- Validate assignment ---
 export interface ValidationResult {
   valid: boolean;

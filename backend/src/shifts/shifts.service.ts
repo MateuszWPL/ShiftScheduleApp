@@ -622,6 +622,137 @@ export class ShiftsService {
     };
   }
 
+  // ── Copy week ──────────────────────────────────────────────
+
+  /** Preview what would be copied from sourceWeek to targetWeek */
+  async previewCopyWeek(
+    requesterId: string,
+    sourceWeekStart: string,
+    targetWeekStart: string,
+    structureOnly: boolean,
+  ) {
+    const membership = await this.requireManager(requesterId);
+    const sourceShifts = await this.getWeekShifts(membership.teamId, sourceWeekStart);
+
+    return sourceShifts.map((shift) => ({
+      roleName: shift.roleName,
+      startTime: shift.startTime.toISOString(),
+      endTime: shift.endTime.toISOString(),
+      assignees: structureOnly
+        ? []
+        : shift.assignments
+            .filter((a) => a.userId)
+            .map((a) => ({
+              userId: a.userId,
+              name: a.user?.nickname || a.user?.name || '?',
+            })),
+      newStartTime: this.shiftDateToTargetWeek(shift.startTime, sourceWeekStart, targetWeekStart).toISOString(),
+      newEndTime: this.shiftDateToTargetWeek(shift.endTime, sourceWeekStart, targetWeekStart).toISOString(),
+    }));
+  }
+
+  /** Copy all shifts from source week to target week as DRAFTs */
+  async copyWeek(
+    requesterId: string,
+    sourceWeekStart: string,
+    targetWeekStart: string,
+    structureOnly: boolean,
+  ) {
+    const membership = await this.requireManager(requesterId);
+
+    // Verify target week is empty (prevent accidental duplicates)
+    const targetShifts = await this.getWeekShifts(membership.teamId, targetWeekStart);
+    if (targetShifts.length > 0) {
+      throw new BadRequestException(
+        `Docelowy tydzień ma już ${targetShifts.length} zmian. Usuń je najpierw lub wybierz pusty tydzień.`,
+      );
+    }
+
+    const sourceShifts = await this.getWeekShifts(membership.teamId, sourceWeekStart);
+
+    if (sourceShifts.length === 0) {
+      throw new BadRequestException('Brak zmian w wybranym tygodniu do skopiowania.');
+    }
+
+    let copiedCount = 0;
+
+    for (const shift of sourceShifts) {
+      const newStart = this.shiftDateToTargetWeek(shift.startTime, sourceWeekStart, targetWeekStart);
+      const newEnd = this.shiftDateToTargetWeek(shift.endTime, sourceWeekStart, targetWeekStart);
+
+      const newShift = await this.prisma.shift.create({
+        data: {
+          teamId: membership.teamId,
+          startTime: newStart,
+          endTime: newEnd,
+          roleName: shift.roleName,
+          status: ShiftStatus.DRAFT,
+        },
+      });
+
+      if (!structureOnly) {
+        for (const assignment of shift.assignments) {
+          await this.prisma.shiftAssignment.create({
+            data: {
+              shiftId: newShift.id,
+              userId: assignment.userId,
+              isUpForGrabs: false,
+            },
+          });
+        }
+      }
+
+      copiedCount++;
+    }
+
+    this.logger.log(
+      `Copied ${copiedCount} shifts from ${sourceWeekStart} to ${targetWeekStart} ` +
+      `(team=${membership.teamId}, structureOnly=${structureOnly})`,
+    );
+
+    return { copied: copiedCount, structureOnly };
+  }
+
+  private async getWeekShifts(teamId: string, weekStart: string) {
+    const from = new Date(weekStart);
+    const to = new Date(weekStart);
+    to.setDate(to.getDate() + 7);
+
+    return this.prisma.shift.findMany({
+      where: {
+        teamId,
+        startTime: { gte: from, lt: to },
+      },
+      include: {
+        assignments: {
+          include: { user: { select: { id: true, name: true, nickname: true } } },
+        },
+      },
+      orderBy: { startTime: 'asc' },
+    });
+  }
+
+  /** Translate a shift's datetime from source week to the same day-of-week in target week */
+  private shiftDateToTargetWeek(dt: Date, sourceWeekStart: string, targetWeekStart: string): Date {
+    const source = new Date(sourceWeekStart);
+    const target = new Date(targetWeekStart);
+    const diffMs = dt.getTime() - source.getTime();
+    return new Date(target.getTime() + diffMs);
+  }
+
+  private async requireManager(userId: string) {
+    const membership = await this.prisma.teamMembership.findFirst({
+      where: { userId, status: MembershipStatus.ACTIVE },
+    });
+    if (!membership) {
+      throw new BadRequestException('Brak aktywnego członkostwa.');
+    }
+    if (membership.role !== Role.OWNER && membership.role !== Role.MANAGER) {
+      throw new ForbiddenException('Tylko Owner/Manager może wykonać tę operację.');
+    }
+    return membership;
+  }
+
   /** Send 1 batch email per employee listing their published shifts */
   private async sendPublishEmails(teamId: string, shiftIds: string[]) {
     try {

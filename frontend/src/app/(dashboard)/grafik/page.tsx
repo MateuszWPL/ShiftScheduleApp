@@ -17,6 +17,7 @@ import {
 import { useDashboardUser } from "@/components/providers/DashboardUserContext";
 import { ScheduleGrid, type AvailabilityDropData } from "@/components/dashboard/ScheduleGrid";
 import { CreateShiftDialog } from "@/components/dashboard/CreateShiftDialog";
+import { CopyWeekDialog } from "@/components/dashboard/CopyWeekDialog";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import {
@@ -29,6 +30,7 @@ import {
   Plus,
   Info,
   CalendarDays,
+  Copy,
 } from "lucide-react";
 
 function getWeekMonday(d: Date): Date {
@@ -322,6 +324,7 @@ export default function GrafikPage() {
   const queryClient = useQueryClient();
   const [weekStart, setWeekStart] = useState(() => new Date());
   const [isShiftDialogOpen, setIsShiftDialogOpen] = useState(false);
+  const [isCopyDialogOpen, setIsCopyDialogOpen] = useState(false);
   const [prefilledDate, setPrefilledDate] = useState<string | undefined>();
   const [prefilledEmployeeId, setPrefilledEmployeeId] = useState<string | undefined>();
   const [editShift, setEditShift] = useState<Shift | null>(null);
@@ -448,6 +451,16 @@ export default function GrafikPage() {
             </Button>
           )}
           {isAdmin && (
+            <Button
+              variant="outline"
+              onClick={() => setIsCopyDialogOpen(true)}
+              className="gap-1.5 border-brand-warm/60 text-brand-dark/70 hover:bg-brand-warm-light text-sm"
+            >
+              <Copy className="h-4 w-4" />
+              <span className="hidden sm:inline">Kopiuj tydzień</span>
+            </Button>
+          )}
+          {isAdmin && (
             <Button onClick={handleAddShiftButton} className="gap-1.5 bg-brand hover:bg-brand-light text-white text-sm">
               <Plus className="h-4 w-4" />
               Dodaj zmianę
@@ -496,6 +509,12 @@ export default function GrafikPage() {
         prefilledDate={prefilledDate}
         prefilledEmployeeId={prefilledEmployeeId}
         editShift={editShift}
+      />
+
+      <CopyWeekDialog
+        isOpen={isCopyDialogOpen}
+        onClose={() => setIsCopyDialogOpen(false)}
+        currentWeekStart={weekStart}
       />
     </div>
   );

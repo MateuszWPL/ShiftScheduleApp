@@ -76,9 +76,9 @@
 > Priorytet: SREDNI | Cel: Pelna aplikacja produkcyjna
 
 ### 2.1 Kopiowanie grafiku
-- [ ] Przycisk "Kopiuj tydzien" — kopiuje caly grafik z wybranego tygodnia na nastepny
-- [ ] Opcja kopiowania tylko struktury (bez przypisanych pracownikow) lub z pracownikami
-- [ ] Podglad przed zatwierdzeniem kopii
+- [x] Przycisk "Kopiuj tydzien" — kopiuje caly grafik z wybranego tygodnia na nastepny
+- [x] Opcja kopiowania tylko struktury (bez przypisanych pracownikow) lub z pracownikami
+- [x] Podglad przed zatwierdzeniem kopii
 
 ### 2.2 Podsumowanie tygodnia / miesiaca
 - [ ] Widok podsumowania: ile godzin przepracował każdy pracownik

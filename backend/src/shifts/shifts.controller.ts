@@ -14,6 +14,7 @@ import { UpdateProfileDto } from './dto/update-profile.dto';
 import { UpdateEmployeeDto } from './dto/update-employee.dto';
 import { SyncUserDto } from './dto/sync-user.dto';
 import { PublishShiftsDto } from './dto/publish-shifts.dto';
+import { CopyWeekDto } from './dto/copy-week.dto';
 import {
   ShiftIdParamDto,
   TargetIdParamDto,
@@ -88,6 +89,28 @@ export class ShiftsController {
       from: body.from,
       to: body.to,
     });
+  }
+
+  /** Preview copy week — returns shifts that would be created. */
+  @Post('copy-week/preview')
+  previewCopyWeek(@Body() body: CopyWeekDto, @CurrentUser() user: User) {
+    return this.shiftsService.previewCopyWeek(
+      user.userId,
+      body.sourceWeekStart,
+      body.targetWeekStart,
+      body.structureOnly ?? false,
+    );
+  }
+
+  /** Copy entire week's schedule to target week as drafts. */
+  @Post('copy-week')
+  copyWeek(@Body() body: CopyWeekDto, @CurrentUser() user: User) {
+    return this.shiftsService.copyWeek(
+      user.userId,
+      body.sourceWeekStart,
+      body.targetWeekStart,
+      body.structureOnly ?? false,
+    );
   }
 
   /** Walidacja przypisania pracownika (dostępność, konflikty, doba pracownicza). */
