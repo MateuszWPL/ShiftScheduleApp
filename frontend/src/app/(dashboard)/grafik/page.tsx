@@ -18,8 +18,6 @@ import { useDashboardUser } from "@/components/providers/DashboardUserContext";
 import { ScheduleGrid, type AvailabilityDropData } from "@/components/dashboard/ScheduleGrid";
 import { CreateShiftDialog } from "@/components/dashboard/CreateShiftDialog";
 import { CopyWeekDialog } from "@/components/dashboard/CopyWeekDialog";
-import { SummaryPanel } from "@/components/dashboard/SummaryPanel";
-import { MonthlyCalendarView } from "@/components/dashboard/MonthlyCalendarView";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import {
@@ -30,11 +28,8 @@ import {
   GripVertical,
   ShoppingBag,
   Plus,
-  Info,
   CalendarDays,
   Copy,
-  CalendarRange,
-  LayoutGrid,
 } from "lucide-react";
 
 function getWeekMonday(d: Date): Date {
@@ -327,8 +322,6 @@ export default function GrafikPage() {
   const { dbUser } = useDashboardUser();
   const queryClient = useQueryClient();
   const [weekStart, setWeekStart] = useState(() => new Date());
-  const [monthDate, setMonthDate] = useState(() => new Date());
-  const [viewMode, setViewMode] = useState<"week" | "month">("week");
   const [isShiftDialogOpen, setIsShiftDialogOpen] = useState(false);
   const [isCopyDialogOpen, setIsCopyDialogOpen] = useState(false);
   const [prefilledDate, setPrefilledDate] = useState<string | undefined>();
@@ -340,15 +333,6 @@ export default function GrafikPage() {
   const toDate = new Date(monday);
   toDate.setDate(toDate.getDate() + 7);
   const toStr = toDate.toISOString();
-
-  const monthStart = new Date(monthDate.getFullYear(), monthDate.getMonth(), 1);
-  const monthEnd = new Date(monthDate.getFullYear(), monthDate.getMonth() + 1, 0, 23, 59, 59);
-  const summaryFrom = viewMode === "week" ? from : monthStart.toISOString();
-  const summaryTo = viewMode === "week" ? toStr : monthEnd.toISOString();
-  const summaryLabel =
-    viewMode === "week"
-      ? `${monday.toLocaleDateString("pl-PL", { day: "numeric", month: "short" })} – ${toDate.toLocaleDateString("pl-PL", { day: "numeric", month: "short", year: "numeric" })}`
-      : monthDate.toLocaleDateString("pl-PL", { month: "long", year: "numeric" });
 
   const claimMutation = useMutation({
     mutationFn: claimAssignment,
@@ -454,7 +438,7 @@ export default function GrafikPage() {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          {isAdmin && viewMode === "week" && (
+          {isAdmin && (
             <>
               {draftCount > 0 && (
                 <Button
@@ -484,32 +468,8 @@ export default function GrafikPage() {
         </div>
       </div>
 
-      {/* View toggle: Week / Month */}
-      <div className="flex items-center gap-2">
-        <div className="inline-flex rounded-lg border border-brand-warm/40 bg-white p-0.5">
-          <button
-            onClick={() => setViewMode("week")}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
-              viewMode === "week" ? "bg-brand text-white" : "text-brand-dark/60 hover:text-brand-dark"
-            }`}
-          >
-            <LayoutGrid className="h-4 w-4" />
-            Tydzień
-          </button>
-          <button
-            onClick={() => setViewMode("month")}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
-              viewMode === "month" ? "bg-brand text-white" : "text-brand-dark/60 hover:text-brand-dark"
-            }`}
-          >
-            <CalendarRange className="h-4 w-4" />
-            Miesiąc
-          </button>
-        </div>
-      </div>
-
-      {/* Publish warning banner - only in week view */}
-      {viewMode === "week" && isAdmin && draftCount > 0 && (
+      {/* Publish warning banner */}
+      {isAdmin && draftCount > 0 && (
         <div className="flex items-start gap-3 p-4 rounded-xl bg-amber-50/80 border border-amber-200/60 text-sm">
           <AlertTriangle className="h-5 w-5 text-amber-500 flex-shrink-0 mt-0.5" />
           <div>
@@ -523,9 +483,7 @@ export default function GrafikPage() {
         </div>
       )}
 
-      {viewMode === "week" && (
-        <>
-          <ScheduleGrid
+      <ScheduleGrid
             weekStart={weekStart}
             onWeekChange={setWeekStart}
             currentUserId={dbUser?.id ?? ""}
@@ -534,49 +492,8 @@ export default function GrafikPage() {
             onShiftClick={isAdmin ? handleShiftClick : undefined}
             onDropAvailability={isAdmin ? handleDropAvailability : undefined}
           />
-          {isAdmin && <AvailabilityPanel weekStart={weekStart} />}
-        </>
-      )}
 
-      {viewMode === "month" && (
-        <div className="space-y-4">
-          <div className="flex items-center justify-between gap-4">
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="icon"
-                className="border-brand-warm/60 hover:bg-brand-warm-light"
-                onClick={() => setMonthDate((d) => new Date(d.getFullYear(), d.getMonth() - 1))}
-              >
-                ‹
-              </Button>
-              <span className="font-semibold text-brand-dark min-w-[140px] text-center">
-                {monthDate.toLocaleDateString("pl-PL", { month: "long", year: "numeric" })}
-              </span>
-              <Button
-                variant="outline"
-                size="icon"
-                className="border-brand-warm/60 hover:bg-brand-warm-light"
-                onClick={() => setMonthDate((d) => new Date(d.getFullYear(), d.getMonth() + 1))}
-              >
-                ›
-              </Button>
-            </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-xs text-brand"
-              onClick={() => setMonthDate(new Date())}
-            >
-              Bieżący miesiąc
-            </Button>
-          </div>
-          <MonthlyCalendarView monthDate={monthDate} />
-        </div>
-      )}
-
-      {/* Summary panel - always visible */}
-      <SummaryPanel from={summaryFrom} to={summaryTo} periodLabel={summaryLabel} />
+      {isAdmin && <AvailabilityPanel weekStart={weekStart} />}
 
       <GieldaSection
         currentUserId={dbUser?.id ?? ""}

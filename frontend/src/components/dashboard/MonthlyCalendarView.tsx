@@ -70,60 +70,55 @@ export function MonthlyCalendarView({ monthDate, onDayClick }: MonthlyCalendarVi
 
   if (isLoading) {
     return (
-      <div className="bg-white border border-brand-warm/40 rounded-xl p-6 shadow-sm">
-        <div className="flex items-center justify-center py-12 text-brand-dark/40">
-          <div className="w-6 h-6 border-2 border-brand-blue/30 border-t-brand-blue rounded-full animate-spin" />
+      <div className="bg-white border border-brand-warm/40 rounded-xl p-4 shadow-sm">
+        <div className="flex items-center justify-center py-8 text-brand-dark/40">
+          <div className="w-5 h-5 border-2 border-brand-blue/30 border-t-brand-blue rounded-full animate-spin" />
         </div>
       </div>
     );
   }
 
-  return (
-    <div className="bg-white border border-brand-warm/40 rounded-xl p-4 sm:p-6 shadow-sm overflow-x-auto">
-      <div className="min-w-[320px]">
-        <div className="grid grid-cols-7 gap-px mb-2">
-          {WEEKDAYS.map((wd) => (
-            <div
-              key={wd}
-              className="text-center text-[10px] sm:text-xs font-semibold text-brand-dark/50 uppercase py-1"
-            >
-              {wd}
-            </div>
-          ))}
-        </div>
-        <div className="grid grid-cols-7 gap-px">
-          {calendarDays.map((d, i) => {
-            if (!d) {
-              return <div key={`empty-${i}`} className="aspect-square min-h-[36px] sm:min-h-[44px] bg-transparent" />;
-            }
-            const key = toLocalDateKey(d);
-            const dayShifts = shiftsByDate.get(key) ?? [];
-            const hasDraft = dayShifts.some((s) => s.status === "DRAFT");
-            const publishedCount = dayShifts.filter((s) => s.status === "PUBLISHED" || s.status === "COMPLETED").length;
+  const CELL_SIZE = "w-8 h-8"; // Compact 32px cells
 
-            return (
-              <div
-                key={key}
-                className={`aspect-square min-h-[36px] sm:min-h-[44px] p-1 rounded-lg border border-brand-warm/20 bg-brand-warm-light/20 flex flex-col items-center justify-center cursor-default ${
-                  onDayClick ? "hover:bg-brand-muted/30 cursor-pointer" : ""
-                }`}
-                onClick={() => onDayClick?.(key)}
-              >
-                <span className="text-xs sm:text-sm font-medium text-brand-dark">{d.getDate()}</span>
-                {(dayShifts.length > 0) && (
-                  <div className="flex items-center gap-0.5 mt-0.5">
-                    {hasDraft && (
-                      <span className="w-1.5 h-1.5 rounded-full bg-amber-400" title="Szkice" />
-                    )}
-                    {publishedCount > 0 && (
-                      <span className="text-[9px] text-brand-dark/50">{dayShifts.length} zm.</span>
-                    )}
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
+  return (
+    <div className="bg-white border border-brand-warm/40 rounded-xl p-4 shadow-sm max-w-md">
+      <div className="grid grid-cols-7 gap-0.5">
+        {WEEKDAYS.map((wd) => (
+          <div
+            key={wd}
+            className={`${CELL_SIZE} flex items-center justify-center text-[10px] font-semibold text-brand-dark/40`}
+          >
+            {wd}
+          </div>
+        ))}
+        {calendarDays.map((d, i) => {
+          if (!d) {
+            return <div key={`empty-${i}`} className={CELL_SIZE} />;
+          }
+          const key = toLocalDateKey(d);
+          const dayShifts = shiftsByDate.get(key) ?? [];
+          const hasDraft = dayShifts.some((s) => s.status === "DRAFT");
+          const count = dayShifts.length;
+
+          return (
+            <div
+              key={key}
+              className={`${CELL_SIZE} flex flex-col items-center justify-center rounded text-[11px] cursor-default ${
+                count > 0 ? "bg-brand-muted/40 font-medium" : "text-brand-dark/60"
+              } ${onDayClick ? "hover:bg-brand-muted/60 cursor-pointer" : ""}`}
+              onClick={() => onDayClick?.(key)}
+              title={count > 0 ? `${count} zmian${count === 1 ? "a" : count < 5 ? "y" : ""}` : undefined}
+            >
+              <span className="leading-none">{d.getDate()}</span>
+              {count > 0 && (
+                <span className="text-[9px] leading-none mt-0.5 flex items-center gap-0.5">
+                  {hasDraft && <span className="w-1 h-1 rounded-full bg-amber-500" />}
+                  {count}
+                </span>
+              )}
+            </div>
+          );
+        })}
       </div>
     </div>
   );

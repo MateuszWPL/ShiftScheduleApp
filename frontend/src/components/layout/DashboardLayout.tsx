@@ -12,6 +12,7 @@ import {
   Megaphone,
   BarChart3,
   FileDown,
+  PieChart,
   Copy,
   Crown,
   Settings,
@@ -66,6 +67,7 @@ export function DashboardLayout({ children, userRole, userName, userAvatar, onLo
   const mainNav: NavItem[] = [
     { href: "/", label: "Pulpit", icon: <LayoutDashboard className="h-4 w-4" /> },
     { href: "/grafik", label: "Grafik", icon: <Calendar className="h-4 w-4" /> },
+    { href: "/podsumowanie", label: "Podsumowanie", icon: <BarChart3 className="h-4 w-4" /> },
     { href: "/dostepnosc", label: "Dostępność", icon: <CalendarCheck className="h-4 w-4" />, show: userRole === "EMPLOYEE" },
   ];
 
@@ -75,7 +77,7 @@ export function DashboardLayout({ children, userRole, userName, userAvatar, onLo
   ];
 
   const premiumNav: NavItem[] = [
-    { href: "/reports", label: "Raporty", icon: <BarChart3 className="h-4 w-4" />, premium: true },
+    { href: "/reports", label: "Raporty", icon: <PieChart className="h-4 w-4" />, premium: true },
     { href: "/export", label: "Eksport", icon: <FileDown className="h-4 w-4" />, premium: true },
     { href: "/templates", label: "Szablony", icon: <Copy className="h-4 w-4" />, premium: true, show: isAdmin },
   ];
@@ -175,6 +177,7 @@ export function DashboardLayout({ children, userRole, userName, userAvatar, onLo
           {[
             { href: "/", icon: <LayoutDashboard className="h-5 w-5" />, label: "Pulpit" },
             { href: "/grafik", icon: <Calendar className="h-5 w-5" />, label: "Grafik" },
+            { href: "/podsumowanie", icon: <BarChart3 className="h-5 w-5" />, label: "Podsumowanie" },
             ...(userRole === "EMPLOYEE" ? [{ href: "/dostepnosc", icon: <CalendarCheck className="h-5 w-5" />, label: "Dostępność" }] : []),
             { href: "/team", icon: <Users className="h-5 w-5" />, label: "Zespół" },
             { href: "/profile", icon: <User className="h-5 w-5" />, label: "Profil" },
