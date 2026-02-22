@@ -7,7 +7,12 @@ import {
   updateTeamSettings,
   updateTeamName,
   regenerateInviteCode,
+  getPositions,
+  createPosition,
+  updatePosition,
+  deletePosition,
   type TeamSettingsResponse,
+  type Position,
 } from "@/lib/api";
 import { useDashboardUser } from "@/components/providers/DashboardUserContext";
 import { useRouter } from "next/navigation";
@@ -26,15 +31,27 @@ import {
   Save,
   Info,
   Shield,
+  Briefcase,
+  Plus,
+  Pencil,
+  Trash2,
+  X,
 } from "lucide-react";
 
-type TabId = "company" | "invite" | "notifications" | "schedule";
+type TabId = "company" | "positions" | "invite" | "notifications" | "schedule";
 
 const TABS: { id: TabId; label: string; icon: React.ReactNode }[] = [
   { id: "company", label: "Firma", icon: <Building2 className="h-4 w-4" /> },
+  { id: "positions", label: "Stanowiska", icon: <Briefcase className="h-4 w-4" /> },
   { id: "invite", label: "Zaproszenia", icon: <Key className="h-4 w-4" /> },
   { id: "schedule", label: "Grafik", icon: <Clock className="h-4 w-4" /> },
   { id: "notifications", label: "Powiadomienia", icon: <Bell className="h-4 w-4" /> },
+];
+
+const POSITION_COLORS = [
+  "#8FACDB", "#FF8400", "#6B8E23", "#E74C3C", "#9B59B6",
+  "#1ABC9C", "#F39C12", "#3498DB", "#E67E22", "#2ECC71",
+  "#E91E63", "#00BCD4", "#795548", "#607D8B",
 ];
 
 function ToggleSwitch({
@@ -92,6 +109,13 @@ export default function SettingsPage() {
   const [notifyMarket, setNotifyMarket] = useState(true);
   const [notifyAnnounce, setNotifyAnnounce] = useState(true);
 
+  // Position management state
+  const [newPosName, setNewPosName] = useState("");
+  const [newPosColor, setNewPosColor] = useState(POSITION_COLORS[0]);
+  const [editingPosId, setEditingPosId] = useState<string | null>(null);
+  const [editPosName, setEditPosName] = useState("");
+  const [editPosColor, setEditPosColor] = useState("");
+
   const isAdmin = dbUser?.role === "OWNER" || dbUser?.role === "MANAGER";
   const isOwner = dbUser?.role === "OWNER";
 
@@ -104,6 +128,12 @@ export default function SettingsPage() {
   const { data, isLoading } = useQuery({
     queryKey: ["team-settings"],
     queryFn: getTeamSettings,
+    enabled: isAdmin,
+  });
+
+  const { data: positions = [], isLoading: positionsLoading } = useQuery({
+    queryKey: ["positions"],
+    queryFn: getPositions,
     enabled: isAdmin,
   });
 
@@ -149,6 +179,54 @@ export default function SettingsPage() {
     },
     onError: (e: Error) => toast.error(e.message),
   });
+
+  const createPosMut = useMutation({
+    mutationFn: createPosition,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["positions"] });
+      setNewPosName("");
+      setNewPosColor(POSITION_COLORS[0]);
+      toast.success("Stanowisko dodane");
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const updatePosMut = useMutation({
+    mutationFn: (args: { id: string; data: { name?: string; color?: string } }) =>
+      updatePosition(args.id, args.data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["positions"] });
+      setEditingPosId(null);
+      toast.success("Stanowisko zaktualizowane");
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const deletePosMut = useMutation({
+    mutationFn: deletePosition,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["positions"] });
+      toast.success("Stanowisko usunięte");
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const handleCreatePosition = () => {
+    const name = newPosName.trim();
+    if (!name) return;
+    createPosMut.mutate({ name, color: newPosColor });
+  };
+
+  const handleStartEditPosition = (pos: Position) => {
+    setEditingPosId(pos.id);
+    setEditPosName(pos.name);
+    setEditPosColor(pos.color);
+  };
+
+  const handleSaveEditPosition = () => {
+    if (!editingPosId || !editPosName.trim()) return;
+    updatePosMut.mutate({ id: editingPosId, data: { name: editPosName.trim(), color: editPosColor } });
+  };
 
   const handleCopyCode = () => {
     if (data?.team.inviteCode) {
@@ -284,6 +362,140 @@ export default function SettingsPage() {
                 <Save className="h-3.5 w-3.5" />
                 Zapisz
               </Button>
+            </div>
+          </div>
+        )}
+
+        {/* POSITIONS TAB */}
+        {activeTab === "positions" && (
+          <div className="p-6 space-y-5">
+            <div>
+              <h2 className="font-semibold text-brand-dark text-sm mb-1">Stanowiska</h2>
+              <p className="text-xs text-brand-dark/40 mb-5">
+                Zdefiniuj stanowiska w zespole. Pracownicy mogą mieć przypisane jedno lub więcej stanowisk — 
+                ułatwia to tworzenie grafiku i automatyczne filtrowanie.
+              </p>
+
+              {/* Create new position */}
+              <div className="flex items-end gap-2 mb-5">
+                <div className="flex-1">
+                  <label className="text-xs font-medium text-brand-dark/50 mb-1.5 block">Nowe stanowisko</label>
+                  <Input
+                    value={newPosName}
+                    onChange={(e) => setNewPosName(e.target.value)}
+                    placeholder="np. Kelner, Barista, Kucharz"
+                    maxLength={50}
+                    className="border-brand-warm/60 focus:border-brand focus:ring-brand/20"
+                    onKeyDown={(e) => e.key === "Enter" && handleCreatePosition()}
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-brand-dark/50 mb-1.5 block">Kolor</label>
+                  <div className="flex gap-1">
+                    {POSITION_COLORS.slice(0, 7).map((c) => (
+                      <button
+                        key={c}
+                        onClick={() => setNewPosColor(c)}
+                        className={`w-6 h-6 rounded-full border-2 transition-transform ${
+                          newPosColor === c ? "border-brand-dark scale-110" : "border-transparent hover:scale-105"
+                        }`}
+                        style={{ backgroundColor: c }}
+                      />
+                    ))}
+                  </div>
+                </div>
+                <Button
+                  onClick={handleCreatePosition}
+                  disabled={!newPosName.trim() || createPosMut.isPending}
+                  className="gap-1 bg-brand hover:bg-brand-light text-white text-sm"
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                  Dodaj
+                </Button>
+              </div>
+
+              {/* Positions list */}
+              {positionsLoading ? (
+                <div className="text-sm text-brand-dark/30 text-center py-8">Ładowanie...</div>
+              ) : positions.length === 0 ? (
+                <div className="text-center py-10 text-brand-dark/30">
+                  <Briefcase className="h-8 w-8 mx-auto mb-2 opacity-30" />
+                  <p className="text-sm">Brak zdefiniowanych stanowisk</p>
+                  <p className="text-xs mt-1">Dodaj pierwsze stanowisko powyżej</p>
+                </div>
+              ) : (
+                <div className="space-y-1.5">
+                  {positions.map((pos) => (
+                    <div
+                      key={pos.id}
+                      className="flex items-center gap-3 p-3 rounded-lg border border-brand-warm/30 bg-white hover:bg-slate-50/50 transition-colors group"
+                    >
+                      {editingPosId === pos.id ? (
+                        <>
+                          <div
+                            className="w-4 h-4 rounded-full flex-shrink-0 cursor-pointer"
+                            style={{ backgroundColor: editPosColor }}
+                            onClick={() => {
+                              const idx = POSITION_COLORS.indexOf(editPosColor);
+                              setEditPosColor(POSITION_COLORS[(idx + 1) % POSITION_COLORS.length]);
+                            }}
+                            title="Kliknij, aby zmienić kolor"
+                          />
+                          <Input
+                            value={editPosName}
+                            onChange={(e) => setEditPosName(e.target.value)}
+                            className="flex-1 h-8 text-sm border-brand-warm/60"
+                            onKeyDown={(e) => e.key === "Enter" && handleSaveEditPosition()}
+                            autoFocus
+                          />
+                          <button
+                            onClick={handleSaveEditPosition}
+                            disabled={updatePosMut.isPending}
+                            className="p-1.5 rounded hover:bg-green-50 text-green-600"
+                          >
+                            <Check className="h-3.5 w-3.5" />
+                          </button>
+                          <button
+                            onClick={() => setEditingPosId(null)}
+                            className="p-1.5 rounded hover:bg-slate-100 text-slate-400"
+                          >
+                            <X className="h-3.5 w-3.5" />
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <div
+                            className="w-4 h-4 rounded-full flex-shrink-0"
+                            style={{ backgroundColor: pos.color }}
+                          />
+                          <span className="flex-1 text-sm font-medium text-brand-dark">
+                            {pos.name}
+                          </span>
+                          <span className="text-[10px] text-brand-dark/25 mr-2">
+                            {pos._count?.employees ?? 0} prac. · {pos._count?.shifts ?? 0} zmian
+                          </span>
+                          <button
+                            onClick={() => handleStartEditPosition(pos)}
+                            className="p-1.5 rounded hover:bg-blue-50 text-brand-dark/20 hover:text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            <Pencil className="h-3.5 w-3.5" />
+                          </button>
+                          <button
+                            onClick={() => {
+                              if (confirm(`Usunąć stanowisko "${pos.name}"?`)) {
+                                deletePosMut.mutate(pos.id);
+                              }
+                            }}
+                            className="p-1.5 rounded hover:bg-red-50 text-brand-dark/20 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         )}

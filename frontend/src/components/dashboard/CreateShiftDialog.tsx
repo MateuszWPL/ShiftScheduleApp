@@ -9,10 +9,13 @@ import {
   addAssignment,
   updateShift,
   getTeamMembers,
+  getPositions,
   type Shift,
+  type Position,
+  type User,
 } from "@/lib/api";
 import { toast } from "sonner";
-import { X, Clock } from "lucide-react";
+import { X, Clock, Briefcase, AlertCircle } from "lucide-react";
 
 function generateTimeOptions(): { value: string; label: string; minutes: number }[] {
   const options: { value: string; label: string; minutes: number }[] = [];
@@ -31,11 +34,8 @@ const TIME_OPTIONS = generateTimeOptions();
 export interface ShiftDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  /** Pre-fill date (YYYY-MM-DD) */
   prefilledDate?: string;
-  /** Pre-fill employee ID */
   prefilledEmployeeId?: string;
-  /** Edit mode: existing shift data */
   editShift?: Shift | null;
 }
 
@@ -47,7 +47,8 @@ export function CreateShiftDialog({
   editShift,
 }: ShiftDialogProps) {
   const queryClient = useQueryClient();
-  const [roleName, setRoleName] = useState("");
+  const [positionId, setPositionId] = useState<string>("");
+  const [customRoleName, setCustomRoleName] = useState("");
   const [shiftDate, setShiftDate] = useState("");
   const [startTime, setStartTime] = useState("08:00");
   const [endTime, setEndTime] = useState("16:00");
@@ -62,17 +63,37 @@ export function CreateShiftDialog({
     enabled: isOpen,
   });
 
+  const { data: positions = [] } = useQuery({
+    queryKey: ["positions"],
+    queryFn: getPositions,
+    enabled: isOpen,
+  });
+
   const employees = teamMembers.filter(
     (m) => (m as { role?: string }).role === "EMPLOYEE"
   );
 
-  // Set initial values when dialog opens
+  const filteredEmployees = useMemo(() => {
+    if (!positionId) return employees;
+    return employees.filter((emp) =>
+      emp.positions?.some((p: Position) => p.id === positionId)
+    );
+  }, [employees, positionId]);
+
+  const selectedPosition = positions.find((p) => p.id === positionId);
+  const roleName = selectedPosition ? selectedPosition.name : customRoleName;
+
   useEffect(() => {
     if (!isOpen) return;
 
     if (editShift) {
-      setRoleName(editShift.roleName);
-      // Parse times from ISO without timezone conversion
+      if (editShift.positionId) {
+        setPositionId(editShift.positionId);
+        setCustomRoleName("");
+      } else {
+        setPositionId("");
+        setCustomRoleName(editShift.roleName);
+      }
       const startMatch = editShift.startTime.match(/(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2})/);
       const endMatch = editShift.endTime.match(/T(\d{2}:\d{2})/);
       if (startMatch) {
@@ -82,34 +103,43 @@ export function CreateShiftDialog({
       if (endMatch) {
         setEndTime(endMatch[1]);
       }
-      // Set assigned employee from first assignment
       const firstAssignment = editShift.assignments?.[0];
       setAssignToId(firstAssignment?.userId ?? "");
       setIsUpForGrabs(firstAssignment?.isUpForGrabs ?? false);
     } else {
-      setRoleName("");
+      setPositionId("");
+      setCustomRoleName("");
       setShiftDate(prefilledDate || new Date().toISOString().split("T")[0]);
       setStartTime("08:00");
       setEndTime("16:00");
       setAssignToId(prefilledEmployeeId || "");
       setIsUpForGrabs(false);
+
+      // Auto-select position based on prefilled employee
+      if (prefilledEmployeeId && positions.length > 0) {
+        const emp = employees.find((e) => e.id === prefilledEmployeeId);
+        if (emp?.positions?.length === 1) {
+          setPositionId(emp.positions[0].id);
+        }
+      }
     }
-  }, [isOpen, editShift, prefilledDate, prefilledEmployeeId]);
+  }, [isOpen, editShift, prefilledDate, prefilledEmployeeId, positions.length]);
 
   const createMutation = useMutation({
     mutationFn: async () => {
       if (!shiftDate || !startTime || !endTime)
         throw new Error("Uzupełnij datę i godziny");
 
-      // Send datetime strings directly without .toISOString() to avoid timezone shift
       const startISO = `${shiftDate}T${startTime}:00`;
       const endISO = `${shiftDate}T${endTime}:00`;
+      const realPositionId = positionId && positionId !== "__custom__" ? positionId : undefined;
 
       if (isEdit && editShift) {
         const updated = await updateShift(editShift.id, {
           startTime: startISO,
           endTime: endISO,
-          roleName,
+          positionId: realPositionId,
+          roleName: realPositionId ? undefined : customRoleName,
         });
         return updated;
       }
@@ -117,7 +147,8 @@ export function CreateShiftDialog({
       const shift = await createShift({
         startTime: startISO,
         endTime: endISO,
-        roleName,
+        positionId: realPositionId,
+        roleName: realPositionId ? undefined : customRoleName,
       });
       await addAssignment(shift.id, {
         userId: assignToId || undefined,
@@ -148,7 +179,6 @@ export function CreateShiftDialog({
 
   if (!isOpen) return null;
 
-  // Compute duration
   const startMinutes =
     TIME_OPTIONS.find((t) => t.value === startTime)?.minutes ?? 0;
   const endMinutes =
@@ -161,19 +191,24 @@ export function CreateShiftDialog({
       ? `${durationHours}h${durationMins > 0 ? ` ${durationMins}min` : ""}`
       : "";
 
+  const hasValidRole = (positionId && positionId !== "__custom__") || customRoleName.trim();
   const canSubmit =
-    roleName.trim() && shiftDate && startTime && endTime && endMinutes > startMinutes;
+    hasValidRole && shiftDate && startTime && endTime && endMinutes > startMinutes;
 
-  // Get selected employee name for header
   const selectedEmployee = employees.find((e) => e.id === assignToId);
   const selectedEmployeeName = selectedEmployee
     ? selectedEmployee.nickname || selectedEmployee.name
     : null;
 
-  // Filter end time options to only show times after start time
   const validEndTimes = TIME_OPTIONS.filter(
     (t) => t.minutes > startMinutes
   );
+
+  // Check if the assigned employee matches the selected position
+  const employeePositionMismatch =
+    assignToId &&
+    positionId &&
+    !filteredEmployees.find((e) => e.id === assignToId);
 
   return (
     <div
@@ -218,19 +253,65 @@ export function CreateShiftDialog({
             </p>
           )}
 
-          {/* Role name */}
+          {/* Position selector */}
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1.5">
-              Stanowisko / Rola <span className="text-red-500">*</span>
+              <Briefcase className="inline h-3.5 w-3.5 mr-1 text-slate-400" />
+              Stanowisko <span className="text-red-500">*</span>
             </label>
-            <input
-              type="text"
-              placeholder="np. Kelner, Barista, Kucharz"
-              className="w-full p-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
-              value={roleName}
-              onChange={(e) => setRoleName(e.target.value)}
-              autoFocus
-            />
+            {positions.length > 0 ? (
+              <>
+                <select
+                  className="w-full p-2.5 border border-slate-300 rounded-lg bg-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
+                  value={positionId}
+                  onChange={(e) => {
+                    setPositionId(e.target.value);
+                    if (e.target.value) setCustomRoleName("");
+                  }}
+                >
+                  <option value="">— Wybierz stanowisko —</option>
+                  {positions.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.name}
+                    </option>
+                  ))}
+                  <option value="__custom__">✏️ Wpisz ręcznie...</option>
+                </select>
+                {positionId === "__custom__" && (
+                  <input
+                    type="text"
+                    placeholder="Nazwa stanowiska"
+                    className="w-full mt-2 p-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
+                    value={customRoleName}
+                    onChange={(e) => {
+                      setCustomRoleName(e.target.value);
+                      setPositionId("__custom__");
+                    }}
+                    autoFocus
+                  />
+                )}
+                {selectedPosition && (
+                  <div className="flex items-center gap-2 mt-1.5">
+                    <div
+                      className="w-2.5 h-2.5 rounded-full"
+                      style={{ backgroundColor: selectedPosition.color }}
+                    />
+                    <span className="text-[11px] text-slate-400">
+                      {selectedPosition._count?.employees ?? 0} pracowników na tym stanowisku
+                    </span>
+                  </div>
+                )}
+              </>
+            ) : (
+              <input
+                type="text"
+                placeholder="np. Kelner, Barista, Kucharz"
+                className="w-full p-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
+                value={customRoleName}
+                onChange={(e) => setCustomRoleName(e.target.value)}
+                autoFocus
+              />
+            )}
           </div>
 
           {/* Date */}
@@ -263,7 +344,6 @@ export function CreateShiftDialog({
                 value={startTime}
                 onChange={(e) => {
                   setStartTime(e.target.value);
-                  // Auto-adjust end time if needed
                   const newStartMin =
                     TIME_OPTIONS.find((t) => t.value === e.target.value)
                       ?.minutes ?? 0;
@@ -301,6 +381,11 @@ export function CreateShiftDialog({
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1.5">
                 Przypisz do
+                {positionId && positionId !== "__custom__" && (
+                  <span className="ml-1 text-xs font-normal text-blue-500">
+                    (filtrowane wg stanowiska)
+                  </span>
+                )}
               </label>
               <select
                 className="w-full p-2.5 border border-slate-300 rounded-lg bg-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
@@ -308,12 +393,47 @@ export function CreateShiftDialog({
                 onChange={(e) => setAssignToId(e.target.value)}
               >
                 <option value="">— Wolna pozycja —</option>
-                {employees.map((m) => (
-                  <option key={m.id} value={m.id}>
-                    {m.nickname || m.name}
-                  </option>
-                ))}
+                {positionId && positionId !== "__custom__" ? (
+                  <>
+                    {filteredEmployees.length > 0 ? (
+                      filteredEmployees.map((m) => (
+                        <option key={m.id} value={m.id}>
+                          {m.nickname || m.name}
+                        </option>
+                      ))
+                    ) : (
+                      <option disabled>Brak pracowników na tym stanowisku</option>
+                    )}
+                    {/* Show other employees below with a separator */}
+                    {employees.filter((e) => !filteredEmployees.includes(e)).length > 0 && (
+                      <>
+                        <option disabled>────── Pozostali ──────</option>
+                        {employees
+                          .filter((e) => !filteredEmployees.includes(e))
+                          .map((m) => (
+                            <option key={m.id} value={m.id}>
+                              {m.nickname || m.name}
+                            </option>
+                          ))}
+                      </>
+                    )}
+                  </>
+                ) : (
+                  employees.map((m) => (
+                    <option key={m.id} value={m.id}>
+                      {m.nickname || m.name}
+                    </option>
+                  ))
+                )}
               </select>
+              {employeePositionMismatch && assignToId && (
+                <div className="flex items-center gap-1.5 mt-1.5 text-amber-600">
+                  <AlertCircle className="h-3 w-3 flex-shrink-0" />
+                  <span className="text-[11px]">
+                    Ten pracownik nie ma przypisanego wybranego stanowiska
+                  </span>
+                </div>
+              )}
             </div>
           )}
 

@@ -495,11 +495,13 @@ export function ScheduleGrid({
                                     }
                                   }}
                                 >
-                                  {/* Left color bar */}
-                                  <div className={`absolute left-0 top-1.5 bottom-1.5 w-[3px] rounded-full ${barColor}`} />
+                                  {/* Left color bar - use position color if available */}
+                                  <div
+                                    className={`absolute left-0 top-1.5 bottom-1.5 w-[3px] rounded-full ${shift.position ? "" : barColor}`}
+                                    style={shift.position ? { backgroundColor: shift.position.color } : {}}
+                                  />
 
                                   <div className="pl-2">
-                                    {/* Header row: role + actions */}
                                     <div className="flex items-start justify-between gap-1">
                                       <span className="font-semibold text-brand-dark leading-tight">
                                         {shift.roleName}
@@ -646,7 +648,10 @@ export function ScheduleGrid({
                                     }
                                   }}
                                 >
-                                  <div className="absolute left-0 top-1.5 bottom-1.5 w-[3px] rounded-full bg-amber-400" />
+                                  <div
+                                    className={`absolute left-0 top-1.5 bottom-1.5 w-[3px] rounded-full ${shift.position ? "" : "bg-amber-400"}`}
+                                    style={shift.position ? { backgroundColor: shift.position.color } : {}}
+                                  />
                                   <div className="pl-2">
                                     <div className="flex items-start justify-between gap-1">
                                       <span className="font-semibold text-brand-dark leading-tight">

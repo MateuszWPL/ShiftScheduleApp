@@ -3,14 +3,21 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { updateEmployee, User, PrivateUser } from "@/lib/api";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  updateEmployee,
+  getPositions,
+  assignPositionsToEmployee,
+  User,
+  PrivateUser,
+  type Position,
+} from "@/lib/api";
 import { toast } from "sonner";
-import { UserIcon, DollarSign, Clock, Tag, X, FileText } from "lucide-react";
+import { UserIcon, DollarSign, Clock, Tag, X, FileText, Briefcase } from "lucide-react";
 
 interface Props {
   managerId: string;
-  targetUser: User | null; // Jeśli null, modal zamknięty
+  targetUser: User | null;
   onClose: () => void;
 }
 
@@ -24,6 +31,13 @@ export function ManageEmployeeDialog({ managerId, targetUser, onClose }: Props) 
   const [maxHours, setMaxHours] = useState("");
   const [skillsInput, setSkillsInput] = useState("");
   const [notes, setNotes] = useState("");
+  const [selectedPositionIds, setSelectedPositionIds] = useState<string[]>([]);
+
+  const { data: positions = [] } = useQuery({
+    queryKey: ["positions"],
+    queryFn: getPositions,
+    enabled: !!targetUser,
+  });
 
   useEffect(() => {
     if (targetUser) {
@@ -41,11 +55,12 @@ export function ManageEmployeeDialog({ managerId, targetUser, onClose }: Props) 
       );
       setSkillsInput(targetUser.skills?.join(", ") || "");
       setNotes(privateUser?.notes || "");
+      setSelectedPositionIds(targetUser.positions?.map((p: Position) => p.id) || []);
     }
   }, [targetUser, privateUser]);
 
   const mutation = useMutation({
-    mutationFn: () => {
+    mutationFn: async () => {
       const skillsArray = skillsInput
         .split(",")
         .map((s) => s.trim())
@@ -87,11 +102,18 @@ export function ManageEmployeeDialog({ managerId, targetUser, onClose }: Props) 
         updateData.notes = notes.trim() || null;
       }
 
-      return updateEmployee(targetUser!.id, updateData);
+      await updateEmployee(targetUser!.id, updateData);
+
+      const currentPosIds = (targetUser?.positions || []).map((p: Position) => p.id).sort();
+      const newPosIds = [...selectedPositionIds].sort();
+      if (JSON.stringify(currentPosIds) !== JSON.stringify(newPosIds)) {
+        await assignPositionsToEmployee(targetUser!.id, selectedPositionIds);
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["team-members"] });
       queryClient.invalidateQueries({ queryKey: ["my-profile"] });
+      queryClient.invalidateQueries({ queryKey: ["positions"] });
       toast.success("Zaktualizowano pracownika!", {
         description: `Dane ${targetUser?.name || "pracownika"} zostały zaktualizowane.`,
       });
@@ -192,20 +214,63 @@ export function ManageEmployeeDialog({ managerId, targetUser, onClose }: Props) 
             </div>
           </div>
 
+          {/* Position assignment */}
+          {positions.length > 0 && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                <Briefcase className="h-4 w-4" />
+                Stanowiska
+              </label>
+              <div className="flex flex-wrap gap-2">
+                {positions.map((pos) => {
+                  const isSelected = selectedPositionIds.includes(pos.id);
+                  return (
+                    <button
+                      key={pos.id}
+                      type="button"
+                      onClick={() => {
+                        setSelectedPositionIds((prev) =>
+                          isSelected
+                            ? prev.filter((id) => id !== pos.id)
+                            : [...prev, pos.id]
+                        );
+                      }}
+                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm border transition-colors ${
+                        isSelected
+                          ? "border-transparent text-white shadow-sm"
+                          : "border-slate-200 text-slate-600 hover:border-slate-300 bg-white"
+                      }`}
+                      style={isSelected ? { backgroundColor: pos.color } : {}}
+                    >
+                      <div
+                        className={`w-2 h-2 rounded-full ${isSelected ? "bg-white/60" : ""}`}
+                        style={!isSelected ? { backgroundColor: pos.color } : {}}
+                      />
+                      {pos.name}
+                    </button>
+                  );
+                })}
+              </div>
+              <p className="text-xs text-gray-500 mt-1.5">
+                Kliknij, aby przypisać lub usunąć stanowisko. Pracownik może mieć wiele stanowisk.
+              </p>
+            </div>
+          )}
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
               <Tag className="h-4 w-4" />
-              Umiejętności / Stanowiska
+              Dodatkowe umiejętności
             </label>
             <Input
               type="text"
-              placeholder="np. Barista, Kierowca, Kuchnia"
+              placeholder="np. Certyfikat BHP, Prawo jazdy B"
               value={skillsInput}
               onChange={(e) => setSkillsInput(e.target.value)}
               className="w-full"
             />
             <p className="text-xs text-gray-500 mt-1">
-              Oddziel przecinkami. Te tagi pomogą przy układaniu grafiku.
+              Oddziel przecinkami. Dodatkowe tagi i certyfikaty.
             </p>
           </div>
 

@@ -12,6 +12,7 @@ import { AvailabilityModule } from './availability/availability.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { AnnouncementsModule } from './announcements/announcements.module';
 import { TeamSettingsModule } from './team-settings/team-settings.module';
+import { PositionsModule } from './positions/positions.module';
 import { RequestLoggerMiddleware } from './common/middleware/request-logger.middleware';
 
 @Module({
@@ -31,6 +32,7 @@ import { RequestLoggerMiddleware } from './common/middleware/request-logger.midd
     NotificationsModule,
     AnnouncementsModule,
     TeamSettingsModule,
+    PositionsModule,
   ],
   controllers: [AppController],
   providers: [

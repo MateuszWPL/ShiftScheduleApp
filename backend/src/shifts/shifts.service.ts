@@ -71,6 +71,7 @@ export class ShiftsService {
     return this.prisma.shift.findMany({
       where,
       include: {
+        position: true,
         assignments: {
           include: { user: true },
         },
@@ -212,7 +213,7 @@ export class ShiftsService {
   async updateShift(
     requesterId: string,
     shiftId: string,
-    data: { startTime?: Date; endTime?: Date; roleName?: string; status?: ShiftStatus },
+    data: { startTime?: Date; endTime?: Date; roleName?: string; positionId?: string; status?: ShiftStatus },
   ) {
     const membership = await this.prisma.teamMembership.findFirst({
       where: { userId: requesterId, status: MembershipStatus.ACTIVE },
@@ -229,15 +230,31 @@ export class ShiftsService {
     if (!shift) {
       throw new NotFoundException('Zmiana nie istnieje.');
     }
-    const updateData: { startTime?: Date; endTime?: Date; roleName?: string; status?: ShiftStatus } = {};
+    const updateData: Record<string, any> = {};
     if (data.startTime !== undefined) updateData.startTime = data.startTime;
     if (data.endTime !== undefined) updateData.endTime = data.endTime;
-    if (data.roleName !== undefined) updateData.roleName = data.roleName;
     if (data.status !== undefined) updateData.status = data.status;
+
+    if (data.positionId !== undefined) {
+      if (data.positionId) {
+        const position = await this.prisma.position.findFirst({
+          where: { id: data.positionId, teamId: membership.teamId },
+        });
+        if (!position) throw new BadRequestException('Stanowisko nie istnieje.');
+        updateData.positionId = position.id;
+        updateData.roleName = position.name;
+      } else {
+        updateData.positionId = null;
+        if (data.roleName) updateData.roleName = data.roleName;
+      }
+    } else if (data.roleName !== undefined) {
+      updateData.roleName = data.roleName;
+    }
+
     return this.prisma.shift.update({
       where: { id: shiftId },
       data: updateData,
-      include: { assignments: { include: { user: true } } },
+      include: { position: true, assignments: { include: { user: true } } },
     });
   }
 
@@ -283,7 +300,7 @@ export class ShiftsService {
   /** Tworzenie zmiany (bez przypisań). Przypisania dodaje się przez addAssignment. */
   async create(
     userId: string,
-    data: { startTime: Date; endTime: Date; roleName: string; status?: ShiftStatus },
+    data: { startTime: Date; endTime: Date; roleName?: string; positionId?: string; status?: ShiftStatus },
   ) {
     const membership = await this.prisma.teamMembership.findFirst({
       where: { userId, status: MembershipStatus.ACTIVE },
@@ -297,15 +314,32 @@ export class ShiftsService {
       throw new ForbiddenException('Tylko Owner lub Manager może tworzyć zmiany.');
     }
 
+    let resolvedRoleName = data.roleName || '';
+    let resolvedPositionId = data.positionId || null;
+
+    if (resolvedPositionId) {
+      const position = await this.prisma.position.findFirst({
+        where: { id: resolvedPositionId, teamId: membership.teamId },
+      });
+      if (!position) throw new BadRequestException('Stanowisko nie istnieje.');
+      resolvedRoleName = position.name;
+    }
+
+    if (!resolvedRoleName) {
+      throw new BadRequestException('Podaj stanowisko (positionId) lub nazwę roli (roleName).');
+    }
+
     return this.prisma.shift.create({
       data: {
         startTime: data.startTime,
         endTime: data.endTime,
-        roleName: data.roleName,
+        roleName: resolvedRoleName,
+        positionId: resolvedPositionId,
         status: data.status ?? ShiftStatus.DRAFT,
         teamId: membership.teamId,
       },
       include: {
+        position: true,
         assignments: { include: { user: true } },
       },
     });
@@ -1165,12 +1199,16 @@ export class ShiftsService {
             maxHours: true,
             avatarUrl: true,
             notes: true,
+            employeePositions: { include: { position: true } },
           },
         },
       },
     });
 
-    return members.map((m) => m.user);
+    return members.map((m) => ({
+      ...m.user,
+      positions: m.user.employeePositions.map((ep: any) => ep.position),
+    }));
   }
   async updateProfile(userId: string, data: { name?: string; phoneNumber?: string }) {
     const updateData: any = {};

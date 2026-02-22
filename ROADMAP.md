@@ -85,14 +85,19 @@
 - [x] Ostrzezenia: przekroczenie maxHours, brak dostepnosci
 - [x] Prosty widok kalendarza miesiecznego (read-only, przeglad)
 
-### 2.3 Lepszy profil pracownika (widok menadzera)
-- [ ] Karta pracownika z pelna historia zmian
-- [ ] Statystyki: srednia godzin/tydzien, frekwencja
-- [ ] Notatki menadzera (prywatne)
+### 2.3 Stanowiska (Positions) — zrobione ✅
+- [x] Model Position + EmployeePosition (many-to-many) w bazie danych
+- [x] API CRUD: tworzenie, edycja, usuwanie stanowisk
+- [x] Przypisywanie wielu stanowisk do pracownika
+- [x] Zarzadzanie stanowiskami w Ustawieniach (nowa zakladka "Stanowiska")
+- [x] Dropdown stanowisk w dialogu tworzenia/edycji zmiany (zamiast recznego wpisywania)
+- [x] Automatyczne filtrowanie pracownikow wg wybranego stanowiska
+- [x] Kolorowanie paskow zmian na kalendarzu wedlug stanowiska
+- [x] Wyswietlanie stanowisk na kartach pracownikow (strona Zespol)
+- [x] Migracja istniejacych roleNames na rekordy Position (endpoint /positions/migrate)
 
 ### 2.4 Poprawki UX kalendarza
 - [ ] Drag & resize zmian na kalendarzu (zmiana godzin przez przeciaganie krawedzi)
-- [ ] Kolorowanie zmian wedlug roli (np. Kelner = niebieski, Kucharz = zielony)
 - [ ] Filtrowanie kalendarza po pracowniku / roli
 - [ ] Widok "Moje zmiany" dla pracownika (lista zamiast tabeli)
 

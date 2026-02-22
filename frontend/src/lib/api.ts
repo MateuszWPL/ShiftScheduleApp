@@ -34,11 +34,21 @@ export interface ShiftAssignment {
   shift?: Shift;
 }
 
+export interface Position {
+  id: string;
+  teamId: string;
+  name: string;
+  color: string;
+  _count?: { employees: number; shifts: number };
+}
+
 export interface Shift {
   id: string;
   startTime: string;
   endTime: string;
   roleName: string;
+  positionId?: string | null;
+  position?: Position | null;
   status: "DRAFT" | "PUBLISHED" | "COMPLETED";
   teamId: string;
   assignments?: ShiftAssignment[];
@@ -324,6 +334,7 @@ export interface User {
   hourlyRate?: number | null;
   maxHours?: number | null;
   nickname?: string | null;
+  positions?: Position[];
 }
 
 export interface PublicUser {
@@ -493,7 +504,8 @@ export async function updateEmployeeSkills(targetId: string, skills: string[]) {
 export interface CreateShiftInput {
   startTime: string;
   endTime: string;
-  roleName: string;
+  roleName?: string;
+  positionId?: string;
   status?: "DRAFT" | "PUBLISHED" | "COMPLETED";
 }
 
@@ -513,6 +525,7 @@ export interface UpdateShiftInput {
   startTime?: string;
   endTime?: string;
   roleName?: string;
+  positionId?: string;
   status?: "DRAFT" | "PUBLISHED" | "COMPLETED";
 }
 
@@ -909,4 +922,59 @@ export async function regenerateInviteCode(): Promise<{ inviteCode: string }> {
     throw new Error(error.message || "Błąd regeneracji kodu");
   }
   return res.json();
+}
+
+// --- Positions (Stanowiska) ---
+export async function getPositions(): Promise<Position[]> {
+  const res = await authenticatedFetch(`${API_URL}/positions`);
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.message || "Błąd pobierania stanowisk");
+  }
+  return res.json();
+}
+
+export async function createPosition(data: { name: string; color?: string }): Promise<Position> {
+  const res = await authenticatedFetch(`${API_URL}/positions`, {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.message || "Błąd tworzenia stanowiska");
+  }
+  return res.json();
+}
+
+export async function updatePosition(id: string, data: { name?: string; color?: string }): Promise<Position> {
+  const res = await authenticatedFetch(`${API_URL}/positions/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.message || "Błąd edycji stanowiska");
+  }
+  return res.json();
+}
+
+export async function deletePosition(id: string): Promise<void> {
+  const res = await authenticatedFetch(`${API_URL}/positions/${id}`, {
+    method: "DELETE",
+  });
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.message || "Błąd usuwania stanowiska");
+  }
+}
+
+export async function assignPositionsToEmployee(userId: string, positionIds: string[]): Promise<void> {
+  const res = await authenticatedFetch(`${API_URL}/positions/employees/${userId}`, {
+    method: "POST",
+    body: JSON.stringify({ positionIds }),
+  });
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.message || "Błąd przypisywania stanowisk");
+  }
 }

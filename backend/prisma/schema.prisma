@@ -34,6 +34,7 @@ model User {
   notifications          Notification[]
   announcements          Announcement[]      @relation("AnnouncementAuthor")
   announcementReads      AnnouncementRead[]
+  employeePositions      EmployeePosition[]
   team                   Team?               @relation(fields: [teamId], references: [id])
 }
 
@@ -43,6 +44,7 @@ model Team {
   createdAt          DateTime          @default(now())
   inviteCode         String             @unique
   shifts             Shift[]
+  positions          Position[]
   availabilitySlots  AvailabilitySlot[]
   memberships        TeamMembership[]
   notifications      Notification[]
@@ -69,6 +71,34 @@ model TeamSettings {
   team                  Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
 }
 
+/// Stanowiska zdefiniowane na poziomie zespołu (np. Kelner, Barista, Kucharz)
+model Position {
+  id        String             @id @default(uuid())
+  teamId    String
+  name      String
+  color     String             @default("#8FACDB")
+  createdAt DateTime           @default(now())
+  team      Team               @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  employees EmployeePosition[]
+  shifts    Shift[]
+
+  @@unique([teamId, name])
+  @@index([teamId])
+}
+
+/// Przypisanie pracownika do stanowiska (many-to-many)
+model EmployeePosition {
+  id         String   @id @default(uuid())
+  userId     String
+  positionId String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  position   Position @relation(fields: [positionId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, positionId])
+  @@index([userId])
+  @@index([positionId])
+}
+
 /// Dostępność pracownika: przedział czasowy, w którym może pracować (min. 4h na slot).
 model AvailabilitySlot {
   id           String   @id @default(uuid())
@@ -90,11 +120,13 @@ model Shift {
   startTime    DateTime
   endTime      DateTime
   roleName     String
+  positionId   String?
   status       ShiftStatus       @default(DRAFT)
   teamId       String
   createdAt    DateTime         @default(now())
   updatedAt    DateTime         @updatedAt
   team         Team             @relation(fields: [teamId], references: [id])
+  position     Position?        @relation(fields: [positionId], references: [id], onDelete: SetNull)
   assignments  ShiftAssignment[]
 
   @@index([teamId, startTime])

@@ -144,8 +144,23 @@ export default function TeamPage() {
                     )}
                   </>
                 )}
-                {member.skills && member.skills.length > 0 && (
+                {(member as User).positions && (member as User).positions!.length > 0 && (
                   <div className="pt-2 border-t border-brand-warm/20">
+                    <div className="flex flex-wrap gap-1">
+                      {(member as User).positions!.map((pos) => (
+                        <span
+                          key={pos.id}
+                          className="text-[10px] px-2 py-0.5 rounded-full font-medium text-white"
+                          style={{ backgroundColor: pos.color }}
+                        >
+                          {pos.name}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {member.skills && member.skills.length > 0 && (
+                  <div className={`${(member as User).positions?.length ? "pt-1" : "pt-2 border-t border-brand-warm/20"}`}>
                     <div className="flex flex-wrap gap-1">
                       {member.skills.map((skill: string, idx: number) => (
                         <span key={idx} className="text-[10px] bg-brand-blue-muted/50 text-brand-blue px-2 py-0.5 rounded-full font-medium">

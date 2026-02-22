@@ -63,6 +63,7 @@ export class ShiftsController {
       startTime: new Date(createShiftDto.startTime),
       endTime: new Date(createShiftDto.endTime),
       roleName: createShiftDto.roleName,
+      positionId: createShiftDto.positionId,
       status: createShiftDto.status,
     });
   }
@@ -77,6 +78,7 @@ export class ShiftsController {
       startTime: body.startTime ? new Date(body.startTime) : undefined,
       endTime: body.endTime ? new Date(body.endTime) : undefined,
       roleName: body.roleName,
+      positionId: body.positionId,
       status: body.status,
     });
   }
