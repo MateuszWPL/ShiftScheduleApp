@@ -1,10 +1,12 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { PendingList } from "@/components/dashboard/PendingList";
 import { EditProfileDialog } from "@/components/dashboard/EditProfileDialog";
+import { OnboardingWizard } from "@/components/onboarding/OnboardingWizard";
 import { useDashboardUser } from "@/components/providers/DashboardUserContext";
 import {
   getShifts,
@@ -12,10 +14,16 @@ import {
   getMyAvailability,
   getAnnouncements,
   markAnnouncementRead,
+  getTeamMembers,
+  getTeamSettings,
   type Shift,
   type Notification,
   type Announcement,
 } from "@/lib/api";
+import {
+  getOnboardingWizardSkipped,
+  getOnboardingWizardDone,
+} from "@/lib/onboarding-storage";
 import {
   Calendar,
   Clock,
@@ -66,8 +74,10 @@ function timeAgo(dateStr: string): string {
 
 export default function PulpitPage() {
   const { dbUser, currentUser, setDbUser } = useDashboardUser();
+  const router = useRouter();
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [codeCopied, setCodeCopied] = useState(false);
+  const [wizardOpen, setWizardOpen] = useState(false);
 
   const monday = useMemo(() => getWeekMonday(), []);
   const weekEnd = useMemo(() => {
@@ -80,6 +90,33 @@ export default function PulpitPage() {
     queryKey: ["shifts", monday.toISOString(), weekEnd.toISOString()],
     queryFn: () => getShifts({ from: monday.toISOString(), to: weekEnd.toISOString() }),
   });
+
+  const { data: teamSettings } = useQuery({
+    queryKey: ["team-settings"],
+    queryFn: getTeamSettings,
+    enabled: !!dbUser && (dbUser?.role === "OWNER" || dbUser?.role === "MANAGER"),
+    retry: false,
+  });
+
+  const { data: teamMembers = [] } = useQuery({
+    queryKey: ["team-members"],
+    queryFn: getTeamMembers,
+    enabled: !!dbUser && (dbUser?.role === "OWNER" || dbUser?.role === "MANAGER"),
+    retry: false,
+  });
+
+  const isAdmin = dbUser?.role === "OWNER" || dbUser?.role === "MANAGER";
+  const isFirstRun =
+    isAdmin &&
+    !getOnboardingWizardSkipped() &&
+    !getOnboardingWizardDone() &&
+    (teamMembers.length <= 1 || shifts.length === 0);
+
+  useEffect(() => {
+    if (isFirstRun && teamMembers.length >= 0 && shifts.length >= 0) {
+      setWizardOpen(true);
+    }
+  }, [isFirstRun, teamMembers.length, shifts.length]);
 
   const { data: notifications = [] } = useQuery({
     queryKey: ["notifications"],
@@ -108,7 +145,6 @@ export default function PulpitPage() {
   if (!dbUser) return null;
 
   const displayUser = currentUser || dbUser;
-  const isAdmin = dbUser.role === "OWNER" || dbUser.role === "MANAGER";
 
   // My shifts this week
   const myShifts = useMemo(() => {
@@ -442,6 +478,13 @@ export default function PulpitPage() {
             avatarUrl: dbUser?.avatarUrl,
           });
         }}
+      />
+
+      <OnboardingWizard
+        isOpen={wizardOpen}
+        onClose={() => setWizardOpen(false)}
+        inviteCode={teamSettings?.team?.inviteCode ?? dbUser?.team?.inviteCode ?? null}
+        onAddFirstShift={() => router.push("/grafik?addShift=1")}
       />
     </div>
   );

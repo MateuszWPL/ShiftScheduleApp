@@ -24,6 +24,7 @@ import {
   Info,
   Users,
 } from "lucide-react";
+import Link from "next/link";
 import { toast } from "sonner";
 import { useState, useCallback, useMemo } from "react";
 
@@ -359,7 +360,14 @@ export function ScheduleGrid({
           <div className="p-12 text-center">
             <Users className="h-10 w-10 mx-auto mb-3 text-brand-dark/15" />
             <p className="text-sm font-medium text-brand-dark/50">Brak pracowników w zespole</p>
-            <p className="text-xs text-brand-dark/30 mt-1">Zaproś członków, aby zobaczyć grafik.</p>
+            <p className="text-xs text-brand-dark/30 mt-1 mb-4">Zaproś członków, aby zobaczyć grafik.</p>
+            <Link
+              href="/team"
+              className="inline-flex items-center gap-1.5 text-sm font-medium text-brand hover:underline"
+            >
+              Przejdź do pracowników
+              <ChevronRight className="h-4 w-4" />
+            </Link>
           </div>
         ) : (
           <table className="w-full border-collapse text-sm">

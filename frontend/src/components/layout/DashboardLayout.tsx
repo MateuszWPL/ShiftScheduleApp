@@ -1,6 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
+import { AppTour } from "@/components/onboarding/AppTour";
 import { Button } from "@/components/ui/button";
 import {
   LayoutDashboard,
@@ -35,12 +36,14 @@ interface NavItem {
   icon: React.ReactNode;
   show?: boolean;
   premium?: boolean;
+  tourId?: string;
 }
 
-function NavLink({ href, label, icon, active, premium }: NavItem & { active: boolean }) {
+function NavLink({ href, label, icon, active, premium, tourId }: NavItem & { active: boolean; tourId?: string }) {
   return (
     <Link
       href={href}
+      data-tour={tourId}
       className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
         active
           ? "bg-brand/10 text-brand"
@@ -65,14 +68,14 @@ export function DashboardLayout({ children, userRole, userName, userAvatar, onLo
   const isAdmin = userRole === "OWNER" || userRole === "MANAGER";
 
   const mainNav: NavItem[] = [
-    { href: "/", label: "Pulpit", icon: <LayoutDashboard className="h-4 w-4" /> },
-    { href: "/grafik", label: "Grafik", icon: <Calendar className="h-4 w-4" /> },
-    { href: "/podsumowanie", label: "Podsumowanie", icon: <BarChart3 className="h-4 w-4" /> },
+    { href: "/", label: "Pulpit", icon: <LayoutDashboard className="h-4 w-4" />, tourId: "nav-pulpit" },
+    { href: "/grafik", label: "Grafik", icon: <Calendar className="h-4 w-4" />, tourId: "nav-grafik" },
+    { href: "/podsumowanie", label: "Podsumowanie", icon: <BarChart3 className="h-4 w-4" />, tourId: "nav-podsumowanie" },
     { href: "/dostepnosc", label: "Dostępność", icon: <CalendarCheck className="h-4 w-4" />, show: userRole === "EMPLOYEE" },
   ];
 
   const teamNav: NavItem[] = [
-    { href: "/team", label: "Pracownicy", icon: <Users className="h-4 w-4" /> },
+    { href: "/team", label: "Pracownicy", icon: <Users className="h-4 w-4" />, tourId: "nav-team" },
     { href: "/announcements", label: "Ogłoszenia", icon: <Megaphone className="h-4 w-4" /> },
   ];
 
@@ -129,7 +132,7 @@ export function DashboardLayout({ children, userRole, userName, userAvatar, onLo
 
         {/* Bottom section */}
         <div className="border-t border-brand-warm/40 p-3 space-y-1">
-          <NavLink href="/profile" label="Mój Profil" icon={<User className="h-4 w-4" />} active={isActive("/profile")} />
+          <NavLink href="/profile" label="Mój Profil" icon={<User className="h-4 w-4" />} active={isActive("/profile")} tourId="nav-profile" />
           {isAdmin && (
             <NavLink href="/settings" label="Ustawienia" icon={<Settings className="h-4 w-4" />} active={isActive("/settings")} />
           )}
@@ -175,16 +178,17 @@ export function DashboardLayout({ children, userRole, userName, userAvatar, onLo
         {/* Mobile bottom nav */}
         <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-brand-warm/40 z-40 flex justify-around px-2 py-1.5 safe-area-pb">
           {[
-            { href: "/", icon: <LayoutDashboard className="h-5 w-5" />, label: "Pulpit" },
-            { href: "/grafik", icon: <Calendar className="h-5 w-5" />, label: "Grafik" },
-            { href: "/podsumowanie", icon: <BarChart3 className="h-5 w-5" />, label: "Podsumowanie" },
-            ...(userRole === "EMPLOYEE" ? [{ href: "/dostepnosc", icon: <CalendarCheck className="h-5 w-5" />, label: "Dostępność" }] : []),
-            { href: "/team", icon: <Users className="h-5 w-5" />, label: "Zespół" },
-            { href: "/profile", icon: <User className="h-5 w-5" />, label: "Profil" },
+            { href: "/", icon: <LayoutDashboard className="h-5 w-5" />, label: "Pulpit", tourId: "nav-pulpit" },
+            { href: "/grafik", icon: <Calendar className="h-5 w-5" />, label: "Grafik", tourId: "nav-grafik" },
+            { href: "/podsumowanie", icon: <BarChart3 className="h-5 w-5" />, label: "Podsumowanie", tourId: "nav-podsumowanie" },
+            ...(userRole === "EMPLOYEE" ? [{ href: "/dostepnosc", icon: <CalendarCheck className="h-5 w-5" />, label: "Dostępność", tourId: undefined }] : []),
+            { href: "/team", icon: <Users className="h-5 w-5" />, label: "Zespół", tourId: "nav-team" },
+            { href: "/profile", icon: <User className="h-5 w-5" />, label: "Profil", tourId: "nav-profile" },
           ].map((item) => (
             <Link
               key={item.href}
               href={item.href}
+              {...(item.tourId ? { "data-tour": item.tourId as string } : {})}
               className={`flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg text-[10px] font-medium transition-colors ${
                 isActive(item.href)
                   ? "text-brand"
@@ -201,6 +205,8 @@ export function DashboardLayout({ children, userRole, userName, userAvatar, onLo
           {children}
         </div>
       </main>
+
+      <AppTour />
     </div>
   );
 }

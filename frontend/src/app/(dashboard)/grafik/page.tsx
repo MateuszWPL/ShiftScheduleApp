@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import {
   claimAssignment,
@@ -321,12 +322,23 @@ function AvailabilityPanel({
 export default function GrafikPage() {
   const { dbUser } = useDashboardUser();
   const queryClient = useQueryClient();
+  const searchParams = useSearchParams();
   const [weekStart, setWeekStart] = useState(() => new Date());
   const [isShiftDialogOpen, setIsShiftDialogOpen] = useState(false);
   const [isCopyDialogOpen, setIsCopyDialogOpen] = useState(false);
   const [prefilledDate, setPrefilledDate] = useState<string | undefined>();
   const [prefilledEmployeeId, setPrefilledEmployeeId] = useState<string | undefined>();
   const [editShift, setEditShift] = useState<Shift | null>(null);
+
+  useEffect(() => {
+    if (searchParams.get("addShift") === "1") {
+      setEditShift(null);
+      setPrefilledDate(undefined);
+      setPrefilledEmployeeId(undefined);
+      setIsShiftDialogOpen(true);
+      window.history.replaceState({}, "", "/grafik");
+    }
+  }, [searchParams]);
 
   const monday = getWeekMonday(weekStart);
   const from = monday.toISOString();

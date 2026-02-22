@@ -268,9 +268,19 @@ export default function AnnouncementsPage() {
         <div className="bg-white border border-brand-warm/40 rounded-xl p-12 text-center">
           <Megaphone className="h-10 w-10 mx-auto mb-3 text-brand-dark/15" />
           <p className="text-sm font-medium text-brand-dark/50">Brak ogłoszeń</p>
-          <p className="text-xs text-brand-dark/30 mt-1">
+          <p className="text-xs text-brand-dark/30 mt-1 mb-4">
             {isAdmin ? "Utwórz pierwsze ogłoszenie, aby poinformować zespół." : "Tu pojawią się ogłoszenia od zespołu."}
           </p>
+          {isAdmin && !showForm && (
+            <Button
+              size="sm"
+              onClick={() => setShowForm(true)}
+              className="gap-1.5 bg-brand hover:bg-brand-light text-white"
+            >
+              <Plus className="h-4 w-4" />
+              Utwórz pierwsze ogłoszenie
+            </Button>
+          )}
         </div>
       ) : (
         <div className="space-y-3">

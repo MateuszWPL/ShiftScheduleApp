@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar } from "@/components/ui/avatar";
 import { useState } from "react";
 import { Users, Phone, Mail, DollarSign, Clock, Edit, Info } from "lucide-react";
+import Link from "next/link";
 import { ManageEmployeeDialog } from "@/components/dashboard/ManageEmployeeDialog";
 
 export default function TeamPage() {
@@ -180,7 +181,14 @@ export default function TeamPage() {
         <div className="bg-white border border-brand-warm/40 rounded-xl p-12 text-center">
           <Users className="h-10 w-10 text-brand-dark/15 mx-auto mb-3" />
           <p className="text-sm font-medium text-brand-dark/50">Brak członków zespołu</p>
-          <p className="text-xs text-brand-dark/30 mt-1">Zaproś pracowników, aby dołączyli.</p>
+          <p className="text-xs text-brand-dark/30 mt-1 mb-4">Zaproś pracowników kodem zaproszenia.</p>
+          {isAdmin && (
+            <Link href="/settings">
+              <Button size="sm" className="gap-1.5 bg-brand hover:bg-brand-light text-white">
+                Otwórz ustawienia i skopiuj kod
+              </Button>
+            </Link>
+          )}
         </div>
       )}
 

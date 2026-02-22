@@ -101,10 +101,12 @@
 - [ ] Filtrowanie kalendarza po pracowniku / roli
 - [ ] Widok "Moje zmiany" dla pracownika (lista zamiast tabeli)
 
-### 2.5 Onboarding
-- [ ] Kreator pierwszego uruchomienia: zaloz firme -> zaproś zespol -> ustaw godziny -> dodaj pierwsza zmiane
-- [ ] Tour po aplikacji (podswietlanie elementow z opisem)
-- [ ] Pusty stan z CTA na kazdej stronie
+### 2.5 Onboarding — zrobione ✅
+- [x] Kreator pierwszego uruchomienia: załóż firmę → zaproś zespół → ustaw godziny → dodaj pierwszą zmianę
+- [x] Opcja „Pomiń samouczek” w każdym kroku kreatora
+- [x] Tour po aplikacji (podświetlanie elementów z opisem)
+- [x] Opcja pominięcia przewodnika („Pomiń”)
+- [x] Pusty stan z CTA na każdej stronie (Grafik, Zespół, Podsumowanie, Ogłoszenia)
 
 ### 2.6 Bezpieczenstwo produkcyjne
 - [ ] Audyt bezpieczenstwa: sprawdzenie wszystkich endpointów
