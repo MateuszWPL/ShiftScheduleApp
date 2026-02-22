@@ -79,6 +79,115 @@ export class ShiftsService {
     });
   }
 
+  /** Podsumowanie okresu: godziny per pracownik, ostrzeżenia (maxHours, brak dostępności) */
+  async getSummary(userId: string, from: string, to: string) {
+    const membership = await this.prisma.teamMembership.findFirst({
+      where: { userId, status: MembershipStatus.ACTIVE },
+    });
+    if (!membership) {
+      throw new BadRequestException('Brak aktywnego zespołu.');
+    }
+
+    const fromDate = new Date(from);
+    const toDate = new Date(to);
+
+    const [shifts, members, availabilitySlots] = await Promise.all([
+      this.prisma.shift.findMany({
+        where: {
+          teamId: membership.teamId,
+          startTime: { lt: toDate },
+          endTime: { gt: fromDate },
+        },
+        include: {
+          assignments: {
+            where: { userId: { not: null } },
+            include: { user: { select: { id: true, name: true, nickname: true } } },
+          },
+        },
+      }),
+      this.prisma.teamMembership.findMany({
+        where: { teamId: membership.teamId, status: MembershipStatus.ACTIVE, role: Role.EMPLOYEE },
+        include: { user: { select: { id: true, name: true, nickname: true, maxHours: true } } },
+      }),
+      this.prisma.availabilitySlot.findMany({
+        where: {
+          teamId: membership.teamId,
+          startDateTime: { lt: toDate },
+          endDateTime: { gt: fromDate },
+        },
+      }),
+    ]);
+
+    const employeeHours = new Map<string, number>();
+    const employeeShifts = new Map<string, { shiftId: string; start: Date; end: Date; roleName: string }[]>();
+    const employeeMaxHours = new Map<string, number | null>();
+
+    for (const m of members) {
+      employeeHours.set(m.user.id, 0);
+      employeeShifts.set(m.user.id, []);
+      employeeMaxHours.set(m.user.id, m.user.maxHours);
+    }
+
+    for (const shift of shifts) {
+      for (const a of shift.assignments) {
+        if (!a.userId) continue;
+        const hrs = (new Date(shift.endTime).getTime() - new Date(shift.startTime).getTime()) / 3600000;
+        employeeHours.set(a.userId, (employeeHours.get(a.userId) ?? 0) + hrs);
+        const list = employeeShifts.get(a.userId) ?? [];
+        list.push({
+          shiftId: shift.id,
+          start: new Date(shift.startTime),
+          end: new Date(shift.endTime),
+          roleName: shift.roleName,
+        });
+        employeeShifts.set(a.userId, list);
+      }
+    }
+
+    const availabilityByUser = new Map<string, { start: Date; end: Date }[]>();
+    for (const slot of availabilitySlots) {
+      const list = availabilityByUser.get(slot.userId) ?? [];
+      list.push({ start: new Date(slot.startDateTime), end: new Date(slot.endDateTime) });
+      availabilityByUser.set(slot.userId, list);
+    }
+
+    const overlaps = (slotStart: Date, slotEnd: Date, shiftStart: Date, shiftEnd: Date) =>
+      slotStart.getTime() < shiftEnd.getTime() && slotEnd.getTime() > shiftStart.getTime();
+
+    const employees = members.map((m) => {
+      const uid = m.user.id;
+      const hours = Math.round((employeeHours.get(uid) ?? 0) * 10) / 10;
+      const maxH = employeeMaxHours.get(uid) ?? null;
+      const shiftsList = employeeShifts.get(uid) ?? [];
+      const slots = availabilityByUser.get(uid) ?? [];
+      const warnings: string[] = [];
+
+      if (maxH != null && hours > maxH) {
+        warnings.push(`Przekroczono limit ${maxH}h (masz ${hours}h)`);
+      }
+      for (const s of shiftsList) {
+        const hasOverlap = slots.some((sl) => overlaps(sl.start, sl.end, s.start, s.end));
+        if (!hasOverlap) {
+          warnings.push(`Brak dostępności: ${s.roleName} ${s.start.toLocaleDateString('pl-PL')}`);
+        }
+      }
+
+      return {
+        userId: uid,
+        name: m.user.nickname || m.user.name,
+        hours,
+        maxHours: maxH,
+        warnings,
+      };
+    });
+
+    return {
+      from,
+      to,
+      employees,
+    };
+  }
+
   /** Jedna zmiana z przypisaniami (np. do edycji). */
   async findOne(userId: string, shiftId: string) {
     const membership = await this.prisma.teamMembership.findFirst({

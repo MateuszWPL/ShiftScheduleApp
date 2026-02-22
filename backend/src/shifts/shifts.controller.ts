@@ -15,6 +15,7 @@ import { UpdateEmployeeDto } from './dto/update-employee.dto';
 import { SyncUserDto } from './dto/sync-user.dto';
 import { PublishShiftsDto } from './dto/publish-shifts.dto';
 import { CopyWeekDto } from './dto/copy-week.dto';
+import { SummaryQueryDto } from './dto/summary-query.dto';
 import {
   ShiftIdParamDto,
   TargetIdParamDto,
@@ -41,6 +42,13 @@ export class ShiftsController {
   @Get('marketplace')
   getMarketplace(@CurrentUser() user: User) {
     return this.shiftsService.getMarketplace(user.userId);
+  }
+
+  /** Podsumowanie okresu: godziny per pracownik, ostrzeżenia */
+  @SkipThrottle()
+  @Get('summary')
+  getSummary(@CurrentUser() user: User, @Query() query: SummaryQueryDto) {
+    return this.shiftsService.getSummary(user.userId, query.from, query.to);
   }
 
   @SkipThrottle()

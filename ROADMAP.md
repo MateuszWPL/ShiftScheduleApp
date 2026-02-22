@@ -81,9 +81,9 @@
 - [x] Podglad przed zatwierdzeniem kopii
 
 ### 2.2 Podsumowanie tygodnia / miesiaca
-- [ ] Widok podsumowania: ile godzin przepracował każdy pracownik
-- [ ] Ostrzezenia: przekroczenie maxHours, brak dostepnosci
-- [ ] Prosty widok kalendarza miesiecznego (read-only, przeglad)
+- [x] Widok podsumowania: ile godzin przepracował każdy pracownik
+- [x] Ostrzezenia: przekroczenie maxHours, brak dostepnosci
+- [x] Prosty widok kalendarza miesiecznego (read-only, przeglad)
 
 ### 2.3 Lepszy profil pracownika (widok menadzera)
 - [ ] Karta pracownika z pelna historia zmian

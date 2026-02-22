@@ -635,6 +635,31 @@ export async function publishShifts(data: PublishShiftsInput): Promise<PublishSh
   return res.json();
 }
 
+// --- Summary ---
+export interface SummaryEmployee {
+  userId: string;
+  name: string;
+  hours: number;
+  maxHours: number | null;
+  warnings: string[];
+}
+
+export interface ScheduleSummary {
+  from: string;
+  to: string;
+  employees: SummaryEmployee[];
+}
+
+export async function getScheduleSummary(params: { from: string; to: string }): Promise<ScheduleSummary> {
+  const search = new URLSearchParams({ from: params.from, to: params.to });
+  const res = await authenticatedFetch(`${API_URL}/shifts/summary?${search}`);
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.message || "Błąd pobierania podsumowania");
+  }
+  return res.json();
+}
+
 // --- Copy week ---
 export interface CopyWeekInput {
   sourceWeekStart: string;
