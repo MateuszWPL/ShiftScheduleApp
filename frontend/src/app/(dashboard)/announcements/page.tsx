@@ -44,7 +44,7 @@ const PRIORITY_CONFIG = {
   },
   NORMAL: {
     label: "Zwykłe",
-    border: "border-brand-warm/40",
+    border: "border-brand-warm",
     bg: "bg-white",
     bar: "bg-brand-blue",
     badge: "bg-brand-blue-muted text-brand-blue",
@@ -148,7 +148,7 @@ export default function AnnouncementsPage() {
           </div>
           <div>
             <h1 className="text-xl font-bold text-brand-dark">Ogłoszenia</h1>
-            <p className="text-xs text-brand-dark/40">
+            <p className="text-xs text-brand-dark-muted">
               {isAdmin ? "Twórz i zarządzaj ogłoszeniami zespołu" : "Ogłoszenia od zespołu"}
             </p>
           </div>
@@ -166,41 +166,41 @@ export default function AnnouncementsPage() {
 
       {/* Create form */}
       {showForm && isAdmin && (
-        <div className="bg-white border border-brand-warm/40 rounded-xl p-5 shadow-sm space-y-4">
+        <div className="bg-white border border-brand-warm rounded-xl p-5 shadow-sm space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="font-semibold text-brand-dark text-sm">Nowe ogłoszenie</h2>
-            <button onClick={resetForm} className="p-1 rounded-lg text-brand-dark/30 hover:text-brand-dark hover:bg-slate-100">
+            <button onClick={resetForm} className="p-1 rounded-lg text-brand-dark-soft hover:text-brand-dark hover:bg-slate-100">
               <X className="h-4 w-4" />
             </button>
           </div>
 
           <div>
-            <label className="text-xs font-medium text-brand-dark/50 mb-1 block">Tytuł</label>
+            <label className="text-xs font-medium text-brand-dark-muted mb-1 block">Tytuł</label>
             <Input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Np. Zmiana godzin otwarcia"
               maxLength={120}
-              className="border-brand-warm/60 focus:border-brand focus:ring-brand/20"
+              className="border-brand-warm focus:border-brand focus:ring-brand/20"
             />
           </div>
 
           <div>
-            <label className="text-xs font-medium text-brand-dark/50 mb-1 block">Treść</label>
+            <label className="text-xs font-medium text-brand-dark-muted mb-1 block">Treść</label>
             <textarea
               value={content}
               onChange={(e) => setContent(e.target.value)}
               placeholder="Treść ogłoszenia..."
               maxLength={2000}
               rows={4}
-              className="w-full rounded-lg border border-brand-warm/60 px-3 py-2 text-sm focus:border-brand focus:ring-1 focus:ring-brand/20 outline-none resize-none"
+              className="w-full rounded-lg border border-brand-warm px-3 py-2 text-sm focus:border-brand focus:ring-1 focus:ring-brand/20 outline-none resize-none"
             />
-            <p className="text-[10px] text-brand-dark/25 mt-0.5 text-right">{content.length}/2000</p>
+            <p className="text-[10px] text-brand-dark-soft mt-0.5 text-right">{content.length}/2000</p>
           </div>
 
           <div className="flex items-end gap-4 flex-wrap">
             <div>
-              <label className="text-xs font-medium text-brand-dark/50 mb-1.5 block">Priorytet</label>
+              <label className="text-xs font-medium text-brand-dark-muted mb-1.5 block">Priorytet</label>
               <div className="flex gap-1.5">
                 {(["NORMAL", "IMPORTANT", "URGENT"] as const).map((p) => {
                   const cfg = PRIORITY_CONFIG[p];
@@ -213,7 +213,7 @@ export default function AnnouncementsPage() {
                       className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
                         selected
                           ? `${cfg.border} ${cfg.bg} ${cfg.badge.split(" ")[1]}`
-                          : "border-brand-warm/30 text-brand-dark/40 hover:bg-slate-50"
+                          : "border-brand-warm text-brand-dark-muted hover:bg-slate-50"
                       }`}
                     >
                       {cfg.icon}
@@ -225,7 +225,7 @@ export default function AnnouncementsPage() {
             </div>
 
             <div>
-              <label className="text-xs font-medium text-brand-dark/50 mb-1.5 block">
+              <label className="text-xs font-medium text-brand-dark-muted mb-1.5 block">
                 Wygaśnięcie (dni)
               </label>
               <Input
@@ -235,12 +235,12 @@ export default function AnnouncementsPage() {
                 value={expiresIn}
                 onChange={(e) => setExpiresIn(e.target.value)}
                 placeholder="np. 7"
-                className="w-24 border-brand-warm/60 focus:border-brand focus:ring-brand/20"
+                className="w-24 border-brand-warm focus:border-brand focus:ring-brand/20"
               />
             </div>
 
             <div className="flex gap-2 ml-auto">
-              <Button variant="ghost" size="sm" onClick={resetForm} className="text-brand-dark/40">
+              <Button variant="ghost" size="sm" onClick={resetForm} className="text-brand-dark-muted">
                 Anuluj
               </Button>
               <Button
@@ -258,17 +258,17 @@ export default function AnnouncementsPage() {
 
       {/* Announcements list */}
       {isLoading ? (
-        <div className="bg-white border border-brand-warm/40 rounded-xl p-12 text-center">
-          <div className="inline-flex items-center gap-2 text-brand-dark/40 text-sm">
+        <div className="bg-white border border-brand-warm rounded-xl p-12 text-center">
+          <div className="inline-flex items-center gap-2 text-brand-dark-muted text-sm">
             <div className="w-4 h-4 border-2 border-brand/30 border-t-brand rounded-full animate-spin" />
             Ładowanie ogłoszeń...
           </div>
         </div>
       ) : announcements.length === 0 ? (
-        <div className="bg-white border border-brand-warm/40 rounded-xl p-12 text-center">
-          <Megaphone className="h-10 w-10 mx-auto mb-3 text-brand-dark/15" />
-          <p className="text-sm font-medium text-brand-dark/50">Brak ogłoszeń</p>
-          <p className="text-xs text-brand-dark/30 mt-1 mb-4">
+        <div className="bg-white border border-brand-warm rounded-xl p-12 text-center">
+          <Megaphone className="h-10 w-10 mx-auto mb-3 text-brand-dark-soft" />
+          <p className="text-sm font-medium text-brand-dark-muted">Brak ogłoszeń</p>
+          <p className="text-xs text-brand-dark-soft mt-1 mb-4">
             {isAdmin ? "Utwórz pierwsze ogłoszenie, aby poinformować zespół." : "Tu pojawią się ogłoszenia od zespołu."}
           </p>
           {isAdmin && !showForm && (
@@ -311,10 +311,10 @@ export default function AnnouncementsPage() {
                         )}
                       </div>
                       <h3 className="font-semibold text-brand-dark text-sm">{a.title}</h3>
-                      <p className="text-brand-dark/60 text-sm mt-1 whitespace-pre-line leading-relaxed">
+                      <p className="text-brand-dark-muted text-sm mt-1 whitespace-pre-line leading-relaxed">
                         {a.content}
                       </p>
-                      <div className="flex items-center gap-3 mt-3 text-[11px] text-brand-dark/30">
+                      <div className="flex items-center gap-3 mt-3 text-[11px] text-brand-dark-soft">
                         <span>{a.author.nickname || a.author.name}</span>
                         <span>·</span>
                         <span className="flex items-center gap-0.5">
@@ -336,7 +336,7 @@ export default function AnnouncementsPage() {
                       {!a.isRead && (
                         <button
                           onClick={() => readMutation.mutate(a.id)}
-                          className="p-1.5 rounded-lg text-brand-dark/20 hover:text-brand-blue hover:bg-brand-blue-muted/50 transition-colors"
+                          className="p-1.5 rounded-lg text-brand-dark-soft hover:text-brand-blue hover:bg-brand-blue-muted/50 transition-colors"
                           title="Oznacz jako przeczytane"
                         >
                           <Eye className="h-4 w-4" />
@@ -349,7 +349,7 @@ export default function AnnouncementsPage() {
                               deleteMutation.mutate(a.id);
                             }
                           }}
-                          className="p-1.5 rounded-lg text-brand-dark/20 hover:text-red-500 hover:bg-red-50 transition-colors"
+                          className="p-1.5 rounded-lg text-brand-dark-soft hover:text-red-500 hover:bg-red-50 transition-colors"
                           title="Usuń ogłoszenie"
                         >
                           <Trash2 className="h-4 w-4" />

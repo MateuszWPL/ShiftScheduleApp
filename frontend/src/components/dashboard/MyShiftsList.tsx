@@ -32,9 +32,9 @@ export function MyShiftsList({
 
   if (myShifts.length === 0) {
     return (
-      <div className="bg-white border border-brand-warm/40 rounded-xl p-12 text-center">
-        <Calendar className="h-10 w-10 mx-auto mb-3 text-brand-dark/15" />
-        <p className="text-sm font-medium text-brand-dark/50">Brak Twoich zmian w tym tygodniu</p>
+      <div className="bg-white border border-brand-warm rounded-xl p-12 text-center">
+        <Calendar className="h-10 w-10 mx-auto mb-3 text-brand-dark-soft" />
+        <p className="text-sm font-medium text-brand-dark-muted">Brak Twoich zmian w tym tygodniu</p>
       </div>
     );
   }
@@ -52,7 +52,7 @@ export function MyShiftsList({
                 ? "border-dashed border-amber-300/70 bg-amber-50/40"
                 : isMarketplace
                 ? "border-brand/20 bg-brand-muted/50"
-                : "border-brand-warm/40 bg-white"
+                : "border-brand-warm bg-white"
             }`}
           >
             <div
@@ -67,10 +67,10 @@ export function MyShiftsList({
             </div>
             <div className="flex-1 min-w-0">
               <p className="font-semibold text-brand-dark">{s.roleName}</p>
-              <p className="text-xs text-brand-dark/50">{formatDay(s.startTime)}</p>
+              <p className="text-xs text-brand-dark-muted">{formatDay(s.startTime)}</p>
             </div>
             <div className="flex items-center gap-2 text-sm font-medium text-brand-dark">
-              <Clock className="h-4 w-4 text-brand-dark/40" />
+              <Clock className="h-4 w-4 text-brand-dark-muted" />
               {parseTime(s.startTime)}–{parseTime(s.endTime)}
             </div>
             {isDraft && (

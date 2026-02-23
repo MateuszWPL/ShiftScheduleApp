@@ -44,11 +44,11 @@ export default function TeamPage() {
           </div>
           <div>
             <h1 className="text-xl font-bold text-brand-dark">Zespół</h1>
-            <p className="text-xs text-brand-dark/40">Zarządzaj członkami zespołu</p>
+            <p className="text-xs text-brand-dark-muted">Zarządzaj członkami zespołu</p>
           </div>
         </div>
         {members && (
-          <span className="text-sm font-medium text-brand-dark/50 bg-brand-warm-light/50 px-3 py-1.5 rounded-full">
+          <span className="text-sm font-medium text-brand-dark-muted bg-brand-warm-light px-3 py-1.5 rounded-full">
             {members.length} {members.length === 1 ? "osoba" : members.length < 5 ? "osoby" : "osób"}
           </span>
         )}
@@ -58,7 +58,7 @@ export default function TeamPage() {
       {!isAdmin && (
         <div className="flex items-start gap-2.5 p-3.5 rounded-xl bg-brand-blue-muted/30 border border-brand-blue/10 text-sm">
           <Info className="h-4 w-4 text-brand-blue flex-shrink-0 mt-0.5" />
-          <p className="text-brand-dark/50 text-xs">
+          <p className="text-brand-dark-muted text-xs">
             Tylko administratorzy mogą edytować dane pracowników.
           </p>
         </div>
@@ -68,8 +68,8 @@ export default function TeamPage() {
       {isAdmin && members && members.length > 0 && (
         <div className="flex items-start gap-2.5 p-3.5 rounded-xl bg-brand-muted/30 border border-brand/10 text-sm">
           <Info className="h-4 w-4 text-brand flex-shrink-0 mt-0.5" />
-          <p className="text-brand-dark/50 text-xs">
-            Kliknij ikonę <Edit className="h-3 w-3 inline text-brand-dark/40" /> na karcie pracownika, aby edytować jego dane, rolę lub stawkę godzinową.
+          <p className="text-brand-dark-muted text-xs">
+            Kliknij ikonę <Edit className="h-3 w-3 inline text-brand-dark-muted" /> na karcie pracownika, aby edytować jego dane, rolę lub stawkę godzinową.
           </p>
         </div>
       )}
@@ -83,11 +83,11 @@ export default function TeamPage() {
           const roleBadge = {
             OWNER: { label: "Właściciel", bg: "bg-brand-muted text-brand" },
             MANAGER: { label: "Menedżer", bg: "bg-brand-blue-muted text-brand-blue" },
-            EMPLOYEE: { label: "Pracownik", bg: "bg-brand-warm-light text-brand-dark/60" },
+            EMPLOYEE: { label: "Pracownik", bg: "bg-brand-warm-light text-brand-dark-muted" },
           }[member.role] || { label: member.role, bg: "bg-gray-100 text-gray-600" };
 
           return (
-            <Card key={member.id} className="p-5 hover:shadow-md transition-shadow border-brand-warm/40 bg-white">
+            <Card key={member.id} className="p-5 hover:shadow-md transition-shadow border-brand-warm bg-white">
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center gap-3">
                   <Avatar src={getAvatarUrl(member.avatarUrl) || undefined} name={member.name} size="md" />
@@ -95,7 +95,7 @@ export default function TeamPage() {
                     <div className="flex items-center gap-2">
                       <h3 className="font-semibold text-brand-dark">{member.name}</h3>
                       {member.nickname && (
-                        <span className="text-xs text-brand-dark/40">({member.nickname})</span>
+                        <span className="text-xs text-brand-dark-muted">({member.nickname})</span>
                       )}
                     </div>
                     <span className={`inline-block text-[10px] font-medium px-2 py-0.5 rounded-full mt-1 ${roleBadge.bg}`}>
@@ -108,7 +108,7 @@ export default function TeamPage() {
                     variant="ghost"
                     size="sm"
                     onClick={() => setEditingUser(member as User)}
-                    className="shrink-0 text-brand-dark/30 hover:text-brand"
+                    className="shrink-0 text-brand-dark-soft hover:text-brand"
                     title="Edytuj pracownika"
                   >
                     <Edit className="h-4 w-4" />
@@ -118,35 +118,35 @@ export default function TeamPage() {
 
               <div className="space-y-2 text-sm">
                 {member.email && (
-                  <div className="flex items-center gap-2 text-brand-dark/50">
-                    <Mail className="h-3.5 w-3.5 text-brand-dark/25" />
+                  <div className="flex items-center gap-2 text-brand-dark-muted">
+                    <Mail className="h-3.5 w-3.5 text-brand-dark-soft" />
                     <span className="truncate text-xs">{member.email}</span>
                   </div>
                 )}
                 {"phoneNumber" in member && member.phoneNumber && (
-                  <div className="flex items-center gap-2 text-brand-dark/50">
-                    <Phone className="h-3.5 w-3.5 text-brand-dark/25" />
+                  <div className="flex items-center gap-2 text-brand-dark-muted">
+                    <Phone className="h-3.5 w-3.5 text-brand-dark-soft" />
                     <span className="text-xs">{member.phoneNumber}</span>
                   </div>
                 )}
                 {isPrivateData && isAdmin && (
                   <>
                     {privateMember.hourlyRate != null && (
-                      <div className="flex items-center gap-2 text-brand-dark/50">
-                        <DollarSign className="h-3.5 w-3.5 text-brand-dark/25" />
+                      <div className="flex items-center gap-2 text-brand-dark-muted">
+                        <DollarSign className="h-3.5 w-3.5 text-brand-dark-soft" />
                         <span className="text-xs">{privateMember.hourlyRate} PLN/h</span>
                       </div>
                     )}
                     {privateMember.maxHours != null && (
-                      <div className="flex items-center gap-2 text-brand-dark/50">
-                        <Clock className="h-3.5 w-3.5 text-brand-dark/25" />
+                      <div className="flex items-center gap-2 text-brand-dark-muted">
+                        <Clock className="h-3.5 w-3.5 text-brand-dark-soft" />
                         <span className="text-xs">{privateMember.maxHours} h/tydzień</span>
                       </div>
                     )}
                   </>
                 )}
                 {(member as User).positions && (member as User).positions!.length > 0 && (
-                  <div className="pt-2 border-t border-brand-warm/20">
+                  <div className="pt-2 border-t border-brand-warm">
                     <div className="flex flex-wrap gap-1">
                       {(member as User).positions!.map((pos) => (
                         <span
@@ -161,7 +161,7 @@ export default function TeamPage() {
                   </div>
                 )}
                 {member.skills && member.skills.length > 0 && (
-                  <div className={`${(member as User).positions?.length ? "pt-1" : "pt-2 border-t border-brand-warm/20"}`}>
+                  <div className={`${(member as User).positions?.length ? "pt-1" : "pt-2 border-t border-brand-warm"}`}>
                     <div className="flex flex-wrap gap-1">
                       {member.skills.map((skill: string, idx: number) => (
                         <span key={idx} className="text-[10px] bg-brand-blue-muted/50 text-brand-blue px-2 py-0.5 rounded-full font-medium">
@@ -178,10 +178,10 @@ export default function TeamPage() {
       </div>
 
       {members && members.length === 0 && (
-        <div className="bg-white border border-brand-warm/40 rounded-xl p-12 text-center">
-          <Users className="h-10 w-10 text-brand-dark/15 mx-auto mb-3" />
-          <p className="text-sm font-medium text-brand-dark/50">Brak członków zespołu</p>
-          <p className="text-xs text-brand-dark/30 mt-1 mb-4">Zaproś pracowników kodem zaproszenia.</p>
+        <div className="bg-white border border-brand-warm rounded-xl p-12 text-center">
+          <Users className="h-10 w-10 text-brand-dark-soft mx-auto mb-3" />
+          <p className="text-sm font-medium text-brand-dark-muted">Brak członków zespołu</p>
+          <p className="text-xs text-brand-dark-soft mt-1 mb-4">Zaproś pracowników kodem zaproszenia.</p>
           {isAdmin && (
             <Link href="/settings">
               <Button size="sm" className="gap-1.5 bg-brand hover:bg-brand-light text-white">

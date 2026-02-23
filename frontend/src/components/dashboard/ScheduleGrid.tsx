@@ -318,14 +318,14 @@ export function ScheduleGrid({
       {/* Header */}
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="icon" onClick={prevWeek} className="border-brand-warm/60 hover:bg-brand-warm-light" aria-label="Poprzedni tydzień">
-            <ChevronLeft className="h-4 w-4 text-brand-dark/50" />
+          <Button variant="outline" size="icon" onClick={prevWeek} className="border-brand-warm hover:bg-brand-warm-light" aria-label="Poprzedni tydzień">
+            <ChevronLeft className="h-4 w-4 text-brand-dark-muted" />
           </Button>
           <span className="font-semibold text-brand-dark min-w-[200px] text-center text-sm">
             {weekLabel}
           </span>
-          <Button variant="outline" size="icon" onClick={nextWeek} className="border-brand-warm/60 hover:bg-brand-warm-light" aria-label="Następny tydzień">
-            <ChevronRight className="h-4 w-4 text-brand-dark/50" />
+          <Button variant="outline" size="icon" onClick={nextWeek} className="border-brand-warm hover:bg-brand-warm-light" aria-label="Następny tydzień">
+            <ChevronRight className="h-4 w-4 text-brand-dark-muted" />
           </Button>
           <Button variant="ghost" size="sm" onClick={goToday} className="text-xs text-brand hover:text-brand-light hover:bg-brand-muted ml-1">
             Dziś
@@ -343,7 +343,7 @@ export function ScheduleGrid({
 
       {/* Legend + hints */}
       <div className="flex items-center justify-between flex-wrap gap-2">
-        <div className="flex items-center gap-3 text-[11px] text-brand-dark/40">
+        <div className="flex items-center gap-3 text-[11px] text-brand-dark-muted">
           {isAdmin && (
             <>
               <span className="flex items-center gap-1">
@@ -362,7 +362,7 @@ export function ScheduleGrid({
           )}
         </div>
         {isAdmin && onCellClick && (
-          <span className="flex items-center gap-1 text-[11px] text-brand-dark/30" title="Kliknij komórkę lub przeciągnij blok z dostępności">
+          <span className="flex items-center gap-1 text-[11px] text-brand-dark-soft" title="Kliknij komórkę lub przeciągnij blok z dostępności">
             <Info className="h-3 w-3" />
             Kliknij komórkę · przeciągnij dostępność
           </span>
@@ -370,19 +370,19 @@ export function ScheduleGrid({
       </div>
 
       {/* Grid */}
-      <div className="border border-brand-warm/50 rounded-xl bg-white overflow-x-auto overflow-y-auto max-h-[70vh] shadow-sm">
+      <div className="border border-brand-warm rounded-xl bg-white overflow-x-auto overflow-y-auto max-h-[70vh] shadow-sm">
         {isLoading ? (
           <div className="p-12 text-center">
-            <div className="inline-flex items-center gap-2 text-brand-dark/40 text-sm">
+            <div className="inline-flex items-center gap-2 text-brand-dark-muted text-sm">
               <div className="w-4 h-4 border-2 border-brand/30 border-t-brand rounded-full animate-spin" />
               Ładowanie grafiku...
             </div>
           </div>
         ) : employeesOnly.length === 0 ? (
           <div className="p-12 text-center">
-            <Users className="h-10 w-10 mx-auto mb-3 text-brand-dark/15" />
-            <p className="text-sm font-medium text-brand-dark/50">Brak pracowników w zespole</p>
-            <p className="text-xs text-brand-dark/30 mt-1 mb-4">Zaproś członków, aby zobaczyć grafik.</p>
+            <Users className="h-10 w-10 mx-auto mb-3 text-brand-dark-soft" />
+            <p className="text-sm font-medium text-brand-dark-muted">Brak pracowników w zespole</p>
+            <p className="text-xs text-brand-dark-soft mt-1 mb-4">Zaproś członków, aby zobaczyć grafik.</p>
             <Link
               href="/team"
               className="inline-flex items-center gap-1.5 text-sm font-medium text-brand hover:underline"
@@ -395,7 +395,7 @@ export function ScheduleGrid({
           <table className="w-full border-collapse text-sm">
             <thead className="bg-brand-warm-light/50 sticky top-0 z-10">
               <tr>
-                <th className="text-left p-2.5 border-b border-brand-warm/40 font-semibold text-brand-dark/70 min-w-[160px] text-xs uppercase tracking-wider">
+                <th className="text-left p-2.5 border-b border-brand-warm font-semibold text-brand-dark min-w-[160px] text-xs uppercase tracking-wider">
                   Pracownik
                 </th>
                 {weekDays.map((d) => {
@@ -403,14 +403,14 @@ export function ScheduleGrid({
                   return (
                     <th
                       key={toLocalDateKey(d)}
-                      className={`p-2 border-b border-l border-brand-warm/30 font-medium min-w-[120px] text-center ${
+                      className={`p-2 border-b border-l border-brand-warm font-medium min-w-[120px] text-center ${
                         todayCol ? "bg-brand-muted/50" : ""
                       }`}
                     >
-                      <div className={`text-xs uppercase tracking-wide ${todayCol ? "text-brand font-semibold" : "text-brand-dark/40"}`}>
+                      <div className={`text-xs uppercase tracking-wide ${todayCol ? "text-brand font-semibold" : "text-brand-dark-muted"}`}>
                         {d.toLocaleDateString("pl-PL", { weekday: "short" })}
                       </div>
-                      <div className={`text-sm font-semibold ${todayCol ? "text-brand" : "text-brand-dark/70"}`}>
+                      <div className={`text-sm font-semibold ${todayCol ? "text-brand" : "text-brand-dark"}`}>
                         {d.getDate()}
                       </div>
                     </th>
@@ -422,8 +422,8 @@ export function ScheduleGrid({
               {employeesOnly.map((member) => {
                 const hours = weeklyHours.get(member.id) || 0;
                 return (
-                  <tr key={member.id} className="border-b border-brand-warm/20 hover:bg-brand-warm-light/20 transition-colors">
-                    <td className="p-2.5 border-r border-brand-warm/20 sticky left-0 bg-white z-[1]">
+                  <tr key={member.id} className="border-b border-brand-warm hover:bg-brand-warm-light/20 transition-colors">
+                    <td className="p-2.5 border-r border-brand-warm sticky left-0 bg-white z-[1]">
                       <div className="flex items-center gap-2.5">
                         <div className="w-8 h-8 rounded-full bg-brand-blue-muted flex items-center justify-center text-xs font-bold text-brand-blue flex-shrink-0">
                           {(member.nickname || member.name || "?").charAt(0).toUpperCase()}
@@ -433,7 +433,7 @@ export function ScheduleGrid({
                             {member.nickname || member.name}
                           </p>
                           {hours > 0 && (
-                            <p className="text-[10px] text-brand-dark/30 flex items-center gap-0.5">
+                            <p className="text-[10px] text-brand-dark-soft flex items-center gap-0.5">
                               <Clock className="h-2.5 w-2.5" />
                               {Math.round(hours * 10) / 10}h / tydzień
                             </p>
@@ -453,7 +453,7 @@ export function ScheduleGrid({
                       return (
                         <td
                           key={key}
-                          className={`p-1 border-l border-brand-warm/20 align-top min-w-[120px] transition-colors ${
+                          className={`p-1 border-l border-brand-warm align-top min-w-[120px] transition-colors ${
                             todayCol ? "bg-brand-muted/20" : ""
                           } ${
                             isAdmin && isEmpty ? "cursor-pointer hover:bg-brand-muted/30 group/cell" : ""
@@ -505,7 +505,7 @@ export function ScheduleGrid({
                                 cardClasses += " border border-brand-blue/20 bg-brand-blue-muted/50";
                                 barColor = "bg-brand-blue";
                               } else {
-                                cardClasses += " border border-brand-warm/40 bg-white";
+                                cardClasses += " border border-brand-warm bg-white";
                                 barColor = "bg-brand-blue/60";
                               }
 
@@ -547,7 +547,7 @@ export function ScheduleGrid({
                                         )}
                                         {isAdmin && (
                                           <button
-                                            className="opacity-0 group-hover/shift:opacity-100 transition-opacity p-0.5 rounded hover:bg-red-50 text-brand-dark/20 hover:text-red-500"
+                                            className="opacity-0 group-hover/shift:opacity-100 transition-opacity p-0.5 rounded hover:bg-red-50 text-brand-dark-soft hover:text-red-500"
                                             title="Usuń zmianę"
                                             onClick={(e) => {
                                               e.stopPropagation();
@@ -560,17 +560,17 @@ export function ScheduleGrid({
                                           </button>
                                         )}
                                         {isAdmin && onShiftClick && (
-                                          <Pencil className="h-3 w-3 text-brand-dark/15 opacity-0 group-hover/shift:opacity-100 transition-opacity" />
+                                          <Pencil className="h-3 w-3 text-brand-dark-soft opacity-0 group-hover/shift:opacity-100 transition-opacity" />
                                         )}
                                       </div>
                                     </div>
 
                                     {/* Time row */}
                                     <div className="flex items-center gap-1.5 mt-0.5">
-                                      <span className="text-brand-dark/50 text-[11px]">
+                                      <span className="text-brand-dark-muted text-[11px]">
                                         {startTime}–{endTime}
                                       </span>
-                                      <span className="text-[10px] font-medium text-brand-dark/30 bg-brand-dark/5 px-1 rounded">
+                                      <span className="text-[10px] font-medium text-brand-dark-soft bg-brand-warm-light px-1 rounded">
                                         {duration}
                                       </span>
                                     </div>
@@ -593,7 +593,7 @@ export function ScheduleGrid({
                                       <Button
                                         size="sm"
                                         variant="outline"
-                                        className="mt-1.5 w-full h-6 text-[11px] border-brand-dark/10 text-brand-dark/50 hover:text-brand hover:border-brand/30"
+                                        className="mt-1.5 w-full h-6 text-[11px] border-brand-warm text-brand-dark-muted hover:text-brand hover:border-brand"
                                         disabled={releaseMutation.isPending}
                                         onClick={(e) => {
                                           e.stopPropagation();
@@ -628,8 +628,8 @@ export function ScheduleGrid({
                 });
                 if (!hasUnassigned || !isAdmin) return null;
                 return (
-                  <tr className="border-b border-brand-warm/20 bg-amber-50/30">
-                    <td className="p-2.5 border-r border-brand-warm/20 sticky left-0 bg-amber-50/50 z-[1]">
+                  <tr className="border-b border-brand-warm bg-amber-50/30">
+                    <td className="p-2.5 border-r border-brand-warm sticky left-0 bg-amber-50/50 z-[1]">
                       <div className="flex items-center gap-2.5">
                         <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center text-xs font-bold text-amber-600 flex-shrink-0">
                           ?
@@ -653,7 +653,7 @@ export function ScheduleGrid({
                       return (
                         <td
                           key={key}
-                          className={`p-1 border-l border-brand-warm/20 align-top min-w-[120px] ${
+                          className={`p-1 border-l border-brand-warm align-top min-w-[120px] ${
                             todayCol ? "bg-brand-muted/20" : ""
                           }`}
                         >
@@ -694,7 +694,7 @@ export function ScheduleGrid({
                                           </span>
                                         )}
                                         <button
-                                          className="opacity-0 group-hover/shift:opacity-100 transition-opacity p-0.5 rounded hover:bg-red-50 text-brand-dark/20 hover:text-red-500"
+                                          className="opacity-0 group-hover/shift:opacity-100 transition-opacity p-0.5 rounded hover:bg-red-50 text-brand-dark-soft hover:text-red-500"
                                           title="Usuń zmianę"
                                           onClick={(e) => {
                                             e.stopPropagation();
@@ -706,15 +706,15 @@ export function ScheduleGrid({
                                           <Trash2 className="h-3 w-3" />
                                         </button>
                                         {onShiftClick && (
-                                          <Pencil className="h-3 w-3 text-brand-dark/15 opacity-0 group-hover/shift:opacity-100 transition-opacity" />
+                                          <Pencil className="h-3 w-3 text-brand-dark-soft opacity-0 group-hover/shift:opacity-100 transition-opacity" />
                                         )}
                                       </div>
                                     </div>
                                     <div className="flex items-center gap-1.5 mt-0.5">
-                                      <span className="text-brand-dark/50 text-[11px]">
+                                      <span className="text-brand-dark-muted text-[11px]">
                                         {startTime}–{endTime}
                                       </span>
-                                      <span className="text-[10px] font-medium text-brand-dark/30 bg-brand-dark/5 px-1 rounded">
+                                      <span className="text-[10px] font-medium text-brand-dark-soft bg-brand-warm-light px-1 rounded">
                                         {duration}
                                       </span>
                                     </div>

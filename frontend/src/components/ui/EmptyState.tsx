@@ -30,12 +30,12 @@ export function EmptyState({
     <div
       className={`flex flex-col items-center justify-center py-12 px-6 text-center ${className}`}
     >
-      <div className="w-12 h-12 rounded-xl bg-slate-100 flex items-center justify-center mb-4 text-slate-400">
+      <div className="w-12 h-12 rounded-xl bg-brand-warm-light flex items-center justify-center mb-4 text-brand-dark-soft">
         <Icon className="h-6 w-6" />
       </div>
       <h3 className="text-sm font-semibold text-brand-dark">{title}</h3>
       {description && (
-        <p className="text-xs text-brand-dark/50 mt-1 max-w-xs">{description}</p>
+        <p className="text-xs text-brand-dark-muted mt-1 max-w-xs">{description}</p>
       )}
       {(actionLabel && (actionHref || onAction)) && (
         <div className="mt-4">

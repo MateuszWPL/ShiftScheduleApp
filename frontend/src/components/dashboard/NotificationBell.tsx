@@ -81,7 +81,7 @@ export function NotificationBell({ align = "right" }: { align?: "left" | "right"
     <div className="relative" ref={ref}>
       <button
         onClick={() => setOpen(!open)}
-        className="relative p-2 rounded-lg text-brand-dark/40 hover:text-brand hover:bg-brand-muted transition-colors"
+        className="relative p-2 rounded-lg text-brand-dark-muted hover:text-brand hover:bg-brand-muted transition-colors"
         title="Powiadomienia"
       >
         <Bell className="h-5 w-5" />

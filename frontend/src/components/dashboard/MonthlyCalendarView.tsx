@@ -70,8 +70,8 @@ export function MonthlyCalendarView({ monthDate, onDayClick }: MonthlyCalendarVi
 
   if (isLoading) {
     return (
-      <div className="bg-white border border-brand-warm/40 rounded-xl p-4 shadow-sm">
-        <div className="flex items-center justify-center py-8 text-brand-dark/40">
+      <div className="bg-white border border-brand-warm rounded-xl p-4 shadow-sm">
+        <div className="flex items-center justify-center py-8 text-brand-dark-muted">
           <div className="w-5 h-5 border-2 border-brand-blue/30 border-t-brand-blue rounded-full animate-spin" />
         </div>
       </div>
@@ -81,12 +81,12 @@ export function MonthlyCalendarView({ monthDate, onDayClick }: MonthlyCalendarVi
   const CELL_SIZE = "w-8 h-8"; // Compact 32px cells
 
   return (
-    <div className="bg-white border border-brand-warm/40 rounded-xl p-4 shadow-sm max-w-md">
+    <div className="bg-white border border-brand-warm rounded-xl p-4 shadow-sm max-w-md">
       <div className="grid grid-cols-7 gap-0.5">
         {WEEKDAYS.map((wd) => (
           <div
             key={wd}
-            className={`${CELL_SIZE} flex items-center justify-center text-[10px] font-semibold text-brand-dark/40`}
+            className={`${CELL_SIZE} flex items-center justify-center text-[10px] font-semibold text-brand-dark-muted`}
           >
             {wd}
           </div>
@@ -104,7 +104,7 @@ export function MonthlyCalendarView({ monthDate, onDayClick }: MonthlyCalendarVi
             <div
               key={key}
               className={`${CELL_SIZE} flex flex-col items-center justify-center rounded text-[11px] cursor-default ${
-                count > 0 ? "bg-brand-muted/40 font-medium" : "text-brand-dark/60"
+                count > 0 ? "bg-brand-muted/40 font-medium" : "text-brand-dark-muted"
               } ${onDayClick ? "hover:bg-brand-muted/60 cursor-pointer" : ""}`}
               onClick={() => onDayClick?.(key)}
               title={count > 0 ? `${count} zmian${count === 1 ? "a" : count < 5 ? "y" : ""}` : undefined}

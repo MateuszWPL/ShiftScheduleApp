@@ -84,7 +84,7 @@ function ToggleSwitch({
       </button>
       <div>
         <p className="text-sm font-medium text-brand-dark group-hover:text-brand transition-colors">{label}</p>
-        {description && <p className="text-[11px] text-brand-dark/35 mt-0.5">{description}</p>}
+        {description && <p className="text-[11px] text-brand-dark-soft mt-0.5">{description}</p>}
       </div>
     </label>
   );
@@ -269,7 +269,7 @@ export default function SettingsPage() {
 
   if (!isAdmin) {
     return (
-      <div className="flex items-center justify-center min-h-[300px] text-brand-dark/40">
+      <div className="flex items-center justify-center min-h-[300px] text-brand-dark-muted">
         Przekierowuję...
       </div>
     );
@@ -278,7 +278,7 @@ export default function SettingsPage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[300px]">
-        <div className="inline-flex items-center gap-2 text-brand-dark/40 text-sm">
+        <div className="inline-flex items-center gap-2 text-brand-dark-muted text-sm">
           <div className="w-4 h-4 border-2 border-brand/30 border-t-brand rounded-full animate-spin" />
           Ładowanie ustawień...
         </div>
@@ -295,12 +295,12 @@ export default function SettingsPage() {
         </div>
         <div>
           <h1 className="text-xl font-bold text-brand-dark">Ustawienia</h1>
-          <p className="text-xs text-brand-dark/40">Zarządzaj ustawieniami zespołu i firmy</p>
+          <p className="text-xs text-brand-dark-muted">Zarządzaj ustawieniami zespołu i firmy</p>
         </div>
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 bg-white border border-brand-warm/40 rounded-xl p-1.5">
+      <div className="flex gap-1 bg-white border border-brand-warm rounded-xl p-1.5">
         {TABS.map((tab) => (
           <button
             key={tab.id}
@@ -308,7 +308,7 @@ export default function SettingsPage() {
             className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors flex-1 justify-center ${
               activeTab === tab.id
                 ? "bg-brand/10 text-brand"
-                : "text-brand-dark/40 hover:text-brand-dark hover:bg-slate-50"
+                : "text-brand-dark-muted hover:text-brand-dark hover:bg-slate-50"
             }`}
           >
             {tab.icon}
@@ -318,7 +318,7 @@ export default function SettingsPage() {
       </div>
 
       {/* Tab content */}
-      <div className="bg-white border border-brand-warm/40 rounded-xl shadow-sm overflow-hidden">
+      <div className="bg-white border border-brand-warm rounded-xl shadow-sm overflow-hidden">
         {/* COMPANY TAB */}
         {activeTab === "company" && (
           <div className="p-6 space-y-5">
@@ -326,32 +326,32 @@ export default function SettingsPage() {
               <h2 className="font-semibold text-brand-dark text-sm mb-4">Dane firmy</h2>
               <div className="space-y-4">
                 <div>
-                  <label className="text-xs font-medium text-brand-dark/50 mb-1.5 block">Nazwa zespołu</label>
+                  <label className="text-xs font-medium text-brand-dark-muted mb-1.5 block">Nazwa zespołu</label>
                   <Input
                     value={teamName}
                     onChange={(e) => setTeamName(e.target.value)}
                     placeholder="Nazwa zespołu"
                     maxLength={100}
-                    className="border-brand-warm/60 focus:border-brand focus:ring-brand/20"
+                    className="border-brand-warm focus:border-brand focus:ring-brand/20"
                   />
-                  <p className="text-[10px] text-brand-dark/25 mt-1">Widoczna dla wszystkich członków zespołu</p>
+                  <p className="text-[10px] text-brand-dark-soft mt-1">Widoczna dla wszystkich członków zespołu</p>
                 </div>
                 <div>
-                  <label className="text-xs font-medium text-brand-dark/50 mb-1.5 block">Nazwa firmy (opcjonalna)</label>
+                  <label className="text-xs font-medium text-brand-dark-muted mb-1.5 block">Nazwa firmy (opcjonalna)</label>
                   <Input
                     value={companyName}
                     onChange={(e) => setCompanyName(e.target.value)}
                     placeholder="Np. Restauracja Pod Lipą"
                     maxLength={100}
-                    className="border-brand-warm/60 focus:border-brand focus:ring-brand/20"
+                    className="border-brand-warm focus:border-brand focus:ring-brand/20"
                   />
-                  <p className="text-[10px] text-brand-dark/25 mt-1">Wyświetlana w nagłówkach i raportach</p>
+                  <p className="text-[10px] text-brand-dark-soft mt-1">Wyświetlana w nagłówkach i raportach</p>
                 </div>
               </div>
             </div>
 
-            <div className="flex justify-between items-center pt-4 border-t border-brand-warm/20">
-              <p className="text-[10px] text-brand-dark/25">
+            <div className="flex justify-between items-center pt-4 border-t border-brand-warm">
+              <p className="text-[10px] text-brand-dark-soft">
                 Zespół utworzony: {data?.team.createdAt ? new Date(data.team.createdAt).toLocaleDateString("pl-PL") : "—"}
               </p>
               <Button
@@ -371,7 +371,7 @@ export default function SettingsPage() {
           <div className="p-6 space-y-5">
             <div>
               <h2 className="font-semibold text-brand-dark text-sm mb-1">Stanowiska</h2>
-              <p className="text-xs text-brand-dark/40 mb-5">
+              <p className="text-xs text-brand-dark-muted mb-5">
                 Zdefiniuj stanowiska w zespole. Pracownicy mogą mieć przypisane jedno lub więcej stanowisk — 
                 ułatwia to tworzenie grafiku i automatyczne filtrowanie.
               </p>
@@ -379,18 +379,18 @@ export default function SettingsPage() {
               {/* Create new position */}
               <div className="flex items-end gap-2 mb-5">
                 <div className="flex-1">
-                  <label className="text-xs font-medium text-brand-dark/50 mb-1.5 block">Nowe stanowisko</label>
+                  <label className="text-xs font-medium text-brand-dark-muted mb-1.5 block">Nowe stanowisko</label>
                   <Input
                     value={newPosName}
                     onChange={(e) => setNewPosName(e.target.value)}
                     placeholder="np. Kelner, Barista, Kucharz"
                     maxLength={50}
-                    className="border-brand-warm/60 focus:border-brand focus:ring-brand/20"
+                    className="border-brand-warm focus:border-brand focus:ring-brand/20"
                     onKeyDown={(e) => e.key === "Enter" && handleCreatePosition()}
                   />
                 </div>
                 <div>
-                  <label className="text-xs font-medium text-brand-dark/50 mb-1.5 block">Kolor</label>
+                  <label className="text-xs font-medium text-brand-dark-muted mb-1.5 block">Kolor</label>
                   <div className="flex gap-1">
                     {POSITION_COLORS.slice(0, 7).map((c) => (
                       <button
@@ -416,9 +416,9 @@ export default function SettingsPage() {
 
               {/* Positions list */}
               {positionsLoading ? (
-                <div className="text-sm text-brand-dark/30 text-center py-8">Ładowanie...</div>
+                <div className="text-sm text-brand-dark-soft text-center py-8">Ładowanie...</div>
               ) : positions.length === 0 ? (
-                <div className="text-center py-10 text-brand-dark/30">
+                <div className="text-center py-10 text-brand-dark-soft">
                   <Briefcase className="h-8 w-8 mx-auto mb-2 opacity-30" />
                   <p className="text-sm">Brak zdefiniowanych stanowisk</p>
                   <p className="text-xs mt-1">Dodaj pierwsze stanowisko powyżej</p>
@@ -428,7 +428,7 @@ export default function SettingsPage() {
                   {positions.map((pos) => (
                     <div
                       key={pos.id}
-                      className="flex items-center gap-3 p-3 rounded-lg border border-brand-warm/30 bg-white hover:bg-slate-50/50 transition-colors group"
+                      className="flex items-center gap-3 p-3 rounded-lg border border-brand-warm bg-white hover:bg-slate-50/50 transition-colors group"
                     >
                       {editingPosId === pos.id ? (
                         <>
@@ -444,7 +444,7 @@ export default function SettingsPage() {
                           <Input
                             value={editPosName}
                             onChange={(e) => setEditPosName(e.target.value)}
-                            className="flex-1 h-8 text-sm border-brand-warm/60"
+                            className="flex-1 h-8 text-sm border-brand-warm"
                             onKeyDown={(e) => e.key === "Enter" && handleSaveEditPosition()}
                             autoFocus
                           />
@@ -471,12 +471,12 @@ export default function SettingsPage() {
                           <span className="flex-1 text-sm font-medium text-brand-dark">
                             {pos.name}
                           </span>
-                          <span className="text-[10px] text-brand-dark/25 mr-2">
+                          <span className="text-[10px] text-brand-dark-soft mr-2">
                             {pos._count?.employees ?? 0} prac. · {pos._count?.shifts ?? 0} zmian
                           </span>
                           <button
                             onClick={() => handleStartEditPosition(pos)}
-                            className="p-1.5 rounded hover:bg-blue-50 text-brand-dark/20 hover:text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity"
+                            className="p-1.5 rounded hover:bg-blue-50 text-brand-dark-soft hover:text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity"
                           >
                             <Pencil className="h-3.5 w-3.5" />
                           </button>
@@ -486,7 +486,7 @@ export default function SettingsPage() {
                                 deletePosMut.mutate(pos.id);
                               }
                             }}
-                            className="p-1.5 rounded hover:bg-red-50 text-brand-dark/20 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                            className="p-1.5 rounded hover:bg-red-50 text-brand-dark-soft hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
                           >
                             <Trash2 className="h-3.5 w-3.5" />
                           </button>
@@ -505,17 +505,17 @@ export default function SettingsPage() {
           <div className="p-6 space-y-5">
             <div>
               <h2 className="font-semibold text-brand-dark text-sm mb-4">Kod zaproszenia</h2>
-              <p className="text-xs text-brand-dark/40 mb-4">
+              <p className="text-xs text-brand-dark-muted mb-4">
                 Udostępnij ten kod pracownikom, aby mogli dołączyć do Twojego zespołu.
               </p>
 
-              <div className="flex items-center gap-3 p-4 rounded-xl bg-brand-warm-light/30 border border-brand-warm/30">
+              <div className="flex items-center gap-3 p-4 rounded-xl bg-brand-warm-light/30 border border-brand-warm">
                 <code className="flex-1 text-2xl font-mono tracking-[0.2em] text-brand-dark font-bold select-all text-center">
                   {data?.team.inviteCode || "—"}
                 </code>
                 <button
                   onClick={handleCopyCode}
-                  className="p-2.5 rounded-lg hover:bg-brand-muted text-brand-dark/40 hover:text-brand transition-colors"
+                  className="p-2.5 rounded-lg hover:bg-brand-muted text-brand-dark-muted hover:text-brand transition-colors"
                   title="Kopiuj kod"
                 >
                   {codeCopied ? <Check className="h-5 w-5 text-green-500" /> : <Copy className="h-5 w-5" />}
@@ -524,7 +524,7 @@ export default function SettingsPage() {
             </div>
 
             {isOwner && (
-              <div className="pt-4 border-t border-brand-warm/20">
+              <div className="pt-4 border-t border-brand-warm">
                 <div className="flex items-start gap-2.5 p-3.5 rounded-xl bg-amber-50/50 border border-amber-200/40 mb-4">
                   <Info className="h-4 w-4 text-amber-500 flex-shrink-0 mt-0.5" />
                   <p className="text-xs text-amber-700/70">
@@ -539,7 +539,7 @@ export default function SettingsPage() {
                     }
                   }}
                   disabled={regenerateCodeMut.isPending}
-                  className="gap-1.5 border-brand-warm/60 text-brand-dark/60 hover:text-brand hover:border-brand/30 text-sm"
+                  className="gap-1.5 border-brand-warm text-brand-dark-muted hover:text-brand hover:border-brand/30 text-sm"
                 >
                   <RefreshCw className={`h-3.5 w-3.5 ${regenerateCodeMut.isPending ? "animate-spin" : ""}`} />
                   {regenerateCodeMut.isPending ? "Generowanie..." : "Regeneruj kod"}
@@ -550,7 +550,7 @@ export default function SettingsPage() {
             {!isOwner && (
               <div className="flex items-start gap-2.5 p-3.5 rounded-xl bg-brand-blue-muted/30 border border-brand-blue/10">
                 <Shield className="h-4 w-4 text-brand-blue flex-shrink-0 mt-0.5" />
-                <p className="text-xs text-brand-dark/50">
+                <p className="text-xs text-brand-dark-muted">
                   Tylko właściciel zespołu może regenerować kod zaproszenia.
                 </p>
               </div>
@@ -566,7 +566,7 @@ export default function SettingsPage() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-xs font-medium text-brand-dark/50 mb-1.5 block">Godzina otwarcia</label>
+                  <label className="text-xs font-medium text-brand-dark-muted mb-1.5 block">Godzina otwarcia</label>
                   <div className="flex items-center gap-2">
                     <Input
                       type="number"
@@ -574,13 +574,13 @@ export default function SettingsPage() {
                       max={23}
                       value={openHour}
                       onChange={(e) => setOpenHour(parseInt(e.target.value) || 0)}
-                      className="w-20 border-brand-warm/60 focus:border-brand focus:ring-brand/20"
+                      className="w-20 border-brand-warm focus:border-brand focus:ring-brand/20"
                     />
-                    <span className="text-sm text-brand-dark/40">:00</span>
+                    <span className="text-sm text-brand-dark-muted">:00</span>
                   </div>
                 </div>
                 <div>
-                  <label className="text-xs font-medium text-brand-dark/50 mb-1.5 block">Godzina zamknięcia</label>
+                  <label className="text-xs font-medium text-brand-dark-muted mb-1.5 block">Godzina zamknięcia</label>
                   <div className="flex items-center gap-2">
                     <Input
                       type="number"
@@ -588,23 +588,23 @@ export default function SettingsPage() {
                       max={24}
                       value={closeHour}
                       onChange={(e) => setCloseHour(parseInt(e.target.value) || 22)}
-                      className="w-20 border-brand-warm/60 focus:border-brand focus:ring-brand/20"
+                      className="w-20 border-brand-warm focus:border-brand focus:ring-brand/20"
                     />
-                    <span className="text-sm text-brand-dark/40">:00</span>
+                    <span className="text-sm text-brand-dark-muted">:00</span>
                   </div>
                 </div>
               </div>
 
-              <p className="text-[10px] text-brand-dark/25 mt-2">
+              <p className="text-[10px] text-brand-dark-soft mt-2">
                 Domyślny zakres godzin widoczny na paskach dostępności i w kalendarzu
               </p>
             </div>
 
-            <div className="border-t border-brand-warm/20 pt-5">
-              <h3 className="text-xs font-medium text-brand-dark/50 mb-3">Długość zmiany</h3>
+            <div className="border-t border-brand-warm pt-5">
+              <h3 className="text-xs font-medium text-brand-dark-muted mb-3">Długość zmiany</h3>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-xs text-brand-dark/40 mb-1.5 block">Minimalna (minuty)</label>
+                  <label className="text-xs text-brand-dark-muted mb-1.5 block">Minimalna (minuty)</label>
                   <Input
                     type="number"
                     min={60}
@@ -612,12 +612,12 @@ export default function SettingsPage() {
                     step={30}
                     value={minShiftMin}
                     onChange={(e) => setMinShiftMin(parseInt(e.target.value) || 240)}
-                    className="border-brand-warm/60 focus:border-brand focus:ring-brand/20"
+                    className="border-brand-warm focus:border-brand focus:ring-brand/20"
                   />
-                  <p className="text-[10px] text-brand-dark/20 mt-1">{Math.floor(minShiftMin / 60)}h {minShiftMin % 60 > 0 ? `${minShiftMin % 60}min` : ""}</p>
+                  <p className="text-[10px] text-brand-dark-soft mt-1">{Math.floor(minShiftMin / 60)}h {minShiftMin % 60 > 0 ? `${minShiftMin % 60}min` : ""}</p>
                 </div>
                 <div>
-                  <label className="text-xs text-brand-dark/40 mb-1.5 block">Maksymalna (minuty)</label>
+                  <label className="text-xs text-brand-dark-muted mb-1.5 block">Maksymalna (minuty)</label>
                   <Input
                     type="number"
                     min={60}
@@ -625,14 +625,14 @@ export default function SettingsPage() {
                     step={30}
                     value={maxShiftMin}
                     onChange={(e) => setMaxShiftMin(parseInt(e.target.value) || 720)}
-                    className="border-brand-warm/60 focus:border-brand focus:ring-brand/20"
+                    className="border-brand-warm focus:border-brand focus:ring-brand/20"
                   />
-                  <p className="text-[10px] text-brand-dark/20 mt-1">{Math.floor(maxShiftMin / 60)}h {maxShiftMin % 60 > 0 ? `${maxShiftMin % 60}min` : ""}</p>
+                  <p className="text-[10px] text-brand-dark-soft mt-1">{Math.floor(maxShiftMin / 60)}h {maxShiftMin % 60 > 0 ? `${maxShiftMin % 60}min` : ""}</p>
                 </div>
               </div>
             </div>
 
-            <div className="flex justify-end pt-4 border-t border-brand-warm/20">
+            <div className="flex justify-end pt-4 border-t border-brand-warm">
               <Button
                 onClick={handleSaveSchedule}
                 disabled={updateSettingsMut.isPending}
@@ -650,7 +650,7 @@ export default function SettingsPage() {
           <div className="p-6 space-y-5">
             <div>
               <h2 className="font-semibold text-brand-dark text-sm mb-1">Preferencje powiadomień</h2>
-              <p className="text-xs text-brand-dark/40 mb-5">
+              <p className="text-xs text-brand-dark-muted mb-5">
                 Skonfiguruj, które powiadomienia wewnętrzne są włączone dla zespołu.
               </p>
 
@@ -682,7 +682,7 @@ export default function SettingsPage() {
               </div>
             </div>
 
-            <div className="flex justify-end pt-4 border-t border-brand-warm/20">
+            <div className="flex justify-end pt-4 border-t border-brand-warm">
               <Button
                 onClick={handleSaveNotifications}
                 disabled={updateSettingsMut.isPending}

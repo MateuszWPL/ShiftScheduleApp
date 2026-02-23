@@ -8,16 +8,21 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  /* Pomarańczowy – główny akcent (bez zmian) */
   --color-brand: #FF8400;
   --color-brand-light: #FFA940;
-  --color-brand-muted: #FFF4E8;
-  --color-brand-blue: #8FACDB;
-  --color-brand-blue-light: #B5C9E8;
-  --color-brand-blue-muted: #EEF3FA;
-  --color-brand-warm: #F9DFC6;
-  --color-brand-warm-light: #FDF2E8;
+  --color-brand-muted: #FFE8D4;
+  --color-brand-blue: #6B8FC7;
+  --color-brand-blue-light: #9BB5DC;
+  --color-brand-blue-muted: #E2EAF5;
+  --color-brand-warm: #F0D5BC;
+  --color-brand-warm-light: #F7EBE0;
+  --color-brand-surface: #FBF8F5;
+  /* Ciemny navy – tekst i elementy */
   --color-brand-dark: #0B0829;
   --color-brand-dark-light: #1A1840;
+  --color-brand-dark-muted: #4A4568;
+  --color-brand-dark-soft: #6B6685;
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);

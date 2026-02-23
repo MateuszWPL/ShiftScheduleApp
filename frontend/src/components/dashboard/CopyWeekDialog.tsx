@@ -131,12 +131,12 @@ export function CopyWeekDialog({ isOpen, onClose, currentWeekStart, onNavigateTo
             </div>
             <div>
               <h2 className="text-lg font-bold text-brand-dark">Kopiuj tydzień</h2>
-              <p className="text-[11px] text-brand-dark/40">
+              <p className="text-[11px] text-brand-dark-muted">
                 {step === "configure" ? "Wybierz opcje kopiowania" : "Podgląd zmian do skopiowania"}
               </p>
             </div>
           </div>
-          <button onClick={handleClose} className="p-2 rounded-lg hover:bg-gray-100 transition-colors text-brand-dark/40 hover:text-brand-dark">
+          <button onClick={handleClose} className="p-2 rounded-lg hover:bg-gray-100 transition-colors text-brand-dark-muted hover:text-brand-dark">
             <X className="h-5 w-5" />
           </button>
         </div>
@@ -147,21 +147,21 @@ export function CopyWeekDialog({ isOpen, onClose, currentWeekStart, onNavigateTo
             <>
               {/* Source week */}
               <div>
-                <label className="text-xs font-medium text-brand-dark/50 uppercase tracking-wider">Źródłowy tydzień</label>
+                <label className="text-xs font-medium text-brand-dark-muted uppercase tracking-wider">Źródłowy tydzień</label>
                 <div className="mt-1.5 p-3 bg-gray-50 border border-gray-200 rounded-xl flex items-center gap-2">
-                  <Clock className="h-4 w-4 text-brand-dark/30" />
+                  <Clock className="h-4 w-4 text-brand-dark-soft" />
                   <span className="text-sm font-semibold text-brand-dark">{formatWeekRange(sourceMonday)}</span>
                 </div>
               </div>
 
               {/* Target week offset */}
               <div>
-                <label className="text-xs font-medium text-brand-dark/50 uppercase tracking-wider">Docelowy tydzień</label>
+                <label className="text-xs font-medium text-brand-dark-muted uppercase tracking-wider">Docelowy tydzień</label>
                 <div className="mt-1.5 flex items-center gap-2">
                   <button
                     onClick={() => setTargetOffset((v) => Math.max(-12, v - 1))}
                     disabled={targetOffset <= -12}
-                    className="w-9 h-9 rounded-lg border border-gray-200 flex items-center justify-center text-brand-dark/60 hover:bg-gray-50 disabled:opacity-30 transition-colors"
+                    className="w-9 h-9 rounded-lg border border-gray-200 flex items-center justify-center text-brand-dark-muted hover:bg-gray-50 disabled:opacity-30 transition-colors"
                   >
                     ‹
                   </button>
@@ -174,7 +174,7 @@ export function CopyWeekDialog({ isOpen, onClose, currentWeekStart, onNavigateTo
                   <button
                     onClick={() => setTargetOffset((v) => Math.min(12, v + 1))}
                     disabled={targetOffset >= 12}
-                    className="w-9 h-9 rounded-lg border border-gray-200 flex items-center justify-center text-brand-dark/60 hover:bg-gray-50 disabled:opacity-30 transition-colors"
+                    className="w-9 h-9 rounded-lg border border-gray-200 flex items-center justify-center text-brand-dark-muted hover:bg-gray-50 disabled:opacity-30 transition-colors"
                   >
                     ›
                   </button>
@@ -189,7 +189,7 @@ export function CopyWeekDialog({ isOpen, onClose, currentWeekStart, onNavigateTo
 
               {/* Copy mode */}
               <div>
-                <label className="text-xs font-medium text-brand-dark/50 uppercase tracking-wider">Tryb kopiowania</label>
+                <label className="text-xs font-medium text-brand-dark-muted uppercase tracking-wider">Tryb kopiowania</label>
                 <div className="mt-1.5 space-y-2">
                   <label
                     className={`flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition-colors ${
@@ -205,7 +205,7 @@ export function CopyWeekDialog({ isOpen, onClose, currentWeekStart, onNavigateTo
                     />
                     <div>
                       <p className="text-sm font-medium text-brand-dark">Z pracownikami</p>
-                      <p className="text-xs text-brand-dark/40">Kopiuje zmiany razem z przypisanymi pracownikami</p>
+                      <p className="text-xs text-brand-dark-muted">Kopiuje zmiany razem z przypisanymi pracownikami</p>
                     </div>
                   </label>
                   <label
@@ -222,7 +222,7 @@ export function CopyWeekDialog({ isOpen, onClose, currentWeekStart, onNavigateTo
                     />
                     <div>
                       <p className="text-sm font-medium text-brand-dark">Tylko struktura</p>
-                      <p className="text-xs text-brand-dark/40">Kopiuje same godziny i stanowiska, bez pracowników</p>
+                      <p className="text-xs text-brand-dark-muted">Kopiuje same godziny i stanowiska, bez pracowników</p>
                     </div>
                   </label>
                 </div>
@@ -232,21 +232,21 @@ export function CopyWeekDialog({ isOpen, onClose, currentWeekStart, onNavigateTo
 
           {step === "preview" && (
             <>
-              <div className="flex items-center gap-2 text-xs text-brand-dark/50">
+              <div className="flex items-center gap-2 text-xs text-brand-dark-muted">
                 <span className="font-medium">{formatWeekRange(sourceMonday)}</span>
                 <ChevronRight className="h-3 w-3" />
                 <span className="font-medium text-brand">{formatWeekRange(targetMonday)}</span>
               </div>
 
               {preview.length === 0 ? (
-                <div className="text-center py-8 text-brand-dark/40">
-                  <AlertTriangle className="h-8 w-8 mx-auto mb-2 text-brand-dark/20" />
+                <div className="text-center py-8 text-brand-dark-muted">
+                  <AlertTriangle className="h-8 w-8 mx-auto mb-2 text-brand-dark-soft" />
                   <p className="text-sm font-medium">Brak zmian do skopiowania</p>
                   <p className="text-xs mt-1">Źródłowy tydzień jest pusty.</p>
                 </div>
               ) : (
                 <div className="space-y-2">
-                  <p className="text-xs text-brand-dark/40">
+                  <p className="text-xs text-brand-dark-muted">
                     {preview.length} zmian{preview.length === 1 ? "a" : preview.length < 5 ? "y" : ""} zostaną skopiowane jako szkice:
                   </p>
                   <div className="space-y-1.5 max-h-[40vh] overflow-y-auto pr-1">
@@ -262,13 +262,13 @@ export function CopyWeekDialog({ isOpen, onClose, currentWeekStart, onNavigateTo
                               SZKIC
                             </span>
                           </div>
-                          <div className="flex items-center gap-1.5 text-xs text-brand-dark/40 mt-0.5">
+                          <div className="flex items-center gap-1.5 text-xs text-brand-dark-muted mt-0.5">
                             <Clock className="h-3 w-3" />
                             <span>{parseDate(item.newStartTime)}</span>
                             <span>{parseTime(item.newStartTime)}–{parseTime(item.newEndTime)}</span>
                           </div>
                           {item.assignees.length > 0 && (
-                            <div className="flex items-center gap-1 text-xs text-brand-dark/30 mt-1">
+                            <div className="flex items-center gap-1 text-xs text-brand-dark-soft mt-1">
                               <Users className="h-3 w-3" />
                               {item.assignees.map((a) => a.name).join(", ")}
                             </div>
@@ -288,14 +288,14 @@ export function CopyWeekDialog({ isOpen, onClose, currentWeekStart, onNavigateTo
           {step === "preview" && (
             <Button
               variant="ghost"
-              className="text-brand-dark/50"
+              className="text-brand-dark-muted"
               onClick={() => setStep("configure")}
             >
               Wróć
             </Button>
           )}
           <div className="flex items-center gap-2 ml-auto">
-            <Button variant="ghost" className="text-brand-dark/50" onClick={handleClose}>
+            <Button variant="ghost" className="text-brand-dark-muted" onClick={handleClose}>
               Anuluj
             </Button>
             {step === "configure" && (

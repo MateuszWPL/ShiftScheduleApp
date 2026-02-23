@@ -202,7 +202,7 @@ export default function DostepnoscPage() {
 
   if (!dbUser || dbUser.role !== "EMPLOYEE") {
     return (
-      <div className="flex items-center justify-center min-h-[300px] text-brand-dark/40">
+      <div className="flex items-center justify-center min-h-[300px] text-brand-dark-muted">
         <p>Przekierowuję...</p>
       </div>
     );
@@ -249,7 +249,7 @@ export default function DostepnoscPage() {
           </div>
           <div>
             <h1 className="text-xl font-bold text-brand-dark">Moja dostępność</h1>
-            <p className="text-xs text-brand-dark/40">Zgłoś kiedy możesz pracować</p>
+            <p className="text-xs text-brand-dark-muted">Zgłoś kiedy możesz pracować</p>
           </div>
         </div>
         {totalDrafts > 0 && (
@@ -260,7 +260,7 @@ export default function DostepnoscPage() {
             <Button
               variant="ghost"
               size="sm"
-              className="text-xs text-brand-dark/40 hover:text-brand-dark"
+              className="text-xs text-brand-dark-muted hover:text-brand-dark"
               onClick={handleClearDrafts}
             >
               Wyczyść
@@ -281,8 +281,8 @@ export default function DostepnoscPage() {
       {/* Instruction hint */}
       <div className="flex items-start gap-2.5 p-3.5 rounded-xl bg-brand-blue-muted/30 border border-brand-blue/10 text-sm">
         <Info className="h-4 w-4 text-brand-blue flex-shrink-0 mt-0.5" />
-        <div className="text-brand-dark/50 text-xs leading-relaxed">
-          <strong className="text-brand-dark/70">Jak dodać dostępność?</strong>{" "}
+        <div className="text-brand-dark-muted text-xs leading-relaxed">
+          <strong className="text-brand-dark">Jak dodać dostępność?</strong>{" "}
           Kliknij i przeciągnij na pasku danego dnia, aby zaznaczyć przedział czasowy (min. 4 godziny).
           Możesz dodać wiele bloków na cały tydzień. Gdy skończysz, kliknij <strong className="text-brand">&quot;Zatwierdź wszystko&quot;</strong>.
         </div>
@@ -293,13 +293,13 @@ export default function DostepnoscPage() {
         <Button
           variant="outline"
           size="icon"
-          className="border-brand-warm/60 hover:bg-brand-warm-light"
+          className="border-brand-warm hover:bg-brand-warm-light"
           onClick={() =>
             setWeekStart(new Date(weekStart.getTime() - 7 * 24 * 60 * 60 * 1000))
           }
           aria-label="Poprzedni tydzień"
         >
-          <ChevronLeft className="h-4 w-4 text-brand-dark/50" />
+          <ChevronLeft className="h-4 w-4 text-brand-dark-muted" />
         </Button>
         <span className="font-semibold text-brand-dark text-sm min-w-[220px] text-center">
           {weekLabel}
@@ -307,13 +307,13 @@ export default function DostepnoscPage() {
         <Button
           variant="outline"
           size="icon"
-          className="border-brand-warm/60 hover:bg-brand-warm-light"
+          className="border-brand-warm hover:bg-brand-warm-light"
           onClick={() =>
             setWeekStart(new Date(weekStart.getTime() + 7 * 24 * 60 * 60 * 1000))
           }
           aria-label="Następny tydzień"
         >
-          <ChevronRight className="h-4 w-4 text-brand-dark/50" />
+          <ChevronRight className="h-4 w-4 text-brand-dark-muted" />
         </Button>
         <Button
           variant="ghost"
@@ -324,17 +324,17 @@ export default function DostepnoscPage() {
           Dziś
         </Button>
         {totalSaved > 0 && (
-          <span className="text-[11px] text-brand-dark/30 ml-2">
+          <span className="text-[11px] text-brand-dark-soft ml-2">
             {totalSaved} zapisany{totalSaved > 1 ? "ch" : ""} slot{totalSaved > 1 ? "ów" : ""}
           </span>
         )}
       </div>
 
       {/* Availability table */}
-      <div className="bg-white border border-brand-warm/40 rounded-xl overflow-hidden shadow-sm">
+      <div className="bg-white border border-brand-warm rounded-xl overflow-hidden shadow-sm">
         {isLoading ? (
           <div className="p-12 text-center">
-            <div className="inline-flex items-center gap-2 text-brand-dark/40 text-sm">
+            <div className="inline-flex items-center gap-2 text-brand-dark-muted text-sm">
               <div className="w-4 h-4 border-2 border-brand-blue/30 border-t-brand-blue rounded-full animate-spin" />
               Ładowanie dostępności...
             </div>
@@ -343,17 +343,17 @@ export default function DostepnoscPage() {
           <table className="w-full border-collapse">
             <thead>
               <tr className="bg-brand-warm-light/30">
-                <th className="text-left p-2.5 border-b border-r border-brand-warm/30 font-semibold text-brand-dark/50 w-[120px] min-w-[120px] text-[11px] uppercase tracking-wider">
+                <th className="text-left p-2.5 border-b border-r border-brand-warm font-semibold text-brand-dark-muted w-[120px] min-w-[120px] text-[11px] uppercase tracking-wider">
                   Dzień
                 </th>
-                <th className="border-b border-brand-warm/30 p-0">
+                <th className="border-b border-brand-warm p-0">
                   <div className="relative h-5">
                     {Array.from({ length: 25 }, (_, h) => h)
                       .filter((h) => h % 3 === 0)
                       .map((h) => (
                         <span
                           key={h}
-                          className="absolute text-[9px] text-brand-dark/25 select-none font-medium"
+                          className="absolute text-[9px] text-brand-dark-soft select-none font-medium"
                           style={{
                             left: `${(h / 24) * 100}%`,
                             transform:
@@ -381,21 +381,21 @@ export default function DostepnoscPage() {
                 return (
                   <tr
                     key={day.index}
-                    className={`border-b border-brand-warm/15 last:border-b-0 ${
+                    className={`border-b border-brand-warm last:border-b-0 ${
                       isWeekend ? "bg-brand-warm-light/20" : ""
                     }`}
                   >
                     <td
-                      className={`p-2.5 border-r border-brand-warm/20 ${
+                      className={`p-2.5 border-r border-brand-warm ${
                         isToday
                           ? "bg-brand-muted/40"
                           : ""
                       }`}
                     >
-                      <div className={`text-sm font-medium ${isToday ? "text-brand" : "text-brand-dark/70"}`}>
+                      <div className={`text-sm font-medium ${isToday ? "text-brand" : "text-brand-dark"}`}>
                         {day.short}
                       </div>
-                      <div className="text-[11px] text-brand-dark/30">
+                      <div className="text-[11px] text-brand-dark-soft">
                         {day.dateLabel}
                       </div>
                     </td>
@@ -468,7 +468,7 @@ export default function DostepnoscPage() {
               variant="ghost"
               size="sm"
               onClick={handleClearDrafts}
-              className="text-brand-dark/40 hover:text-brand-dark"
+              className="text-brand-dark-muted hover:text-brand-dark"
             >
               <Trash2 className="h-3.5 w-3.5 mr-1" />
               Wyczyść
@@ -489,7 +489,7 @@ export default function DostepnoscPage() {
       )}
 
       {/* Legend */}
-      <div className="flex items-center gap-4 text-[11px] text-brand-dark/35">
+      <div className="flex items-center gap-4 text-[11px] text-brand-dark-soft">
         <span className="flex items-center gap-1.5">
           <span className="inline-block w-3 h-3 rounded bg-brand-blue/70" />
           Zapisana dostępność

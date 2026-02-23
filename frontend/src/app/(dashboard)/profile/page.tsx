@@ -80,7 +80,7 @@ export default function ProfilePage() {
 
   if (!user) {
     return (
-      <div className="flex items-center justify-center min-h-[300px] text-brand-dark/40">
+      <div className="flex items-center justify-center min-h-[300px] text-brand-dark-muted">
         <div className="inline-flex items-center gap-2 text-sm">
           <div className="w-4 h-4 border-2 border-brand-blue/30 border-t-brand-blue rounded-full animate-spin" />
           Ładowanie profilu...
@@ -99,7 +99,7 @@ export default function ProfilePage() {
           </div>
           <div className="min-w-0">
             <h1 className="text-lg sm:text-xl font-bold text-brand-dark truncate">Mój Profil</h1>
-            <p className="text-[11px] sm:text-xs text-brand-dark/40 hidden sm:block">Zarządzaj danymi swojego konta</p>
+            <p className="text-[11px] sm:text-xs text-brand-dark-muted hidden sm:block">Zarządzaj danymi swojego konta</p>
           </div>
         </div>
         {!isEditing && (
@@ -114,7 +114,7 @@ export default function ProfilePage() {
       </div>
 
       {/* Avatar card */}
-      <div className="bg-white border border-brand-warm/40 rounded-xl p-4 sm:p-6 shadow-sm">
+      <div className="bg-white border border-brand-warm rounded-xl p-4 sm:p-6 shadow-sm">
         <div className="flex flex-col items-center sm:flex-row sm:items-start gap-4 sm:gap-6">
           {/* Avatar */}
           <div className="flex-shrink-0 relative">
@@ -147,7 +147,7 @@ export default function ProfilePage() {
           {/* Upload controls (show below avatar on mobile when file selected) */}
           {isEditing && selectedFile && (
             <div className="w-full sm:hidden space-y-2 -mt-1">
-              <p className="text-xs text-brand-dark/50 truncate text-center">{selectedFile.name}</p>
+              <p className="text-xs text-brand-dark-muted truncate text-center">{selectedFile.name}</p>
               <div className="flex gap-2 justify-center">
                 <Button
                   size="sm"
@@ -160,7 +160,7 @@ export default function ProfilePage() {
                 <Button
                   size="sm"
                   variant="ghost"
-                  className="text-brand-dark/30 hover:text-brand-dark"
+                  className="text-brand-dark-soft hover:text-brand-dark"
                   onClick={() => {
                     setAvatarPreview(null);
                     setSelectedFile(null);
@@ -178,7 +178,7 @@ export default function ProfilePage() {
             {/* Desktop upload controls */}
             {isEditing && selectedFile && (
               <div className="hidden sm:block space-y-2">
-                <p className="text-xs text-brand-dark/50 truncate">{selectedFile.name}</p>
+                <p className="text-xs text-brand-dark-muted truncate">{selectedFile.name}</p>
                 <div className="flex gap-2">
                   <Button
                     size="sm"
@@ -191,7 +191,7 @@ export default function ProfilePage() {
                   <Button
                     size="sm"
                     variant="ghost"
-                    className="text-brand-dark/30 hover:text-brand-dark"
+                    className="text-brand-dark-soft hover:text-brand-dark"
                     onClick={() => {
                       setAvatarPreview(null);
                       setSelectedFile(null);
@@ -206,7 +206,7 @@ export default function ProfilePage() {
 
             {/* Name */}
             <div>
-              <label className="text-[11px] sm:text-xs font-medium text-brand-dark/40 flex items-center gap-1.5 uppercase tracking-wider">
+              <label className="text-[11px] sm:text-xs font-medium text-brand-dark-muted flex items-center gap-1.5 uppercase tracking-wider">
                 <UserIcon className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> Imię i Nazwisko
               </label>
               {isEditing ? (
@@ -215,7 +215,7 @@ export default function ProfilePage() {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="Imię i Nazwisko"
-                  className="mt-1.5 border-brand-warm/60 focus:border-brand focus:ring-brand/20"
+                  className="mt-1.5 border-brand-warm focus:border-brand focus:ring-brand/20"
                 />
               ) : (
                 <p className="text-base sm:text-lg font-semibold text-brand-dark mt-1">{user.name}</p>
@@ -225,20 +225,20 @@ export default function ProfilePage() {
             {/* Email */}
             {user.email && (
               <div>
-                <label className="text-[11px] sm:text-xs font-medium text-brand-dark/40 flex items-center gap-1.5 uppercase tracking-wider">
+                <label className="text-[11px] sm:text-xs font-medium text-brand-dark-muted flex items-center gap-1.5 uppercase tracking-wider">
                   <Mail className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> Email
                 </label>
                 <div className="mt-1 flex items-center gap-2 min-w-0">
                   <p className="text-sm sm:text-lg text-brand-dark truncate">{user.email}</p>
-                  <Lock className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-brand-dark/20 flex-shrink-0" />
+                  <Lock className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-brand-dark-soft flex-shrink-0" />
                 </div>
-                <p className="text-[10px] text-brand-dark/30 mt-0.5">Email nie może być zmieniony</p>
+                <p className="text-[10px] text-brand-dark-soft mt-0.5">Email nie może być zmieniony</p>
               </div>
             )}
 
             {/* Phone */}
             <div>
-              <label className="text-[11px] sm:text-xs font-medium text-brand-dark/40 flex items-center gap-1.5 uppercase tracking-wider">
+              <label className="text-[11px] sm:text-xs font-medium text-brand-dark-muted flex items-center gap-1.5 uppercase tracking-wider">
                 <Phone className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> Numer telefonu
               </label>
               {isEditing ? (
@@ -247,7 +247,7 @@ export default function ProfilePage() {
                   value={phoneNumber}
                   onChange={(e) => setPhoneNumber(e.target.value)}
                   placeholder="+48 000 000 000"
-                  className="mt-1.5 border-brand-warm/60 focus:border-brand focus:ring-brand/20"
+                  className="mt-1.5 border-brand-warm focus:border-brand focus:ring-brand/20"
                 />
               ) : (
                 <p className="text-sm sm:text-lg text-brand-dark mt-1">
@@ -259,7 +259,7 @@ export default function ProfilePage() {
             {/* Skills */}
             {isEmployee && (
               <div>
-                <label className="text-[11px] sm:text-xs font-medium text-brand-dark/40 uppercase tracking-wider">Umiejętności</label>
+                <label className="text-[11px] sm:text-xs font-medium text-brand-dark-muted uppercase tracking-wider">Umiejętności</label>
                 <div className="mt-2 flex flex-wrap gap-1.5">
                   {user.skills?.length ? (
                     user.skills.map((skill: string, idx: number) => (
@@ -268,10 +268,10 @@ export default function ProfilePage() {
                       </span>
                     ))
                   ) : (
-                    <p className="text-brand-dark/40 text-sm">Brak umiejętności</p>
+                    <p className="text-brand-dark-muted text-sm">Brak umiejętności</p>
                   )}
                 </div>
-                <p className="text-[10px] text-brand-dark/30 mt-1.5 flex items-center gap-1">
+                <p className="text-[10px] text-brand-dark-soft mt-1.5 flex items-center gap-1">
                   <Info className="h-3 w-3 flex-shrink-0" />
                   Tylko administrator może zmienić umiejętności
                 </p>
@@ -280,7 +280,7 @@ export default function ProfilePage() {
 
             {/* Save / Cancel */}
             {isEditing && (
-              <div className="flex flex-col sm:flex-row gap-2 pt-4 border-t border-brand-warm/20">
+              <div className="flex flex-col sm:flex-row gap-2 pt-4 border-t border-brand-warm">
                 <Button
                   onClick={() => updateProfileMutation.mutate()}
                   disabled={updateProfileMutation.isPending}
@@ -290,7 +290,7 @@ export default function ProfilePage() {
                 </Button>
                 <Button
                   variant="ghost"
-                  className="text-brand-dark/50 hover:text-brand-dark w-full sm:w-auto"
+                  className="text-brand-dark-muted hover:text-brand-dark w-full sm:w-auto"
                   onClick={() => {
                     setIsEditing(false);
                     setName(user.name || "");
@@ -308,10 +308,10 @@ export default function ProfilePage() {
       </div>
 
       {/* Role badge - always visible */}
-      <div className="bg-white border border-brand-warm/40 rounded-xl p-4 shadow-sm">
+      <div className="bg-white border border-brand-warm rounded-xl p-4 shadow-sm">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-[11px] sm:text-xs font-medium text-brand-dark/40 uppercase tracking-wider">Rola w zespole</p>
+            <p className="text-[11px] sm:text-xs font-medium text-brand-dark-muted uppercase tracking-wider">Rola w zespole</p>
             <p className="text-sm sm:text-base font-semibold text-brand-dark mt-1">
               {user.role === "OWNER" ? "Właściciel" : user.role === "MANAGER" ? "Menedżer" : "Pracownik"}
             </p>

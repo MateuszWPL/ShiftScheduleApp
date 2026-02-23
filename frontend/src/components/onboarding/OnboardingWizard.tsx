@@ -139,13 +139,13 @@ export function OnboardingWizard({
         {/* Header with skip */}
         <div className="flex items-center justify-between px-5 py-3 border-b border-slate-100">
           <div className="flex items-center gap-2">
-            <span className="text-[10px] font-semibold text-brand-dark/40 uppercase tracking-wider">
+            <span className="text-[10px] font-semibold text-brand-dark-muted uppercase tracking-wider">
               Krok {stepIndex + 1} z {STEPS.length}
             </span>
           </div>
           <button
             onClick={handleSkip}
-            className="text-xs text-brand-dark/40 hover:text-brand-dark px-2 py-1 rounded-lg hover:bg-slate-100 transition-colors flex items-center gap-1"
+            className="text-xs text-brand-dark-muted hover:text-brand-dark px-2 py-1 rounded-lg hover:bg-slate-100 transition-colors flex items-center gap-1"
           >
             <X className="h-3.5 w-3.5" />
             Pomiń samouczek
@@ -170,16 +170,16 @@ export function OnboardingWizard({
             <Icon className="h-6 w-6 text-brand" />
           </div>
           <h2 className="text-lg font-bold text-brand-dark mb-1">{step.title}</h2>
-          <p className="text-sm text-brand-dark/50 mb-5">{step.desc}</p>
+          <p className="text-sm text-brand-dark-muted mb-5">{step.desc}</p>
 
           {step.id === "invite" && inviteCode && (
-            <div className="flex items-center gap-2 p-4 rounded-xl bg-brand-warm-light/30 border border-brand-warm/30 mb-5">
+            <div className="flex items-center gap-2 p-4 rounded-xl bg-brand-warm-light/30 border border-brand-warm mb-5">
               <code className="flex-1 text-xl font-mono tracking-[0.2em] font-bold text-brand-dark select-all text-center">
                 {inviteCode}
               </code>
               <button
                 onClick={copyCode}
-                className="p-2.5 rounded-lg hover:bg-brand-muted text-brand-dark/40 hover:text-brand transition-colors"
+                className="p-2.5 rounded-lg hover:bg-brand-muted text-brand-dark-muted hover:text-brand transition-colors"
                 title="Kopiuj kod"
               >
                 {codeCopied ? (
@@ -192,13 +192,13 @@ export function OnboardingWizard({
           )}
 
           {step.id === "hours" && (
-            <p className="text-xs text-brand-dark/40 mb-4">
+            <p className="text-xs text-brand-dark-muted mb-4">
               W Ustawieniach → zakładka „Grafik” ustawisz godziny otwarcia/zamknięcia oraz długość zmian.
             </p>
           )}
 
           {step.id === "first-shift" && (
-            <p className="text-xs text-brand-dark/40 mb-4">
+            <p className="text-xs text-brand-dark-muted mb-4">
               Kliknij w pustą komórkę kalendarza lub przycisk „Dodaj zmianę”, aby utworzyć pierwszą zmianę.
             </p>
           )}
@@ -212,7 +212,7 @@ export function OnboardingWizard({
                 variant="ghost"
                 size="sm"
                 onClick={handlePrev}
-                className="text-brand-dark/50"
+                className="text-brand-dark-muted"
               >
                 <ChevronLeft className="h-4 w-4" />
                 Wstecz

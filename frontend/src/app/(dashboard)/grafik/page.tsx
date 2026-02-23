@@ -75,7 +75,7 @@ function GieldaSection({
   if (marketplace.length === 0) return null;
 
   return (
-    <div className="bg-white border border-brand-warm/40 rounded-xl p-5 shadow-sm">
+    <div className="bg-white border border-brand-warm rounded-xl p-5 shadow-sm">
       <div className="flex items-center gap-2.5 mb-4">
         <div className="w-8 h-8 rounded-lg bg-brand-muted flex items-center justify-center">
           <ShoppingBag className="h-4 w-4 text-brand" />
@@ -84,7 +84,7 @@ function GieldaSection({
           <h3 className="font-semibold text-brand-dark">
             Giełda zmian
           </h3>
-          <p className="text-[11px] text-brand-dark/40">{marketplace.length} {marketplace.length === 1 ? "zmiana dostępna" : "zmian dostępnych"}</p>
+          <p className="text-[11px] text-brand-dark-muted">{marketplace.length} {marketplace.length === 1 ? "zmiana dostępna" : "zmian dostępnych"}</p>
         </div>
       </div>
       <ul className="space-y-2">
@@ -105,23 +105,23 @@ function GieldaSection({
           return (
             <li
               key={a.id}
-              className="flex items-center justify-between gap-3 py-3 px-4 rounded-lg border border-brand-warm/30 bg-brand-warm-light/30 text-sm hover:bg-brand-warm-light/60 transition-colors"
+              className="flex items-center justify-between gap-3 py-3 px-4 rounded-lg border border-brand-warm bg-brand-warm-light/30 text-sm hover:bg-brand-warm-light/60 transition-colors"
             >
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
                   <span className="font-semibold text-brand-dark">{shift.roleName}</span>
-                  <span className="text-brand-dark/20">·</span>
-                  <span className="text-brand-dark/60">{date}</span>
+                  <span className="text-brand-dark-soft">·</span>
+                  <span className="text-brand-dark-muted">{date}</span>
                 </div>
-                <div className="flex items-center gap-2 text-brand-dark/40 text-xs mt-0.5">
+                <div className="flex items-center gap-2 text-brand-dark-muted text-xs mt-0.5">
                   <span className="flex items-center gap-1">
                     <Clock className="h-3 w-3" />
                     {timeStr}
                   </span>
-                  <span className="text-[10px] font-medium text-brand-dark/25 bg-brand-dark/5 px-1 rounded">
+                  <span className="text-[10px] font-medium text-brand-dark-soft bg-brand-warm-light px-1 rounded">
                     {dur}h
                   </span>
-                  {who && <span className="text-brand-dark/30">oddaje: {who}</span>}
+                  {who && <span className="text-brand-dark-soft">oddaje: {who}</span>}
                 </div>
               </div>
               {!isMine && currentUserRole === "EMPLOYEE" && (
@@ -225,8 +225,8 @@ function AvailabilityPanel({
 
   if (isLoading) {
     return (
-      <div className="bg-white border border-brand-warm/40 rounded-xl p-5 shadow-sm">
-        <div className="flex items-center gap-2 text-brand-dark/40 text-sm">
+      <div className="bg-white border border-brand-warm rounded-xl p-5 shadow-sm">
+        <div className="flex items-center gap-2 text-brand-dark-muted text-sm">
           <div className="w-4 h-4 border-2 border-brand-blue/30 border-t-brand-blue rounded-full animate-spin" />
           Ładowanie dostępności...
         </div>
@@ -236,20 +236,20 @@ function AvailabilityPanel({
 
   if (byUser.size === 0) {
     return (
-      <div className="bg-white border border-brand-warm/40 rounded-xl p-5 shadow-sm">
+      <div className="bg-white border border-brand-warm rounded-xl p-5 shadow-sm">
         <div className="flex items-center gap-2.5 mb-2">
           <div className="w-8 h-8 rounded-lg bg-brand-blue-muted flex items-center justify-center">
             <Users className="h-4 w-4 text-brand-blue" />
           </div>
           <h3 className="font-semibold text-brand-dark">Dostępność pracowników</h3>
         </div>
-        <p className="text-brand-dark/40 text-sm">Brak zgłoszonej dostępności na ten tydzień.</p>
+        <p className="text-brand-dark-muted text-sm">Brak zgłoszonej dostępności na ten tydzień.</p>
       </div>
     );
   }
 
   return (
-    <div className="bg-white border border-brand-warm/40 rounded-xl p-5 shadow-sm">
+    <div className="bg-white border border-brand-warm rounded-xl p-5 shadow-sm">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-lg bg-brand-blue-muted flex items-center justify-center">
@@ -257,10 +257,10 @@ function AvailabilityPanel({
           </div>
           <div>
             <h3 className="font-semibold text-brand-dark">Dostępność pracowników</h3>
-            <p className="text-[11px] text-brand-dark/30">{byUser.size} {byUser.size === 1 ? "pracownik" : "pracowników"} zgłosiło dostępność</p>
+            <p className="text-[11px] text-brand-dark-soft">{byUser.size} {byUser.size === 1 ? "pracownik" : "pracowników"} zgłosiło dostępność</p>
           </div>
         </div>
-        <span className="flex items-center gap-1 text-[11px] text-brand-dark/30 bg-brand-blue-muted/50 px-2.5 py-1 rounded-full">
+        <span className="flex items-center gap-1 text-[11px] text-brand-dark-soft bg-brand-blue-muted px-2.5 py-1 rounded-full">
           <GripVertical className="h-3 w-3" />
           Przeciągnij na kalendarz
         </span>
@@ -269,11 +269,11 @@ function AvailabilityPanel({
         <table className="w-full text-xs border-collapse">
           <thead>
             <tr className="bg-brand-warm-light/30">
-              <th className="text-left p-2 border-b border-brand-warm/30 font-semibold text-brand-dark/50 min-w-[120px] text-[11px] uppercase tracking-wider">
+              <th className="text-left p-2 border-b border-brand-warm font-semibold text-brand-dark-muted min-w-[120px] text-[11px] uppercase tracking-wider">
                 Pracownik
               </th>
               {DAY_SHORT.map((d, i) => (
-                <th key={i} className="p-2 border-b border-l border-brand-warm/20 font-medium text-brand-dark/40 text-center min-w-[80px] text-[11px]">
+                <th key={i} className="p-2 border-b border-l border-brand-warm font-medium text-brand-dark-muted text-center min-w-[80px] text-[11px]">
                   {d}
                 </th>
               ))}
@@ -281,7 +281,7 @@ function AvailabilityPanel({
           </thead>
           <tbody>
             {Array.from(byUser.entries()).map(([mapUserId, data]) => (
-              <tr key={mapUserId} className="border-b border-brand-warm/10 hover:bg-brand-warm-light/20 transition-colors">
+              <tr key={mapUserId} className="border-b border-brand-warm hover:bg-brand-warm-light/20 transition-colors">
                 <td className="p-2 text-brand-dark font-medium">
                   <div className="flex items-center gap-2">
                     <div className="w-6 h-6 rounded-full bg-brand-blue-muted flex items-center justify-center text-[10px] font-bold text-brand-blue flex-shrink-0">
@@ -293,7 +293,7 @@ function AvailabilityPanel({
                 {Array.from({ length: 7 }, (_, dayIdx) => {
                   const daySlots = data.slots.filter((s) => s.dayIdx === dayIdx);
                   return (
-                    <td key={dayIdx} className="p-1 border-l border-brand-warm/10 text-center align-middle">
+                    <td key={dayIdx} className="p-1 border-l border-brand-warm text-center align-middle">
                       {daySlots.length > 0 ? (
                         <div className="space-y-0.5">
                           {daySlots.map((s, si) => (
@@ -312,7 +312,7 @@ function AvailabilityPanel({
                           ))}
                         </div>
                       ) : (
-                        <span className="text-brand-dark/10">—</span>
+                        <span className="text-brand-dark-soft">—</span>
                       )}
                     </td>
                   );
@@ -468,7 +468,7 @@ export default function GrafikPage() {
           </div>
           <div>
             <h1 className="text-xl font-bold text-brand-dark">Grafik</h1>
-            <p className="text-xs text-brand-dark/40">Zarządzaj zmianami pracowników</p>
+            <p className="text-xs text-brand-dark-muted">Zarządzaj zmianami pracowników</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -488,7 +488,7 @@ export default function GrafikPage() {
               <Button
                 variant="outline"
                 onClick={() => setIsCopyDialogOpen(true)}
-                className="gap-1.5 border-brand-warm/60 text-brand-dark/70 hover:bg-brand-warm-light text-sm"
+                className="gap-1.5 border-brand-warm text-brand-dark-muted hover:bg-brand-warm-light text-sm"
               >
                 <Copy className="h-4 w-4" />
                 <span className="hidden sm:inline">Kopiuj tydzień</span>
@@ -520,11 +520,11 @@ export default function GrafikPage() {
       {/* View toggle (employee) + Filters (admin) */}
       <div className="flex flex-wrap items-center gap-3">
         {!isAdmin && (
-          <div className="inline-flex rounded-lg border border-brand-warm/40 bg-white p-0.5">
+          <div className="inline-flex rounded-lg border border-brand-warm bg-white p-0.5">
             <button
               onClick={() => setViewMode("table")}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
-                viewMode === "table" ? "bg-brand text-white" : "text-brand-dark/60 hover:text-brand-dark"
+                viewMode === "table" ? "bg-brand text-white" : "text-brand-dark-muted hover:text-brand-dark"
               }`}
             >
               <LayoutGrid className="h-4 w-4" />
@@ -533,7 +533,7 @@ export default function GrafikPage() {
             <button
               onClick={() => setViewMode("my")}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
-                viewMode === "my" ? "bg-brand text-white" : "text-brand-dark/60 hover:text-brand-dark"
+                viewMode === "my" ? "bg-brand text-white" : "text-brand-dark-muted hover:text-brand-dark"
               }`}
             >
               <List className="h-4 w-4" />
@@ -543,11 +543,11 @@ export default function GrafikPage() {
         )}
         {isAdmin && (employees.length > 0 || positions.length > 0) && (
           <div className="flex items-center gap-2 flex-wrap">
-            <Filter className="h-4 w-4 text-brand-dark/40" />
+            <Filter className="h-4 w-4 text-brand-dark-muted" />
             <select
               value={filterEmployeeId ?? ""}
               onChange={(e) => setFilterEmployeeId(e.target.value || null)}
-              className="text-sm border border-brand-warm/50 rounded-lg px-2.5 py-1.5 bg-white focus:ring-2 focus:ring-brand/20 focus:border-brand outline-none"
+              className="text-sm border border-brand-warm rounded-lg px-2.5 py-1.5 bg-white focus:ring-2 focus:ring-brand/20 focus:border-brand outline-none"
             >
               <option value="">Wszyscy</option>
               {employees.map((m) => (
@@ -558,7 +558,7 @@ export default function GrafikPage() {
               <select
                 value={filterPositionId ?? ""}
                 onChange={(e) => setFilterPositionId(e.target.value || null)}
-                className="text-sm border border-brand-warm/50 rounded-lg px-2.5 py-1.5 bg-white focus:ring-2 focus:ring-brand/20 focus:border-brand outline-none"
+                className="text-sm border border-brand-warm rounded-lg px-2.5 py-1.5 bg-white focus:ring-2 focus:ring-brand/20 focus:border-brand outline-none"
               >
                 <option value="">Wszystkie</option>
                 {positions.map((p) => (
@@ -581,13 +581,13 @@ export default function GrafikPage() {
       {!isAdmin && viewMode === "my" ? (
         <div className="space-y-4">
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="icon" onClick={() => setWeekStart((prev) => { const m = getWeekMonday(prev); m.setDate(m.getDate() - 7); return m; })} className="border-brand-warm/60 hover:bg-brand-warm-light h-8 w-8" aria-label="Poprzedni tydzień">
+            <Button variant="outline" size="icon" onClick={() => setWeekStart((prev) => { const m = getWeekMonday(prev); m.setDate(m.getDate() - 7); return m; })} className="border-brand-warm hover:bg-brand-warm-light h-8 w-8" aria-label="Poprzedni tydzień">
               <ChevronLeft className="h-4 w-4" />
             </Button>
             <span className="font-semibold text-brand-dark min-w-[180px] text-center text-sm">
               {monday.toLocaleDateString("pl-PL", { day: "numeric", month: "short" })} – {toDate.toLocaleDateString("pl-PL", { day: "numeric", month: "short", year: "numeric" })}
             </span>
-            <Button variant="outline" size="icon" onClick={() => setWeekStart((prev) => { const m = getWeekMonday(prev); m.setDate(m.getDate() + 7); return m; })} className="border-brand-warm/60 hover:bg-brand-warm-light h-8 w-8" aria-label="Następny tydzień">
+            <Button variant="outline" size="icon" onClick={() => setWeekStart((prev) => { const m = getWeekMonday(prev); m.setDate(m.getDate() + 7); return m; })} className="border-brand-warm hover:bg-brand-warm-light h-8 w-8" aria-label="Następny tydzień">
               <ChevronRight className="h-4 w-4" />
             </Button>
             <Button variant="ghost" size="sm" onClick={() => setWeekStart(getWeekMonday(new Date()))} className="text-xs text-brand">

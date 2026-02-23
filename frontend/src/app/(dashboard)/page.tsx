@@ -195,47 +195,47 @@ export default function PulpitPage() {
         <h1 className="text-2xl font-bold text-brand-dark">
           Cześć, {displayUser?.name?.split(" ")[0] || "Użytkowniku"}
         </h1>
-        <p className="text-brand-dark/50 text-sm mt-0.5">
+        <p className="text-brand-dark-muted text-sm mt-0.5">
           {new Date().toLocaleDateString("pl-PL", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
         </p>
       </div>
 
       {/* Stats row */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <div className="bg-white rounded-xl border border-brand-warm/50 p-4">
+        <div className="bg-white rounded-xl border border-brand-warm p-4">
           <div className="flex items-center gap-2 mb-2">
             <div className="w-8 h-8 rounded-lg bg-brand-muted flex items-center justify-center">
               <Calendar className="h-4 w-4 text-brand" />
             </div>
           </div>
           <p className="text-2xl font-bold text-brand-dark">{myShifts.length}</p>
-          <p className="text-xs text-brand-dark/40">Zmian w tym tygodniu</p>
+          <p className="text-xs text-brand-dark-muted">Zmian w tym tygodniu</p>
         </div>
 
-        <div className="bg-white rounded-xl border border-brand-warm/50 p-4">
+        <div className="bg-white rounded-xl border border-brand-warm p-4">
           <div className="flex items-center gap-2 mb-2">
             <div className="w-8 h-8 rounded-lg bg-brand-blue-muted flex items-center justify-center">
               <Clock className="h-4 w-4 text-brand-blue" />
             </div>
           </div>
           <p className="text-2xl font-bold text-brand-dark">{totalHours}h</p>
-          <p className="text-xs text-brand-dark/40">Godzin w tym tygodniu</p>
+          <p className="text-xs text-brand-dark-muted">Godzin w tym tygodniu</p>
         </div>
 
         {dbUser.role === "EMPLOYEE" && (
-          <div className="bg-white rounded-xl border border-brand-warm/50 p-4">
+          <div className="bg-white rounded-xl border border-brand-warm p-4">
             <div className="flex items-center gap-2 mb-2">
               <div className="w-8 h-8 rounded-lg bg-green-50 flex items-center justify-center">
                 <ClipboardCheck className="h-4 w-4 text-green-500" />
               </div>
             </div>
             <p className="text-2xl font-bold text-brand-dark">{availability.length}</p>
-            <p className="text-xs text-brand-dark/40">Dostępności zgłoszone</p>
+            <p className="text-xs text-brand-dark-muted">Dostępności zgłoszone</p>
           </div>
         )}
 
         {isAdmin && (
-          <div className="bg-white rounded-xl border border-brand-warm/50 p-4">
+          <div className="bg-white rounded-xl border border-brand-warm p-4">
             <div className="flex items-center gap-2 mb-2">
               <div className="w-8 h-8 rounded-lg bg-green-50 flex items-center justify-center">
                 <Users className="h-4 w-4 text-green-500" />
@@ -244,11 +244,11 @@ export default function PulpitPage() {
             <p className="text-2xl font-bold text-brand-dark">
               {shifts.filter((s: Shift) => s.status === "DRAFT").length}
             </p>
-            <p className="text-xs text-brand-dark/40">Zmian w szkicu</p>
+            <p className="text-xs text-brand-dark-muted">Zmian w szkicu</p>
           </div>
         )}
 
-        <div className="bg-white rounded-xl border border-brand-warm/50 p-4">
+        <div className="bg-white rounded-xl border border-brand-warm p-4">
           <div className="flex items-center gap-2 mb-2">
             <div className="w-8 h-8 rounded-lg bg-brand-warm flex items-center justify-center">
               <Bell className="h-4 w-4 text-brand" />
@@ -257,7 +257,7 @@ export default function PulpitPage() {
           <p className="text-2xl font-bold text-brand-dark">
             {notifications.filter((n: Notification) => !n.read).length}
           </p>
-          <p className="text-xs text-brand-dark/40">Nieprzeczytanych</p>
+          <p className="text-xs text-brand-dark-muted">Nieprzeczytanych</p>
         </div>
       </div>
 
@@ -265,8 +265,8 @@ export default function PulpitPage() {
         {/* Left column: Upcoming shifts */}
         <div className="lg:col-span-2 space-y-5">
           {/* Upcoming shifts */}
-          <div className="bg-white rounded-xl border border-brand-warm/50 overflow-hidden">
-            <div className="flex items-center justify-between px-5 py-3 border-b border-brand-warm/30">
+          <div className="bg-white rounded-xl border border-brand-warm overflow-hidden">
+            <div className="flex items-center justify-between px-5 py-3 border-b border-brand-warm">
               <h2 className="font-semibold text-brand-dark text-sm">Najbliższe zmiany</h2>
               <Link href="/grafik" className="text-xs text-brand hover:text-brand-light font-medium flex items-center gap-0.5">
                 Zobacz grafik <ChevronRight className="h-3 w-3" />
@@ -274,14 +274,14 @@ export default function PulpitPage() {
             </div>
             {upcomingShifts.length === 0 ? (
               <div className="px-5 py-8 text-center">
-                <Calendar className="h-8 w-8 mx-auto mb-2 text-brand-dark/20" />
-                <p className="text-sm text-brand-dark/40">Brak nadchodzących zmian</p>
+                <Calendar className="h-8 w-8 mx-auto mb-2 text-brand-dark-soft" />
+                <p className="text-sm text-brand-dark-muted">Brak nadchodzących zmian</p>
                 <Link href="/grafik" className="text-xs text-brand hover:underline mt-1 inline-block">
                   Przejdź do grafiku
                 </Link>
               </div>
             ) : (
-              <div className="divide-y divide-brand-warm/20">
+              <div className="divide-y divide-brand-warm">
                 {upcomingShifts.map((shift: Shift) => {
                   const isToday = new Date(shift.startTime).toDateString() === new Date().toDateString();
                   return (
@@ -293,7 +293,7 @@ export default function PulpitPage() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-brand-dark">{shift.roleName}</p>
-                        <p className="text-xs text-brand-dark/40">
+                        <p className="text-xs text-brand-dark-muted">
                           {formatDayShort(shift.startTime)} &middot; {parseShiftTime(shift.startTime)}–{parseShiftTime(shift.endTime)}
                         </p>
                       </div>
@@ -311,8 +311,8 @@ export default function PulpitPage() {
 
           {/* Announcements */}
           {announcements.length > 0 && (
-            <div className="bg-white rounded-xl border border-brand-warm/50 overflow-hidden">
-              <div className="flex items-center justify-between px-5 py-3 border-b border-brand-warm/30">
+            <div className="bg-white rounded-xl border border-brand-warm overflow-hidden">
+              <div className="flex items-center justify-between px-5 py-3 border-b border-brand-warm">
                 <div className="flex items-center gap-2">
                   <Megaphone className="h-4 w-4 text-brand" />
                   <h2 className="font-semibold text-brand-dark text-sm">Ogłoszenia</h2>
@@ -326,7 +326,7 @@ export default function PulpitPage() {
                   Wszystkie <ChevronRight className="h-3 w-3" />
                 </Link>
               </div>
-              <div className="divide-y divide-brand-warm/20">
+              <div className="divide-y divide-brand-warm">
                 {announcements.slice(0, 3).map((a: Announcement) => {
                   const priorityIcon = a.priority === "URGENT"
                     ? <AlertTriangle className="h-3 w-3 text-red-500" />
@@ -349,18 +349,18 @@ export default function PulpitPage() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-1.5">
-                          <p className={`text-sm truncate ${!a.isRead ? "font-semibold text-brand-dark" : "font-medium text-brand-dark/70"}`}>
+                          <p className={`text-sm truncate ${!a.isRead ? "font-semibold text-brand-dark" : "font-medium text-brand-dark-muted"}`}>
                             {a.title}
                           </p>
                           {!a.isRead && <span className="w-1.5 h-1.5 rounded-full bg-brand flex-shrink-0" />}
                         </div>
-                        <p className="text-xs text-brand-dark/40 mt-0.5 line-clamp-1">{a.content}</p>
-                        <p className="text-[10px] text-brand-dark/25 mt-1">{timeAgo(a.createdAt)} · {a.author.nickname || a.author.name}</p>
+                        <p className="text-xs text-brand-dark-muted mt-0.5 line-clamp-1">{a.content}</p>
+                        <p className="text-[10px] text-brand-dark-soft mt-1">{timeAgo(a.createdAt)} · {a.author.nickname || a.author.name}</p>
                       </div>
                       {!a.isRead && (
                         <button
                           onClick={() => readAnnouncementMutation.mutate(a.id)}
-                          className="p-1 rounded-lg text-brand-dark/20 hover:text-brand-blue hover:bg-brand-blue-muted/50 transition-colors flex-shrink-0"
+                          className="p-1 rounded-lg text-brand-dark-soft hover:text-brand-blue hover:bg-brand-blue-muted transition-colors flex-shrink-0"
                           title="Oznacz jako przeczytane"
                         >
                           <Eye className="h-3.5 w-3.5" />
@@ -380,21 +380,21 @@ export default function PulpitPage() {
         {/* Right column */}
         <div className="space-y-5">
           {/* Quick profile card */}
-          <div className="bg-white rounded-xl border border-brand-warm/50 p-5">
+          <div className="bg-white rounded-xl border border-brand-warm p-5">
             <div className="flex items-center gap-3 mb-3">
               <div className="w-10 h-10 rounded-full bg-brand-muted flex items-center justify-center text-brand font-bold text-sm">
                 {(displayUser?.name || "?").charAt(0).toUpperCase()}
               </div>
               <div className="flex-1 min-w-0">
                 <p className="font-semibold text-brand-dark text-sm truncate">{displayUser?.name}</p>
-                <p className="text-xs text-brand-dark/40">
+                <p className="text-xs text-brand-dark-muted">
                   {dbUser.role === "OWNER" ? "Właściciel" : dbUser.role === "MANAGER" ? "Menedżer" : "Pracownik"}
                 </p>
               </div>
               <Button
                 variant="ghost"
                 size="sm"
-                className="text-xs text-brand-dark/50 hover:text-brand"
+                className="text-xs text-brand-dark-muted hover:text-brand"
                 onClick={() => setIsProfileOpen(true)}
               >
                 Edytuj
@@ -413,8 +413,8 @@ export default function PulpitPage() {
 
           {/* Invite code (owner only) */}
           {dbUser?.role === "OWNER" && dbUser?.team?.inviteCode && (
-            <div className="bg-white rounded-xl border border-brand-warm/50 p-5">
-              <p className="text-[10px] font-semibold text-brand-dark/30 uppercase tracking-wider mb-2">
+            <div className="bg-white rounded-xl border border-brand-warm p-5">
+              <p className="text-[10px] font-semibold text-brand-dark-soft uppercase tracking-wider mb-2">
                 Kod zaproszenia
               </p>
               <div className="flex items-center gap-2">
@@ -423,39 +423,39 @@ export default function PulpitPage() {
                 </code>
                 <button
                   onClick={handleCopyCode}
-                  className="p-2 rounded-lg hover:bg-brand-muted text-brand-dark/40 hover:text-brand transition-colors"
+                  className="p-2 rounded-lg hover:bg-brand-muted text-brand-dark-muted hover:text-brand transition-colors"
                   title="Kopiuj kod"
                 >
                   {codeCopied ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
                 </button>
               </div>
-              <p className="text-[10px] text-brand-dark/30 mt-2">
+              <p className="text-[10px] text-brand-dark-soft mt-2">
                 Udostępnij ten kod pracownikom, aby dołączyli do zespołu.
               </p>
             </div>
           )}
 
           {/* Recent notifications */}
-          <div className="bg-white rounded-xl border border-brand-warm/50 overflow-hidden">
-            <div className="flex items-center justify-between px-5 py-3 border-b border-brand-warm/30">
+          <div className="bg-white rounded-xl border border-brand-warm overflow-hidden">
+            <div className="flex items-center justify-between px-5 py-3 border-b border-brand-warm">
               <h2 className="font-semibold text-brand-dark text-sm">Powiadomienia</h2>
             </div>
             {recentNotifications.length === 0 ? (
               <div className="px-5 py-6 text-center">
-                <Bell className="h-6 w-6 mx-auto mb-1.5 text-brand-dark/15" />
-                <p className="text-xs text-brand-dark/30">Brak powiadomień</p>
+                <Bell className="h-6 w-6 mx-auto mb-1.5 text-brand-dark-soft" />
+                <p className="text-xs text-brand-dark-soft">Brak powiadomień</p>
               </div>
             ) : (
-              <div className="divide-y divide-brand-warm/20">
+              <div className="divide-y divide-brand-warm">
                 {recentNotifications.map((n: Notification) => (
                   <div
                     key={n.id}
                     className={`px-5 py-2.5 ${!n.read ? "bg-brand-muted/30" : ""}`}
                   >
-                    <p className={`text-xs ${!n.read ? "font-medium text-brand-dark" : "text-brand-dark/60"}`}>
+                    <p className={`text-xs ${!n.read ? "font-medium text-brand-dark" : "text-brand-dark-muted"}`}>
                       {n.title}
                     </p>
-                    <p className="text-[10px] text-brand-dark/30 mt-0.5">{timeAgo(n.createdAt)}</p>
+                    <p className="text-[10px] text-brand-dark-soft mt-0.5">{timeAgo(n.createdAt)}</p>
                   </div>
                 ))}
               </div>

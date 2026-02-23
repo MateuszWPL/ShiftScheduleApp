@@ -42,16 +42,16 @@ export default function PodsumowaniePage() {
         </div>
         <div>
           <h1 className="text-xl font-bold text-brand-dark">Podsumowanie</h1>
-          <p className="text-xs text-brand-dark/40">Godziny pracowników i przegląd grafiku</p>
+          <p className="text-xs text-brand-dark-muted">Godziny pracowników i przegląd grafiku</p>
         </div>
       </div>
 
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div className="inline-flex rounded-lg border border-brand-warm/40 bg-white p-0.5">
+        <div className="inline-flex rounded-lg border border-brand-warm bg-white p-0.5">
           <button
             onClick={() => setViewMode("week")}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
-              viewMode === "week" ? "bg-brand text-white" : "text-brand-dark/60 hover:text-brand-dark"
+              viewMode === "week" ? "bg-brand text-white" : "text-brand-dark-muted hover:text-brand-dark"
             }`}
           >
             <LayoutGrid className="h-4 w-4" />
@@ -60,7 +60,7 @@ export default function PodsumowaniePage() {
           <button
             onClick={() => setViewMode("month")}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
-              viewMode === "month" ? "bg-brand text-white" : "text-brand-dark/60 hover:text-brand-dark"
+              viewMode === "month" ? "bg-brand text-white" : "text-brand-dark-muted hover:text-brand-dark"
             }`}
           >
             <CalendarRange className="h-4 w-4" />
@@ -73,7 +73,7 @@ export default function PodsumowaniePage() {
             <Button
               variant="outline"
               size="icon"
-              className="border-brand-warm/60 hover:bg-brand-warm-light h-8 w-8"
+              className="border-brand-warm hover:bg-brand-warm-light h-8 w-8"
               onClick={() => {
                 const prev = new Date(weekStart);
                 prev.setDate(prev.getDate() - 7);
@@ -88,7 +88,7 @@ export default function PodsumowaniePage() {
             <Button
               variant="outline"
               size="icon"
-              className="border-brand-warm/60 hover:bg-brand-warm-light h-8 w-8"
+              className="border-brand-warm hover:bg-brand-warm-light h-8 w-8"
               onClick={() => {
                 const next = new Date(weekStart);
                 next.setDate(next.getDate() + 7);
@@ -105,7 +105,7 @@ export default function PodsumowaniePage() {
             <Button
               variant="outline"
               size="icon"
-              className="border-brand-warm/60 hover:bg-brand-warm-light h-8 w-8"
+              className="border-brand-warm hover:bg-brand-warm-light h-8 w-8"
               onClick={() => setMonthDate((d) => new Date(d.getFullYear(), d.getMonth() - 1))}
             >
               <ChevronLeft className="h-4 w-4" />
@@ -116,7 +116,7 @@ export default function PodsumowaniePage() {
             <Button
               variant="outline"
               size="icon"
-              className="border-brand-warm/60 hover:bg-brand-warm-light h-8 w-8"
+              className="border-brand-warm hover:bg-brand-warm-light h-8 w-8"
               onClick={() => setMonthDate((d) => new Date(d.getFullYear(), d.getMonth() + 1))}
             >
               <ChevronRight className="h-4 w-4" />

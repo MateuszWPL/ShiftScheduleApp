@@ -127,13 +127,13 @@ export function AppTour({ onClose }: Props) {
   if (showPrompt && !isOpen) {
     return (
       <div className="fixed bottom-20 left-4 right-4 md:left-auto md:right-6 md:bottom-6 md:max-w-sm z-50">
-        <div className="bg-white rounded-xl shadow-xl border border-brand-warm/40 p-4 flex items-start gap-3">
+        <div className="bg-white rounded-xl shadow-xl border border-brand-warm p-4 flex items-start gap-3">
           <div className="w-10 h-10 rounded-lg bg-brand-muted flex items-center justify-center flex-shrink-0">
             <Compass className="h-5 w-5 text-brand" />
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-semibold text-brand-dark">Przewodnik po aplikacji</p>
-            <p className="text-xs text-brand-dark/50 mt-0.5">
+            <p className="text-xs text-brand-dark-muted mt-0.5">
               Chcesz zobaczyć krótki przewodnik po głównych sekcjach?
             </p>
             <div className="flex gap-2 mt-3">
@@ -151,7 +151,7 @@ export function AppTour({ onClose }: Props) {
               <Button
                 size="sm"
                 variant="ghost"
-                className="text-xs text-brand-dark/50"
+                className="text-xs text-brand-dark-muted"
                 onClick={() => {
                   setAppTourSkipped();
                   setShowPrompt(false);
@@ -166,7 +166,7 @@ export function AppTour({ onClose }: Props) {
               setAppTourSkipped();
               setShowPrompt(false);
             }}
-            className="p-1 rounded text-brand-dark/30 hover:text-brand-dark"
+            className="p-1 rounded text-brand-dark-soft hover:text-brand-dark"
           >
             <X className="h-4 w-4" />
           </button>
@@ -193,7 +193,7 @@ export function AppTour({ onClose }: Props) {
         className="fixed left-4 right-4 md:left-auto md:right-6 md:max-w-sm bottom-20 md:bottom-8 z-[91] pointer-events-auto"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="bg-white rounded-xl shadow-xl border border-brand-warm/40 p-4">
+        <div className="bg-white rounded-xl shadow-xl border border-brand-warm p-4">
           <div className="flex items-start justify-between gap-3 mb-3">
             <div>
               <p className="text-xs font-semibold text-brand uppercase tracking-wider">
@@ -205,12 +205,12 @@ export function AppTour({ onClose }: Props) {
             </div>
             <button
               onClick={handleSkip}
-              className="text-xs text-brand-dark/40 hover:text-brand-dark px-2 py-1 rounded"
+              className="text-xs text-brand-dark-muted hover:text-brand-dark px-2 py-1 rounded"
             >
               Pomiń
             </button>
           </div>
-          <p className="text-xs text-brand-dark/60 mb-4">
+          <p className="text-xs text-brand-dark-muted mb-4">
             {currentStep?.content}
           </p>
           <div className="flex justify-between items-center">

@@ -47,10 +47,10 @@ function NavLink({ href, label, icon, active, premium, tourId }: NavItem & { act
       className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
         active
           ? "bg-brand/10 text-brand"
-          : "text-brand-dark/60 hover:text-brand-dark hover:bg-brand-warm-light"
+          : "text-brand-dark-muted hover:text-brand-dark hover:bg-brand-warm-light"
       }`}
     >
-      <span className={active ? "text-brand" : "text-brand-dark/40"}>{icon}</span>
+      <span className={active ? "text-brand" : "text-brand-dark-soft"}>{icon}</span>
       <span className="flex-1">{label}</span>
       {premium && (
         <span className="flex items-center gap-0.5 text-[10px] font-semibold text-brand bg-brand-muted px-1.5 py-0.5 rounded-full">
@@ -95,7 +95,7 @@ export function DashboardLayout({ children, userRole, userName, userAvatar, onLo
     if (visible.length === 0) return null;
     return (
       <div>
-        <p className="text-[10px] font-semibold text-brand-dark/30 uppercase tracking-wider px-3 mb-1.5">{title}</p>
+        <p className="text-[10px] font-semibold text-brand-dark-muted uppercase tracking-wider px-3 mb-1.5">{title}</p>
         <div className="space-y-0.5">
           {visible.map((item) => (
             <NavLink key={item.href} {...item} active={isActive(item.href)} />
@@ -106,9 +106,9 @@ export function DashboardLayout({ children, userRole, userName, userAvatar, onLo
   };
 
   return (
-    <div className="flex h-screen bg-slate-50 overflow-hidden">
+    <div className="flex h-screen bg-brand-surface overflow-hidden">
       {/* Desktop sidebar */}
-      <aside className="w-64 bg-white border-r border-brand-warm/60 flex flex-col hidden md:flex">
+      <aside className="w-64 bg-white border-r border-brand-warm flex flex-col hidden md:flex shadow-sm">
         {/* Logo area */}
         <div className="px-5 py-5 flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -117,7 +117,7 @@ export function DashboardLayout({ children, userRole, userName, userAvatar, onLo
             </div>
             <div>
               <h1 className="text-base font-bold text-brand-dark tracking-tight">ShiftApp</h1>
-              <p className="text-[10px] text-brand-dark/40 font-medium uppercase tracking-wider">{roleLabel}</p>
+              <p className="text-[10px] text-brand-dark-muted font-medium uppercase tracking-wider">{roleLabel}</p>
             </div>
           </div>
           <NotificationBell align="left" />
@@ -131,7 +131,7 @@ export function DashboardLayout({ children, userRole, userName, userAvatar, onLo
         </nav>
 
         {/* Bottom section */}
-        <div className="border-t border-brand-warm/40 p-3 space-y-1">
+        <div className="border-t border-brand-warm p-3 space-y-1">
           <NavLink href="/profile" label="Mój Profil" icon={<User className="h-4 w-4" />} active={isActive("/profile")} tourId="nav-profile" />
           {isAdmin && (
             <NavLink href="/settings" label="Ustawienia" icon={<Settings className="h-4 w-4" />} active={isActive("/settings")} />
@@ -140,15 +140,15 @@ export function DashboardLayout({ children, userRole, userName, userAvatar, onLo
 
         {/* User card */}
         {userName && (
-          <div className="px-4 py-3 border-t border-brand-warm/40 flex items-center gap-3">
+          <div className="px-4 py-3 border-t border-brand-warm flex items-center gap-3">
             <Avatar src={userAvatar} name={userName} size="sm" />
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-brand-dark truncate">{userName}</p>
-              <p className="text-[10px] text-brand-dark/40">{roleLabel}</p>
+              <p className="text-[10px] text-brand-dark-muted">{roleLabel}</p>
             </div>
             <button
               onClick={onLogout}
-              className="p-1.5 rounded-lg text-brand-dark/30 hover:text-red-500 hover:bg-red-50 transition-colors"
+              className="p-1.5 rounded-lg text-brand-dark-soft hover:text-red-500 hover:bg-red-50 transition-colors"
               title="Wyloguj"
             >
               <LogOut className="h-4 w-4" />
@@ -160,7 +160,7 @@ export function DashboardLayout({ children, userRole, userName, userAvatar, onLo
       {/* Main content */}
       <main className="flex-1 overflow-auto relative flex flex-col">
         {/* Mobile header */}
-        <header className="md:hidden bg-white border-b border-brand-warm/40 px-4 py-3 flex justify-between items-center">
+        <header className="md:hidden bg-white border-b border-brand-warm px-4 py-3 flex justify-between items-center shadow-sm">
           <div className="flex items-center gap-2">
             <div className="w-7 h-7 rounded-lg bg-brand flex items-center justify-center">
               <Calendar className="h-3.5 w-3.5 text-white" />
@@ -169,14 +169,14 @@ export function DashboardLayout({ children, userRole, userName, userAvatar, onLo
           </div>
           <div className="flex items-center gap-1">
             <NotificationBell />
-            <button onClick={onLogout} className="p-2 rounded-lg text-brand-dark/40 hover:text-red-500">
+            <button onClick={onLogout} className="p-2 rounded-lg text-brand-dark-muted hover:text-red-500">
               <LogOut className="h-4 w-4" />
             </button>
           </div>
         </header>
 
         {/* Mobile bottom nav */}
-        <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-brand-warm/40 z-40 flex justify-around px-2 py-1.5 safe-area-pb">
+        <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-brand-warm z-40 flex justify-around px-2 py-1.5 safe-area-pb shadow-[0_-2px_10px_rgba(11,8,41,0.06)]">
           {[
             { href: "/", icon: <LayoutDashboard className="h-5 w-5" />, label: "Pulpit", tourId: "nav-pulpit" },
             { href: "/grafik", icon: <Calendar className="h-5 w-5" />, label: "Grafik", tourId: "nav-grafik" },
@@ -192,7 +192,7 @@ export function DashboardLayout({ children, userRole, userName, userAvatar, onLo
               className={`flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg text-[10px] font-medium transition-colors ${
                 isActive(item.href)
                   ? "text-brand"
-                  : "text-brand-dark/40"
+                  : "text-brand-dark-muted"
               }`}
             >
               {item.icon}
