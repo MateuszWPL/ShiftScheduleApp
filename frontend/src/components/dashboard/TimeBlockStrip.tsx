@@ -94,17 +94,49 @@ export function TimeBlockStrip({
   });
   const justFinishedDragRef = useRef(false);
 
+  const getClientX = useCallback((e: MouseEvent | TouchEvent) => {
+    if ("touches" in e && e.touches.length > 0) return e.touches[0].clientX;
+    if ("changedTouches" in e && e.changedTouches.length > 0) return e.changedTouches[0].clientX;
+    return (e as MouseEvent).clientX;
+  }, []);
+
   const getMinutesFromEvent = useCallback(
-    (e: React.MouseEvent | MouseEvent) => {
+    (e: React.MouseEvent | MouseEvent | React.TouchEvent | TouchEvent) => {
       const el = stripRef.current;
       if (!el) return 0;
       const rect = el.getBoundingClientRect();
-      const x =
-        ("clientX" in e ? e.clientX : (e as MouseEvent).clientX) - rect.left;
+      const clientX = "clientX" in e ? e.clientX : getClientX(e as TouchEvent);
+      const x = clientX - rect.left;
       const pct = Math.max(0, Math.min(1, x / rect.width));
       return clamp(snap(pct * MINUTES_PER_DAY));
     },
-    []
+    [getClientX]
+  );
+
+  const startCreate = useCallback(
+    (minutes: number) => {
+      if (singleBlock) {
+        setDragMode("create");
+        setDragStartMin(minutes);
+        setCreatePreview({ startMin: minutes, endMin: minutes });
+        onChange?.({ startMin: minutes, endMin: clamp(minutes + minBlockMinutes) });
+      } else {
+        setDragMode("create");
+        setDragStartMin(minutes);
+        setCreatePreview({ startMin: minutes, endMin: minutes });
+      }
+    },
+    [singleBlock, onChange, minBlockMinutes]
+  );
+
+  const handleStripTouchStart = useCallback(
+    (e: React.TouchEvent) => {
+      if (disabled) return;
+      e.preventDefault();
+      const minutes = getMinutesFromEvent(e);
+      startCreate(minutes);
+    },
+    [disabled, getMinutesFromEvent, startCreate]
   );
 
   // Mousedown on empty strip area → start creating
@@ -113,21 +145,9 @@ export function TimeBlockStrip({
       if (disabled) return;
       if (e.button !== 0) return;
       const minutes = getMinutesFromEvent(e);
-
-      if (singleBlock) {
-        // In single block mode, start creating immediately
-        setDragMode("create");
-        setDragStartMin(minutes);
-        setCreatePreview({ startMin: minutes, endMin: minutes });
-        onChange?.({ startMin: minutes, endMin: clamp(minutes + minBlockMinutes) });
-      } else {
-        // Multi-block mode: start drag-to-create
-        setDragMode("create");
-        setDragStartMin(minutes);
-        setCreatePreview({ startMin: minutes, endMin: minutes });
-      }
+      startCreate(minutes);
     },
-    [disabled, getMinutesFromEvent, singleBlock, onChange, minBlockMinutes]
+    [disabled, getMinutesFromEvent, startCreate]
   );
 
   // Mousedown on existing block → drag/resize
@@ -149,7 +169,7 @@ export function TimeBlockStrip({
   useEffect(() => {
     if (!dragMode) return;
 
-    const onMove = (e: MouseEvent) => {
+    const onMove = (e: MouseEvent | TouchEvent) => {
       const currentMin = getMinutesFromEvent(e);
 
       if (dragMode === "create") {
@@ -189,7 +209,7 @@ export function TimeBlockStrip({
       }
     };
 
-    const onUp = (e: MouseEvent) => {
+    const onUp = (e: MouseEvent | TouchEvent) => {
       if (dragMode === "create" && !singleBlock) {
         const currentMin = getMinutesFromEvent(e);
         const lo = Math.min(dragStartMin, currentMin);
@@ -214,11 +234,24 @@ export function TimeBlockStrip({
       setCreatePreview(null);
     };
 
-    window.addEventListener("mousemove", onMove);
-    window.addEventListener("mouseup", onUp);
+    const moveHandler = (e: MouseEvent | TouchEvent) => {
+      e.preventDefault();
+      onMove(e);
+    };
+    const upHandler = (e: MouseEvent | TouchEvent) => {
+      onUp(e);
+    };
+    window.addEventListener("mousemove", onMove as (e: MouseEvent) => void);
+    window.addEventListener("mouseup", onUp as (e: MouseEvent) => void);
+    window.addEventListener("touchmove", moveHandler, { passive: false });
+    window.addEventListener("touchend", upHandler);
+    window.addEventListener("touchcancel", upHandler);
     return () => {
-      window.removeEventListener("mousemove", onMove);
-      window.removeEventListener("mouseup", onUp);
+      window.removeEventListener("mousemove", onMove as (e: MouseEvent) => void);
+      window.removeEventListener("mouseup", onUp as (e: MouseEvent) => void);
+      window.removeEventListener("touchmove", moveHandler);
+      window.removeEventListener("touchend", upHandler);
+      window.removeEventListener("touchcancel", upHandler);
     };
   }, [
     dragMode,
@@ -245,11 +278,12 @@ export function TimeBlockStrip({
         ref={stripRef}
         role="slider"
         aria-label={`Pasmo godzin ${label || ""}`}
-        className={`relative w-full bg-slate-50 cursor-crosshair overflow-hidden ${
+        className={`relative w-full bg-slate-50 cursor-crosshair overflow-hidden touch-none ${
           compact ? "rounded-none" : "rounded-lg border border-slate-200"
         }`}
         style={{ height }}
         onMouseDown={handleStripMouseDown}
+        onTouchStart={handleStripTouchStart}
       >
         {/* Hour grid lines */}
         {HOURS.map((h) => (

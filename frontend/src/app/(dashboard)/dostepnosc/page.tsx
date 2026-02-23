@@ -283,55 +283,59 @@ export default function DostepnoscPage() {
         <Info className="h-4 w-4 text-brand-blue flex-shrink-0 mt-0.5" />
         <div className="text-brand-dark-muted text-xs leading-relaxed">
           <strong className="text-brand-dark">Jak dodać dostępność?</strong>{" "}
-          Kliknij i przeciągnij na pasku danego dnia, aby zaznaczyć przedział czasowy (min. 4 godziny).
+          Kliknij lub dotknij i przeciągnij na pasku danego dnia, aby zaznaczyć przedział czasowy (min. 4 godziny).
           Możesz dodać wiele bloków na cały tydzień. Gdy skończysz, kliknij <strong className="text-brand">&quot;Zatwierdź wszystko&quot;</strong>.
         </div>
       </div>
 
-      {/* Week navigation */}
-      <div className="flex items-center gap-2">
-        <Button
-          variant="outline"
-          size="icon"
-          className="border-brand-warm hover:bg-brand-warm-light"
-          onClick={() =>
-            setWeekStart(new Date(weekStart.getTime() - 7 * 24 * 60 * 60 * 1000))
-          }
-          aria-label="Poprzedni tydzień"
-        >
-          <ChevronLeft className="h-4 w-4 text-brand-dark-muted" />
-        </Button>
-        <span className="font-semibold text-brand-dark text-sm min-w-[220px] text-center">
-          {weekLabel}
-        </span>
-        <Button
-          variant="outline"
-          size="icon"
-          className="border-brand-warm hover:bg-brand-warm-light"
-          onClick={() =>
-            setWeekStart(new Date(weekStart.getTime() + 7 * 24 * 60 * 60 * 1000))
-          }
-          aria-label="Następny tydzień"
-        >
-          <ChevronRight className="h-4 w-4 text-brand-dark-muted" />
-        </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          className="text-xs text-brand hover:text-brand-light hover:bg-brand-muted ml-1"
-          onClick={() => setWeekStart(getWeekMonday(new Date()))}
-        >
-          Dziś
-        </Button>
-        {totalSaved > 0 && (
-          <span className="text-[11px] text-brand-dark-soft ml-2">
-            {totalSaved} zapisany{totalSaved > 1 ? "ch" : ""} slot{totalSaved > 1 ? "ów" : ""}
+      {/* Week navigation - mobile: Dziś w drugim wierszu */}
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="icon"
+            className="border-brand-warm hover:bg-brand-warm-light shrink-0"
+            onClick={() =>
+              setWeekStart(new Date(weekStart.getTime() - 7 * 24 * 60 * 60 * 1000))
+            }
+            aria-label="Poprzedni tydzień"
+          >
+            <ChevronLeft className="h-4 w-4 text-brand-dark-muted" />
+          </Button>
+          <span className="font-semibold text-brand-dark text-sm min-w-[180px] sm:min-w-[220px] text-center truncate">
+            {weekLabel}
           </span>
-        )}
+          <Button
+            variant="outline"
+            size="icon"
+            className="border-brand-warm hover:bg-brand-warm-light shrink-0"
+            onClick={() =>
+              setWeekStart(new Date(weekStart.getTime() + 7 * 24 * 60 * 60 * 1000))
+            }
+            aria-label="Następny tydzień"
+          >
+            <ChevronRight className="h-4 w-4 text-brand-dark-muted" />
+          </Button>
+        </div>
+        <div className="flex items-center gap-2 sm:ml-1">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-xs text-brand hover:text-brand-light hover:bg-brand-muted shrink-0"
+            onClick={() => setWeekStart(getWeekMonday(new Date()))}
+          >
+            Dziś
+          </Button>
+          {totalSaved > 0 && (
+            <span className="text-[11px] text-brand-dark-soft">
+              {totalSaved} zapisany{totalSaved > 1 ? "ch" : ""} slot{totalSaved > 1 ? "ów" : ""}
+            </span>
+          )}
+        </div>
       </div>
 
-      {/* Availability table */}
-      <div className="bg-white border border-brand-warm rounded-xl overflow-hidden shadow-sm">
+      {/* Availability table - horizontal scroll na mobile jak grafik */}
+      <div className="bg-white border border-brand-warm rounded-xl overflow-hidden shadow-sm overflow-x-auto [-webkit-overflow-scrolling:touch]">
         {isLoading ? (
           <div className="p-12 text-center">
             <div className="inline-flex items-center gap-2 text-brand-dark-muted text-sm">
@@ -340,7 +344,7 @@ export default function DostepnoscPage() {
             </div>
           </div>
         ) : (
-          <table className="w-full border-collapse">
+          <table className="w-full border-collapse min-w-[560px]">
             <thead>
               <tr className="bg-brand-warm-light/30">
                 <th className="text-left p-2.5 border-b border-r border-brand-warm font-semibold text-brand-dark-muted w-[120px] min-w-[120px] text-[11px] uppercase tracking-wider">

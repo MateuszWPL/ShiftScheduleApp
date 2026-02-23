@@ -159,54 +159,58 @@ export function DashboardLayout({ children, userRole, userName, userAvatar, onLo
 
       {/* Main content */}
       <main className="flex-1 overflow-auto relative flex flex-col">
-        {/* Mobile header */}
-        <header className="md:hidden bg-white border-b border-brand-warm px-4 py-3 flex justify-between items-center shadow-sm">
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg bg-brand flex items-center justify-center">
-              <Calendar className="h-3.5 w-3.5 text-white" />
+        {/* Mobile header + top nav */}
+        <header className="md:hidden sticky top-0 z-40 bg-white border-b border-brand-warm shadow-sm">
+          <div className="flex justify-between items-center px-4 py-2">
+            <div className="flex items-center gap-2 shrink-0">
+              <div className="w-7 h-7 rounded-lg bg-brand flex items-center justify-center">
+                <Calendar className="h-3.5 w-3.5 text-white" />
+              </div>
+              <span className="font-bold text-brand-dark text-sm">ShiftApp</span>
             </div>
-            <span className="font-bold text-brand-dark text-sm">ShiftApp</span>
+            <div className="flex items-center gap-1 shrink-0">
+              <NotificationBell />
+              <button onClick={onLogout} className="p-2 rounded-lg text-brand-dark-muted hover:text-red-500">
+                <LogOut className="h-4 w-4" />
+              </button>
+            </div>
           </div>
-          <div className="flex items-center gap-1">
-            <NotificationBell />
-            <button onClick={onLogout} className="p-2 rounded-lg text-brand-dark-muted hover:text-red-500">
-              <LogOut className="h-4 w-4" />
-            </button>
+          {/* Mobile top nav - horizontal scroll */}
+          <div className="overflow-x-auto [-webkit-overflow-scrolling:touch] border-t border-brand-warm/60 hide-scrollbar">
+            <nav className="flex justify-start gap-0 px-2 py-1.5 min-w-max">
+              {[
+                { href: "/", icon: <LayoutDashboard className="h-4 w-4 shrink-0" />, label: "Pulpit", tourId: "nav-pulpit" },
+                { href: "/grafik", icon: <Calendar className="h-4 w-4 shrink-0" />, label: "Grafik", tourId: "nav-grafik" },
+                { href: "/podsumowanie", icon: <BarChart3 className="h-4 w-4 shrink-0" />, label: "Podsum.", tourId: "nav-podsumowanie" },
+                ...(userRole === "EMPLOYEE" ? [{ href: "/dostepnosc", icon: <CalendarCheck className="h-4 w-4 shrink-0" />, label: "Dostępn.", tourId: "nav-dostepnosc" }] : []),
+                { href: "/team", icon: <Users className="h-4 w-4 shrink-0" />, label: "Zespół", tourId: "nav-team" },
+                { href: "/profile", icon: <User className="h-4 w-4 shrink-0" />, label: "Profil", tourId: "nav-profile" },
+                ...(isAdmin ? [{ href: "/settings", icon: <Settings className="h-4 w-4 shrink-0" />, label: "Ustawienia", tourId: "nav-settings" }] : []),
+              ].map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  {...(item.tourId ? { "data-tour": item.tourId as string } : {})}
+                  className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-colors shrink-0 touch-manipulation ${
+                    isActive(item.href)
+                      ? "bg-brand/10 text-brand"
+                      : "text-brand-dark-muted hover:bg-brand-warm-light"
+                  }`}
+                >
+                  {item.icon}
+                  {item.label}
+                </Link>
+              ))}
+            </nav>
           </div>
         </header>
 
-        {/* Mobile bottom nav */}
-        <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-brand-warm z-40 flex justify-around items-stretch px-1 py-1.5 safe-area-pb shadow-[0_-2px_10px_rgba(11,8,41,0.06)] min-h-[56px]">
-          {[
-            { href: "/", icon: <LayoutDashboard className="h-5 w-5 shrink-0" />, label: "Pulpit", tourId: "nav-pulpit" },
-            { href: "/grafik", icon: <Calendar className="h-5 w-5 shrink-0" />, label: "Grafik", tourId: "nav-grafik" },
-            { href: "/podsumowanie", icon: <BarChart3 className="h-5 w-5 shrink-0" />, label: "Podsum.", tourId: "nav-podsumowanie" },
-            ...(userRole === "EMPLOYEE" ? [{ href: "/dostepnosc", icon: <CalendarCheck className="h-5 w-5 shrink-0" />, label: "Dostępn.", tourId: undefined }] : []),
-            { href: "/team", icon: <Users className="h-5 w-5 shrink-0" />, label: "Zespół", tourId: "nav-team" },
-            { href: "/profile", icon: <User className="h-5 w-5 shrink-0" />, label: "Profil", tourId: "nav-profile" },
-          ].map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              {...(item.tourId ? { "data-tour": item.tourId as string } : {})}
-              className={`flex flex-col items-center justify-center gap-0.5 px-2 py-1.5 rounded-lg text-[10px] font-medium transition-colors min-w-0 min-h-[44px] touch-manipulation ${
-                isActive(item.href)
-                  ? "text-brand"
-                  : "text-brand-dark-muted"
-              }`}
-            >
-              {item.icon}
-              <span className="truncate w-full text-center">{item.label}</span>
-            </Link>
-          ))}
-        </div>
-
-        <div className="flex-1 p-4 sm:p-5 md:p-8 pb-24 sm:pb-24 md:pb-8 min-h-0 overflow-auto">
+        <div className="flex-1 p-4 sm:p-5 md:p-8 min-h-0 overflow-auto">
           {children}
         </div>
       </main>
 
-      <AppTour />
+      <AppTour userRole={userRole} />
     </div>
   );
 }

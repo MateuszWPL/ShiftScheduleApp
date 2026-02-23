@@ -93,7 +93,7 @@ export function NotificationBell({ align = "right" }: { align?: "left" | "right"
       </button>
 
       {open && (
-        <div className={`absolute top-full mt-2 w-[360px] bg-white rounded-xl shadow-2xl border border-slate-200 z-50 overflow-hidden ${align === "left" ? "left-0" : "right-0"}`}>
+        <div className={`fixed top-24 left-2 right-2 w-auto z-50 md:absolute md:top-full md:mt-2 md:left-auto md:right-0 md:w-[360px] md:max-w-[360px] bg-white rounded-xl shadow-2xl border border-slate-200 overflow-hidden ${align === "left" ? "md:left-0 md:right-auto" : ""}`}>
           <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 bg-slate-50">
             <h3 className="font-semibold text-slate-800 text-sm">Powiadomienia</h3>
             <div className="flex items-center gap-1">

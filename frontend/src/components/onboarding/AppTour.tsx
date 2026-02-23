@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
   getAppTourSkipped,
@@ -22,57 +22,48 @@ import {
   Compass,
 } from "lucide-react";
 
-const TOUR_STEPS = [
-  {
-    id: "pulpit",
-    target: "[data-tour='nav-pulpit']",
-    title: "Pulpit",
-    content: "Tu zobaczysz podsumowanie: Twoje zmiany, godziny i powiadomienia.",
-  },
-  {
-    id: "grafik",
-    target: "[data-tour='nav-grafik']",
-    title: "Grafik",
-    content: "Układaj zmiany, publikuj grafik i zarządzaj dostępnością zespołu.",
-  },
-  {
-    id: "podsumowanie",
-    target: "[data-tour='nav-podsumowanie']",
-    title: "Podsumowanie",
-    content: "Godziny przepracowane, podsumowanie tygodnia i miesięczny widok.",
-  },
-  {
-    id: "zespol",
-    target: "[data-tour='nav-team']",
-    title: "Pracownicy",
-    content: "Lista zespołu, zarządzanie pracownikami i przypisywanie stanowisk.",
-  },
-  {
-    id: "profil",
-    target: "[data-tour='nav-profile']",
-    title: "Mój Profil",
-    content: "Edytuj swoje dane, zdjęcie i ustawienia.",
-  },
+const BASE_STEPS = [
+  { id: "pulpit", target: "[data-tour='nav-pulpit']", href: "/", title: "Pulpit", content: "Tu zobaczysz podsumowanie: Twoje zmiany, godziny i powiadomienia." },
+  { id: "grafik", target: "[data-tour='nav-grafik']", href: "/grafik", title: "Grafik", content: "Układaj zmiany, publikuj grafik i zarządzaj dostępnością zespołu." },
+  { id: "dostepnosc", target: "[data-tour='nav-dostepnosc']", href: "/dostepnosc", title: "Dostępność", content: "Zgłoś kiedy możesz pracować. Dotknij i przeciągnij, aby dodać bloki.", show: (role: string) => role === "EMPLOYEE" },
+  { id: "podsumowanie", target: "[data-tour='nav-podsumowanie']", href: "/podsumowanie", title: "Podsumowanie", content: "Godziny przepracowane, podsumowanie tygodnia i miesięczny widok." },
+  { id: "zespol", target: "[data-tour='nav-team']", href: "/team", title: "Pracownicy", content: "Lista zespołu, zarządzanie pracownikami i przypisywanie stanowisk." },
+  { id: "profil", target: "[data-tour='nav-profile']", href: "/profile", title: "Mój Profil", content: "Edytuj swoje dane, zdjęcie i ustawienia." },
+  { id: "ustawienia", target: "[data-tour='nav-settings']", href: "/settings", title: "Ustawienia", content: "Zarządzaj firmą, stanowiskami, zaproszeniami i preferencjami grafiku.", show: (role: string) => role === "OWNER" || role === "MANAGER" },
 ];
+
+function getTourSteps(userRole: string) {
+  return BASE_STEPS.filter((s) => {
+    if (!("show" in s) || typeof s.show !== "function") return true;
+    return (s.show as (r: string) => boolean)(userRole);
+  });
+}
 
 interface Props {
   onClose?: () => void;
+  userRole?: string;
 }
 
-export function AppTour({ onClose }: Props) {
+export function AppTour({ onClose, userRole = "EMPLOYEE" }: Props) {
   const pathname = usePathname();
+  const router = useRouter();
+  const tourSteps = getTourSteps(userRole);
   const [step, setStep] = useState(0);
   const [targetRect, setTargetRect] = useState<DOMRect | null>(null);
   const [isOpen, setIsOpen] = useState(false);
   const [showPrompt, setShowPrompt] = useState(false);
 
-  const currentStep = TOUR_STEPS[step];
+  const currentStep = tourSteps[step];
 
   const updateTargetRect = useCallback(() => {
     if (!currentStep) return;
     const el = document.querySelector(currentStep.target);
     if (el) {
-      setTargetRect(el.getBoundingClientRect());
+      el.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
+      requestAnimationFrame(() => {
+        const rect = el.getBoundingClientRect();
+        setTargetRect(rect);
+      });
     } else {
       setTargetRect(null);
     }
@@ -80,11 +71,22 @@ export function AppTour({ onClose }: Props) {
 
   useEffect(() => {
     if (!isOpen) return;
-    updateTargetRect();
+    const t = setTimeout(updateTargetRect, 100);
     const resize = () => updateTargetRect();
     window.addEventListener("resize", resize);
-    return () => window.removeEventListener("resize", resize);
+    return () => {
+      clearTimeout(t);
+      window.removeEventListener("resize", resize);
+    };
   }, [isOpen, currentStep?.target, updateTargetRect]);
+
+  // Nawigacja do widoku przy zmianie kroku
+  useEffect(() => {
+    if (!isOpen || !currentStep?.href) return;
+    if (pathname !== currentStep.href && !pathname.startsWith(currentStep.href + "/")) {
+      router.replace(currentStep.href);
+    }
+  }, [isOpen, step, currentStep?.href, pathname, router]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -115,7 +117,9 @@ export function AppTour({ onClose }: Props) {
   };
 
   const handleNext = () => {
-    if (step < TOUR_STEPS.length - 1) {
+    if (step < tourSteps.length - 1) {
+      const nextStep = tourSteps[step + 1];
+      if (nextStep?.href) router.replace(nextStep.href);
       setStep(step + 1);
     } else {
       handleComplete();
@@ -126,7 +130,7 @@ export function AppTour({ onClose }: Props) {
 
   if (showPrompt && !isOpen) {
     return (
-      <div className="fixed bottom-20 left-4 right-4 md:left-auto md:right-6 md:bottom-6 md:max-w-sm z-50">
+      <div className="fixed bottom-6 left-4 right-4 md:left-auto md:right-6 md:bottom-6 md:max-w-sm z-50">
         <div className="bg-white rounded-xl shadow-xl border border-brand-warm p-4 flex items-start gap-3">
           <div className="w-10 h-10 rounded-lg bg-brand-muted flex items-center justify-center flex-shrink-0">
             <Compass className="h-5 w-5 text-brand" />
@@ -144,6 +148,7 @@ export function AppTour({ onClose }: Props) {
                   setShowPrompt(false);
                   setIsOpen(true);
                   setStep(0);
+                  router.replace(tourSteps[0]?.href ?? "/");
                 }}
               >
                 Rozpocznij
@@ -190,14 +195,14 @@ export function AppTour({ onClose }: Props) {
       )}
       <div className="absolute inset-0 pointer-events-auto" onClick={handleSkip} />
       <div
-        className="fixed left-4 right-4 md:left-auto md:right-6 md:max-w-sm bottom-20 md:bottom-8 z-[91] pointer-events-auto"
+        className="fixed left-4 right-4 md:left-auto md:right-6 md:max-w-sm bottom-6 md:bottom-8 z-[91] pointer-events-auto"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="bg-white rounded-xl shadow-xl border border-brand-warm p-4">
           <div className="flex items-start justify-between gap-3 mb-3">
             <div>
               <p className="text-xs font-semibold text-brand uppercase tracking-wider">
-                Krok {step + 1} / {TOUR_STEPS.length}
+                Krok {step + 1} / {tourSteps.length}
               </p>
               <h3 className="text-sm font-bold text-brand-dark mt-0.5">
                 {currentStep?.title}
@@ -215,7 +220,7 @@ export function AppTour({ onClose }: Props) {
           </p>
           <div className="flex justify-between items-center">
             <div className="flex gap-1.5">
-              {TOUR_STEPS.map((_, i) => (
+              {tourSteps.map((_, i) => (
                 <div
                   key={i}
                   className={`h-1.5 rounded-full w-1.5 transition-all ${
@@ -225,7 +230,7 @@ export function AppTour({ onClose }: Props) {
               ))}
             </div>
             <Button size="sm" onClick={handleNext} className="gap-1 text-xs">
-              {step < TOUR_STEPS.length - 1 ? "Dalej" : "Zakończ"}
+              {step < tourSteps.length - 1 ? "Dalej" : "Zakończ"}
               <ChevronRight className="h-3 w-3" />
             </Button>
           </div>
