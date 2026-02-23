@@ -145,6 +145,8 @@ export interface ScheduleGridProps {
   onWeekChange: (monday: Date) => void;
   currentUserId: string;
   currentUserRole: string;
+  filterEmployeeId?: string | null;
+  filterPositionId?: string | null;
   onCellClick?: (employeeId: string, dateKey: string) => void;
   onShiftClick?: (shift: Shift) => void;
   onDropAvailability?: (data: AvailabilityDropData) => void;
@@ -156,6 +158,8 @@ export function ScheduleGrid({
   onWeekChange,
   currentUserId,
   currentUserRole,
+  filterEmployeeId,
+  filterPositionId,
   onCellClick,
   onShiftClick,
   onDropAvailability,
@@ -246,20 +250,38 @@ export function ScheduleGrid({
     [onDropAvailability]
   );
 
-  const employeesOnly = members.filter(
+  let employeesOnly = members.filter(
     (m) => (m as { role?: string }).role === "EMPLOYEE"
   );
-  const grid = buildGrid(shifts, employeesOnly, weekDays);
+  let filteredShifts = shifts;
+
+  if (filterEmployeeId) {
+    employeesOnly = employeesOnly.filter((m) => m.id === filterEmployeeId);
+  }
+  if (filterPositionId) {
+    filteredShifts = shifts.filter((s) => s.positionId === filterPositionId || s.position?.id === filterPositionId);
+    if (filterEmployeeId) {
+      employeesOnly = employeesOnly.filter((m) =>
+        (m as { positions?: { id: string }[] }).positions?.some((p) => p.id === filterPositionId)
+      );
+    } else {
+      employeesOnly = employeesOnly.filter((m) =>
+        (m as { positions?: { id: string }[] }).positions?.some((p) => p.id === filterPositionId)
+      );
+    }
+  }
+
+  const grid = buildGrid(filteredShifts, employeesOnly, weekDays);
   const isLoading = membersLoading || shiftsLoading;
   const canUseMarketplace = currentUserRole === "EMPLOYEE";
   const isAdmin = currentUserRole === "OWNER" || currentUserRole === "MANAGER";
 
-  const draftCount = shifts.filter((s) => s.status === "DRAFT").length;
+  const draftCount = filteredShifts.filter((s) => s.status === "DRAFT").length;
 
-  // Calculate weekly hours per employee
+  // Calculate weekly hours per employee (from filtered shifts)
   const weeklyHours = useMemo(() => {
     const map = new Map<string, number>();
-    for (const shift of shifts) {
+    for (const shift of filteredShifts) {
       const dur = (new Date(shift.endTime).getTime() - new Date(shift.startTime).getTime()) / 3600000;
       for (const a of shift.assignments ?? []) {
         if (a.userId) {
@@ -268,7 +290,7 @@ export function ScheduleGrid({
       }
     }
     return map;
-  }, [shifts]);
+  }, [filteredShifts]);
 
   const prevWeek = () => {
     const prev = new Date(monday);
@@ -340,9 +362,9 @@ export function ScheduleGrid({
           )}
         </div>
         {isAdmin && onCellClick && (
-          <span className="flex items-center gap-1 text-[11px] text-brand-dark/30">
+          <span className="flex items-center gap-1 text-[11px] text-brand-dark/30" title="Kliknij komórkę lub przeciągnij blok z dostępności">
             <Info className="h-3 w-3" />
-            Kliknij pustą komórkę lub przeciągnij dostępność, aby dodać zmianę
+            Kliknij komórkę · przeciągnij dostępność
           </span>
         )}
       </div>

@@ -9,6 +9,8 @@ import {
   publishShifts,
   getShifts,
   getTeamAvailability,
+  getTeamMembers,
+  getPositions,
   createShift,
   addAssignment,
   type Shift,
@@ -17,6 +19,7 @@ import {
 } from "@/lib/api";
 import { useDashboardUser } from "@/components/providers/DashboardUserContext";
 import { ScheduleGrid, type AvailabilityDropData } from "@/components/dashboard/ScheduleGrid";
+import { MyShiftsList } from "@/components/dashboard/MyShiftsList";
 import { CreateShiftDialog } from "@/components/dashboard/CreateShiftDialog";
 import { CopyWeekDialog } from "@/components/dashboard/CopyWeekDialog";
 import { Button } from "@/components/ui/button";
@@ -31,6 +34,11 @@ import {
   Plus,
   CalendarDays,
   Copy,
+  Filter,
+  LayoutGrid,
+  List,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 
 function getWeekMonday(d: Date): Date {
@@ -329,6 +337,11 @@ export default function GrafikPage() {
   const [prefilledDate, setPrefilledDate] = useState<string | undefined>();
   const [prefilledEmployeeId, setPrefilledEmployeeId] = useState<string | undefined>();
   const [editShift, setEditShift] = useState<Shift | null>(null);
+  const [viewMode, setViewMode] = useState<"table" | "my">(() =>
+    dbUser?.role === "EMPLOYEE" ? "my" : "table"
+  );
+  const [filterEmployeeId, setFilterEmployeeId] = useState<string | null>(null);
+  const [filterPositionId, setFilterPositionId] = useState<string | null>(null);
 
   useEffect(() => {
     if (searchParams.get("addShift") === "1") {
@@ -360,6 +373,15 @@ export default function GrafikPage() {
     queryKey: ["shifts", from, toStr],
     queryFn: () => getShifts({ from, to: toStr }),
   });
+  const { data: teamMembers = [] } = useQuery({
+    queryKey: ["team-members"],
+    queryFn: getTeamMembers,
+  });
+  const { data: positions = [] } = useQuery({
+    queryKey: ["positions"],
+    queryFn: getPositions,
+  });
+  const employees = teamMembers.filter((m: { role?: string }) => m.role === "EMPLOYEE");
   const draftCount = weekShifts.filter((s) => s.status === "DRAFT").length;
 
   const publishMutation = useMutation({
@@ -495,15 +517,98 @@ export default function GrafikPage() {
         </div>
       )}
 
+      {/* View toggle (employee) + Filters (admin) */}
+      <div className="flex flex-wrap items-center gap-3">
+        {!isAdmin && (
+          <div className="inline-flex rounded-lg border border-brand-warm/40 bg-white p-0.5">
+            <button
+              onClick={() => setViewMode("table")}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                viewMode === "table" ? "bg-brand text-white" : "text-brand-dark/60 hover:text-brand-dark"
+              }`}
+            >
+              <LayoutGrid className="h-4 w-4" />
+              Tabela
+            </button>
+            <button
+              onClick={() => setViewMode("my")}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                viewMode === "my" ? "bg-brand text-white" : "text-brand-dark/60 hover:text-brand-dark"
+              }`}
+            >
+              <List className="h-4 w-4" />
+              Moje
+            </button>
+          </div>
+        )}
+        {isAdmin && (employees.length > 0 || positions.length > 0) && (
+          <div className="flex items-center gap-2 flex-wrap">
+            <Filter className="h-4 w-4 text-brand-dark/40" />
+            <select
+              value={filterEmployeeId ?? ""}
+              onChange={(e) => setFilterEmployeeId(e.target.value || null)}
+              className="text-sm border border-brand-warm/50 rounded-lg px-2.5 py-1.5 bg-white focus:ring-2 focus:ring-brand/20 focus:border-brand outline-none"
+            >
+              <option value="">Wszyscy</option>
+              {employees.map((m) => (
+                <option key={m.id} value={m.id}>{m.nickname || m.name}</option>
+              ))}
+            </select>
+            {positions.length > 0 && (
+              <select
+                value={filterPositionId ?? ""}
+                onChange={(e) => setFilterPositionId(e.target.value || null)}
+                className="text-sm border border-brand-warm/50 rounded-lg px-2.5 py-1.5 bg-white focus:ring-2 focus:ring-brand/20 focus:border-brand outline-none"
+              >
+                <option value="">Wszystkie</option>
+                {positions.map((p) => (
+                  <option key={p.id} value={p.id}>{p.name}</option>
+                ))}
+              </select>
+            )}
+            {(filterEmployeeId || filterPositionId) && (
+              <button
+                onClick={() => { setFilterEmployeeId(null); setFilterPositionId(null); }}
+                className="text-xs text-brand hover:underline"
+              >
+                Wyczyść
+              </button>
+            )}
+          </div>
+        )}
+      </div>
+
+      {!isAdmin && viewMode === "my" ? (
+        <div className="space-y-4">
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="icon" onClick={() => setWeekStart((prev) => { const m = getWeekMonday(prev); m.setDate(m.getDate() - 7); return m; })} className="border-brand-warm/60 hover:bg-brand-warm-light h-8 w-8" aria-label="Poprzedni tydzień">
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <span className="font-semibold text-brand-dark min-w-[180px] text-center text-sm">
+              {monday.toLocaleDateString("pl-PL", { day: "numeric", month: "short" })} – {toDate.toLocaleDateString("pl-PL", { day: "numeric", month: "short", year: "numeric" })}
+            </span>
+            <Button variant="outline" size="icon" onClick={() => setWeekStart((prev) => { const m = getWeekMonday(prev); m.setDate(m.getDate() + 7); return m; })} className="border-brand-warm/60 hover:bg-brand-warm-light h-8 w-8" aria-label="Następny tydzień">
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+            <Button variant="ghost" size="sm" onClick={() => setWeekStart(getWeekMonday(new Date()))} className="text-xs text-brand">
+              Dziś
+            </Button>
+          </div>
+          <MyShiftsList shifts={weekShifts} currentUserId={dbUser?.id ?? ""} />
+        </div>
+      ) : (
       <ScheduleGrid
             weekStart={weekStart}
             onWeekChange={setWeekStart}
             currentUserId={dbUser?.id ?? ""}
             currentUserRole={dbUser?.role ?? "EMPLOYEE"}
+            filterEmployeeId={filterEmployeeId}
+            filterPositionId={filterPositionId}
             onCellClick={isAdmin ? handleCellClick : undefined}
             onShiftClick={isAdmin ? handleShiftClick : undefined}
             onDropAvailability={isAdmin ? handleDropAvailability : undefined}
           />
+      )}
 
       {isAdmin && <AvailabilityPanel weekStart={weekStart} />}
 

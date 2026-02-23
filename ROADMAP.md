@@ -96,10 +96,10 @@
 - [x] Wyswietlanie stanowisk na kartach pracownikow (strona Zespol)
 - [x] Migracja istniejacych roleNames na rekordy Position (endpoint /positions/migrate)
 
-### 2.4 Poprawki UX kalendarza
-- [ ] Drag & resize zmian na kalendarzu (zmiana godzin przez przeciaganie krawedzi)
-- [ ] Filtrowanie kalendarza po pracowniku / roli
-- [ ] Widok "Moje zmiany" dla pracownika (lista zamiast tabeli)
+### 2.4 Poprawki UX kalendarza — zrobione ✅
+- [ ] Drag & resize zmian (odlozone — skupienie na nawigacji)
+- [x] Filtrowanie kalendarza po pracowniku / stanowisku (kompaktowe dropdowny)
+- [x] Widok „Moje zmiany” dla pracownika (lista zamiast tabeli, domyslnie dla pracownikow)
 
 ### 2.5 Onboarding — zrobione ✅
 - [x] Kreator pierwszego uruchomienia: załóż firmę → zaproś zespół → ustaw godziny → dodaj pierwszą zmianę
