@@ -35,16 +35,16 @@ export default function TeamPage() {
   }
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6">
+    <div className="max-w-6xl mx-auto space-y-6 w-full min-w-0">
       {/* Header */}
       <div className="flex justify-between items-center flex-wrap gap-3">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-brand-blue-muted flex items-center justify-center">
             <Users className="h-5 w-5 text-brand-blue" />
           </div>
-          <div>
-            <h1 className="text-xl font-bold text-brand-dark">Zespół</h1>
-            <p className="text-xs text-brand-dark-muted">Zarządzaj członkami zespołu</p>
+          <div className="min-w-0">
+            <h1 className="text-lg sm:text-xl font-bold text-brand-dark truncate">Zespół</h1>
+            <p className="text-xs text-brand-dark-muted truncate">Zarządzaj członkami zespołu</p>
           </div>
         </div>
         {members && (
@@ -120,7 +120,7 @@ export default function TeamPage() {
                 {member.email && (
                   <div className="flex items-center gap-2 text-brand-dark-muted">
                     <Mail className="h-3.5 w-3.5 text-brand-dark-soft" />
-                    <span className="truncate text-xs">{member.email}</span>
+                    <span className="truncate text-xs block max-w-full">{member.email}</span>
                   </div>
                 )}
                 {"phoneNumber" in member && member.phoneNumber && (

@@ -81,7 +81,7 @@ export function MonthlyCalendarView({ monthDate, onDayClick }: MonthlyCalendarVi
   const CELL_SIZE = "w-8 h-8"; // Compact 32px cells
 
   return (
-    <div className="bg-white border border-brand-warm rounded-xl p-4 shadow-sm max-w-md">
+    <div className="bg-white border border-brand-warm rounded-xl p-4 shadow-sm max-w-md w-full min-w-0 overflow-hidden">
       <div className="grid grid-cols-7 gap-0.5">
         {WEEKDAYS.map((wd) => (
           <div

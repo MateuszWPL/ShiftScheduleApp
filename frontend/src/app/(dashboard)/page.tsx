@@ -189,13 +189,13 @@ export default function PulpitPage() {
   };
 
   return (
-    <div className="space-y-6 max-w-5xl">
+    <div className="space-y-6 max-w-5xl w-full min-w-0">
       {/* Welcome header */}
       <div>
-        <h1 className="text-2xl font-bold text-brand-dark">
+        <h1 className="text-xl sm:text-2xl font-bold text-brand-dark truncate">
           Cześć, {displayUser?.name?.split(" ")[0] || "Użytkowniku"}
         </h1>
-        <p className="text-brand-dark-muted text-sm mt-0.5">
+        <p className="text-brand-dark-muted text-xs sm:text-sm mt-0.5 line-clamp-2">
           {new Date().toLocaleDateString("pl-PL", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
         </p>
       </div>
@@ -417,8 +417,8 @@ export default function PulpitPage() {
               <p className="text-[10px] font-semibold text-brand-dark-soft uppercase tracking-wider mb-2">
                 Kod zaproszenia
               </p>
-              <div className="flex items-center gap-2">
-                <code className="flex-1 text-lg font-mono tracking-widest text-brand-dark font-bold select-all">
+              <div className="flex items-center gap-2 min-w-0">
+                <code className="flex-1 min-w-0 text-sm sm:text-lg font-mono tracking-widest text-brand-dark font-bold select-all break-all truncate">
                   {dbUser.team.inviteCode}
                 </code>
                 <button

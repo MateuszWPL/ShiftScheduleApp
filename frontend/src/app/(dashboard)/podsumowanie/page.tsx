@@ -35,14 +35,14 @@ export default function PodsumowaniePage() {
       : monthDate.toLocaleDateString("pl-PL", { month: "long", year: "numeric" });
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 w-full min-w-0">
       <div className="flex items-center gap-3">
         <div className="w-10 h-10 rounded-xl bg-brand-muted flex items-center justify-center">
           <BarChart3 className="h-5 w-5 text-brand" />
         </div>
-        <div>
-          <h1 className="text-xl font-bold text-brand-dark">Podsumowanie</h1>
-          <p className="text-xs text-brand-dark-muted">Godziny pracowników i przegląd grafiku</p>
+        <div className="min-w-0">
+          <h1 className="text-lg sm:text-xl font-bold text-brand-dark truncate">Podsumowanie</h1>
+          <p className="text-xs text-brand-dark-muted truncate">Godziny pracowników i przegląd grafiku</p>
         </div>
       </div>
 

@@ -75,13 +75,13 @@ function GieldaSection({
   if (marketplace.length === 0) return null;
 
   return (
-    <div className="bg-white border border-brand-warm rounded-xl p-5 shadow-sm">
+    <div className="bg-white border border-brand-warm rounded-xl p-4 sm:p-5 shadow-sm overflow-hidden">
       <div className="flex items-center gap-2.5 mb-4">
-        <div className="w-8 h-8 rounded-lg bg-brand-muted flex items-center justify-center">
+        <div className="w-8 h-8 rounded-lg bg-brand-muted flex items-center justify-center shrink-0">
           <ShoppingBag className="h-4 w-4 text-brand" />
         </div>
-        <div>
-          <h3 className="font-semibold text-brand-dark">
+        <div className="min-w-0">
+          <h3 className="font-semibold text-brand-dark truncate">
             Giełda zmian
           </h3>
           <p className="text-[11px] text-brand-dark-muted">{marketplace.length} {marketplace.length === 1 ? "zmiana dostępna" : "zmian dostępnych"}</p>
@@ -249,7 +249,7 @@ function AvailabilityPanel({
   }
 
   return (
-    <div className="bg-white border border-brand-warm rounded-xl p-5 shadow-sm">
+    <div className="bg-white border border-brand-warm rounded-xl p-4 sm:p-5 shadow-sm overflow-hidden">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-lg bg-brand-blue-muted flex items-center justify-center">
@@ -260,13 +260,14 @@ function AvailabilityPanel({
             <p className="text-[11px] text-brand-dark-soft">{byUser.size} {byUser.size === 1 ? "pracownik" : "pracowników"} zgłosiło dostępność</p>
           </div>
         </div>
-        <span className="flex items-center gap-1 text-[11px] text-brand-dark-soft bg-brand-blue-muted px-2.5 py-1 rounded-full">
-          <GripVertical className="h-3 w-3" />
-          Przeciągnij na kalendarz
+        <span className="flex items-center gap-1 text-[11px] text-brand-dark-soft bg-brand-blue-muted px-2.5 py-1 rounded-full shrink-0">
+          <GripVertical className="h-3 w-3 shrink-0" />
+          <span className="hidden sm:inline">Przeciągnij na kalendarz</span>
+          <span className="sm:hidden">Przeciągnij</span>
         </span>
       </div>
-      <div className="overflow-x-auto">
-        <table className="w-full text-xs border-collapse">
+      <div className="overflow-x-auto [-webkit-overflow-scrolling:touch]">
+        <table className="w-full text-xs border-collapse min-w-[500px]">
           <thead>
             <tr className="bg-brand-warm-light/30">
               <th className="text-left p-2 border-b border-brand-warm font-semibold text-brand-dark-muted min-w-[120px] text-[11px] uppercase tracking-wider">
@@ -459,19 +460,19 @@ export default function GrafikPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 w-full min-w-0">
       {/* Page header */}
-      <div className="flex justify-between items-center flex-wrap gap-3">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-brand-muted flex items-center justify-center">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="w-10 h-10 rounded-xl bg-brand-muted flex items-center justify-center shrink-0">
             <CalendarDays className="h-5 w-5 text-brand" />
           </div>
-          <div>
-            <h1 className="text-xl font-bold text-brand-dark">Grafik</h1>
-            <p className="text-xs text-brand-dark-muted">Zarządzaj zmianami pracowników</p>
+          <div className="min-w-0">
+            <h1 className="text-lg sm:text-xl font-bold text-brand-dark truncate">Grafik</h1>
+            <p className="text-xs text-brand-dark-muted truncate">Zarządzaj zmianami pracowników</p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2 shrink-0">
           {isAdmin && (
             <>
               {draftCount > 0 && (

@@ -131,7 +131,15 @@
   * {
     @apply border-border outline-ring/50;
   }
+  html {
+    overflow-x: hidden;
+  }
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* Mobile: safe area for bottom nav (notch devices) */
+.safe-area-pb {
+  padding-bottom: env(safe-area-inset-bottom, 0);
 }

@@ -71,7 +71,7 @@ export function SummaryPanel({ from, to, periodLabel }: SummaryPanelProps) {
         </span>
       </div>
 
-      <div className="space-y-2 max-h-[280px] overflow-y-auto">
+      <div className="space-y-2 max-h-[240px] sm:max-h-[280px] overflow-y-auto [-webkit-overflow-scrolling:touch]">
         {data.employees.map((emp) => (
           <EmployeeSummaryRow key={emp.userId} employee={emp} />
         ))}

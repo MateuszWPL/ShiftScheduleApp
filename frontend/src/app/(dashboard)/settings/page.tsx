@@ -287,7 +287,7 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="max-w-3xl mx-auto space-y-6">
+    <div className="max-w-3xl mx-auto space-y-6 w-full min-w-0">
       {/* Header */}
       <div className="flex items-center gap-3">
         <div className="w-10 h-10 rounded-xl bg-brand-muted flex items-center justify-center">
@@ -300,12 +300,12 @@ export default function SettingsPage() {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 bg-white border border-brand-warm rounded-xl p-1.5">
+      <div className="flex gap-1 bg-white border border-brand-warm rounded-xl p-1.5 overflow-x-auto [-webkit-overflow-scrolling:touch]">
         {TABS.map((tab) => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors flex-1 justify-center ${
+            className={`flex items-center gap-2 px-3 sm:px-4 py-2 rounded-lg text-sm font-medium transition-colors flex-1 min-w-0 justify-center shrink-0 touch-manipulation ${
               activeTab === tab.id
                 ? "bg-brand/10 text-brand"
                 : "text-brand-dark-muted hover:text-brand-dark hover:bg-slate-50"

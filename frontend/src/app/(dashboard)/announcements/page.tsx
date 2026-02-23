@@ -139,15 +139,15 @@ export default function AnnouncementsPage() {
   };
 
   return (
-    <div className="max-w-3xl mx-auto space-y-6">
+    <div className="max-w-3xl mx-auto space-y-6 w-full min-w-0">
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-brand-muted flex items-center justify-center">
             <Megaphone className="h-5 w-5 text-brand" />
           </div>
-          <div>
-            <h1 className="text-xl font-bold text-brand-dark">Ogłoszenia</h1>
+          <div className="min-w-0">
+            <h1 className="text-lg sm:text-xl font-bold text-brand-dark truncate">Ogłoszenia</h1>
             <p className="text-xs text-brand-dark-muted">
               {isAdmin ? "Twórz i zarządzaj ogłoszeniami zespołu" : "Ogłoszenia od zespołu"}
             </p>

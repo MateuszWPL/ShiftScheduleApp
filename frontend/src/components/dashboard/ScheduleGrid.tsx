@@ -316,18 +316,18 @@ export function ScheduleGrid({
   return (
     <div className="space-y-3">
       {/* Header */}
-      <div className="flex items-center justify-between gap-4 flex-wrap">
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="icon" onClick={prevWeek} className="border-brand-warm hover:bg-brand-warm-light" aria-label="Poprzedni tydzień">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div className="flex items-center gap-2 flex-wrap">
+          <Button variant="outline" size="icon" onClick={prevWeek} className="border-brand-warm hover:bg-brand-warm-light h-9 w-9 sm:h-8 sm:w-8 shrink-0 touch-manipulation" aria-label="Poprzedni tydzień">
             <ChevronLeft className="h-4 w-4 text-brand-dark-muted" />
           </Button>
-          <span className="font-semibold text-brand-dark min-w-[200px] text-center text-sm">
+          <span className="font-semibold text-brand-dark min-w-[160px] sm:min-w-[200px] text-center text-sm truncate">
             {weekLabel}
           </span>
-          <Button variant="outline" size="icon" onClick={nextWeek} className="border-brand-warm hover:bg-brand-warm-light" aria-label="Następny tydzień">
+          <Button variant="outline" size="icon" onClick={nextWeek} className="border-brand-warm hover:bg-brand-warm-light h-9 w-9 sm:h-8 sm:w-8 shrink-0 touch-manipulation" aria-label="Następny tydzień">
             <ChevronRight className="h-4 w-4 text-brand-dark-muted" />
           </Button>
-          <Button variant="ghost" size="sm" onClick={goToday} className="text-xs text-brand hover:text-brand-light hover:bg-brand-muted ml-1">
+          <Button variant="ghost" size="sm" onClick={goToday} className="text-xs text-brand hover:text-brand-light hover:bg-brand-muted ml-1 shrink-0 touch-manipulation min-h-[36px]">
             Dziś
           </Button>
         </div>
@@ -370,7 +370,7 @@ export function ScheduleGrid({
       </div>
 
       {/* Grid */}
-      <div className="border border-brand-warm rounded-xl bg-white overflow-x-auto overflow-y-auto max-h-[70vh] shadow-sm">
+      <div className="border border-brand-warm rounded-xl bg-white overflow-x-auto overflow-y-auto max-h-[60vh] sm:max-h-[70vh] shadow-sm overscroll-x-contain [-webkit-overflow-scrolling:touch]">
         {isLoading ? (
           <div className="p-12 text-center">
             <div className="inline-flex items-center gap-2 text-brand-dark-muted text-sm">
@@ -395,7 +395,7 @@ export function ScheduleGrid({
           <table className="w-full border-collapse text-sm">
             <thead className="bg-brand-warm-light/50 sticky top-0 z-10">
               <tr>
-                <th className="text-left p-2.5 border-b border-brand-warm font-semibold text-brand-dark min-w-[160px] text-xs uppercase tracking-wider">
+                <th className="text-left p-2 sm:p-2.5 border-b border-brand-warm font-semibold text-brand-dark min-w-[120px] sm:min-w-[160px] text-xs uppercase tracking-wider">
                   Pracownik
                 </th>
                 {weekDays.map((d) => {
@@ -403,7 +403,7 @@ export function ScheduleGrid({
                   return (
                     <th
                       key={toLocalDateKey(d)}
-                      className={`p-2 border-b border-l border-brand-warm font-medium min-w-[120px] text-center ${
+                      className={`p-1.5 sm:p-2 border-b border-l border-brand-warm font-medium min-w-[80px] sm:min-w-[120px] text-center ${
                         todayCol ? "bg-brand-muted/50" : ""
                       }`}
                     >
@@ -423,13 +423,13 @@ export function ScheduleGrid({
                 const hours = weeklyHours.get(member.id) || 0;
                 return (
                   <tr key={member.id} className="border-b border-brand-warm hover:bg-brand-warm-light/20 transition-colors">
-                    <td className="p-2.5 border-r border-brand-warm sticky left-0 bg-white z-[1]">
-                      <div className="flex items-center gap-2.5">
-                        <div className="w-8 h-8 rounded-full bg-brand-blue-muted flex items-center justify-center text-xs font-bold text-brand-blue flex-shrink-0">
+                    <td className="p-2 sm:p-2.5 border-r border-brand-warm sticky left-0 bg-white z-[1] shadow-[2px_0_4px_-2px_rgba(0,0,0,0.08)]">
+                      <div className="flex items-center gap-2">
+                        <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-brand-blue-muted flex items-center justify-center text-[10px] sm:text-xs font-bold text-brand-blue flex-shrink-0">
                           {(member.nickname || member.name || "?").charAt(0).toUpperCase()}
                         </div>
                         <div className="min-w-0">
-                          <p className="text-sm font-medium text-brand-dark truncate max-w-[100px]">
+                          <p className="text-xs sm:text-sm font-medium text-brand-dark truncate max-w-[70px] sm:max-w-[100px]">
                             {member.nickname || member.name}
                           </p>
                           {hours > 0 && (
@@ -453,7 +453,7 @@ export function ScheduleGrid({
                       return (
                         <td
                           key={key}
-                          className={`p-1 border-l border-brand-warm align-top min-w-[120px] transition-colors ${
+                          className={`p-1 border-l border-brand-warm align-top min-w-[80px] sm:min-w-[120px] transition-colors ${
                             todayCol ? "bg-brand-muted/20" : ""
                           } ${
                             isAdmin && isEmpty ? "cursor-pointer hover:bg-brand-muted/30 group/cell" : ""
@@ -653,7 +653,7 @@ export function ScheduleGrid({
                       return (
                         <td
                           key={key}
-                          className={`p-1 border-l border-brand-warm align-top min-w-[120px] ${
+                          className={`p-1 border-l border-brand-warm align-top min-w-[80px] sm:min-w-[120px] ${
                             todayCol ? "bg-brand-muted/20" : ""
                           }`}
                         >

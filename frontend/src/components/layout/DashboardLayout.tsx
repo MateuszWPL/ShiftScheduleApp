@@ -176,32 +176,32 @@ export function DashboardLayout({ children, userRole, userName, userAvatar, onLo
         </header>
 
         {/* Mobile bottom nav */}
-        <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-brand-warm z-40 flex justify-around px-2 py-1.5 safe-area-pb shadow-[0_-2px_10px_rgba(11,8,41,0.06)]">
+        <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-brand-warm z-40 flex justify-around items-stretch px-1 py-1.5 safe-area-pb shadow-[0_-2px_10px_rgba(11,8,41,0.06)] min-h-[56px]">
           {[
-            { href: "/", icon: <LayoutDashboard className="h-5 w-5" />, label: "Pulpit", tourId: "nav-pulpit" },
-            { href: "/grafik", icon: <Calendar className="h-5 w-5" />, label: "Grafik", tourId: "nav-grafik" },
-            { href: "/podsumowanie", icon: <BarChart3 className="h-5 w-5" />, label: "Podsumowanie", tourId: "nav-podsumowanie" },
-            ...(userRole === "EMPLOYEE" ? [{ href: "/dostepnosc", icon: <CalendarCheck className="h-5 w-5" />, label: "Dostępność", tourId: undefined }] : []),
-            { href: "/team", icon: <Users className="h-5 w-5" />, label: "Zespół", tourId: "nav-team" },
-            { href: "/profile", icon: <User className="h-5 w-5" />, label: "Profil", tourId: "nav-profile" },
+            { href: "/", icon: <LayoutDashboard className="h-5 w-5 shrink-0" />, label: "Pulpit", tourId: "nav-pulpit" },
+            { href: "/grafik", icon: <Calendar className="h-5 w-5 shrink-0" />, label: "Grafik", tourId: "nav-grafik" },
+            { href: "/podsumowanie", icon: <BarChart3 className="h-5 w-5 shrink-0" />, label: "Podsum.", tourId: "nav-podsumowanie" },
+            ...(userRole === "EMPLOYEE" ? [{ href: "/dostepnosc", icon: <CalendarCheck className="h-5 w-5 shrink-0" />, label: "Dostępn.", tourId: undefined }] : []),
+            { href: "/team", icon: <Users className="h-5 w-5 shrink-0" />, label: "Zespół", tourId: "nav-team" },
+            { href: "/profile", icon: <User className="h-5 w-5 shrink-0" />, label: "Profil", tourId: "nav-profile" },
           ].map((item) => (
             <Link
               key={item.href}
               href={item.href}
               {...(item.tourId ? { "data-tour": item.tourId as string } : {})}
-              className={`flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg text-[10px] font-medium transition-colors ${
+              className={`flex flex-col items-center justify-center gap-0.5 px-2 py-1.5 rounded-lg text-[10px] font-medium transition-colors min-w-0 min-h-[44px] touch-manipulation ${
                 isActive(item.href)
                   ? "text-brand"
                   : "text-brand-dark-muted"
               }`}
             >
               {item.icon}
-              {item.label}
+              <span className="truncate w-full text-center">{item.label}</span>
             </Link>
           ))}
         </div>
 
-        <div className="flex-1 p-5 md:p-8 pb-20 md:pb-8">
+        <div className="flex-1 p-4 sm:p-5 md:p-8 pb-24 sm:pb-24 md:pb-8 min-h-0 overflow-auto">
           {children}
         </div>
       </main>
