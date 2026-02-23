@@ -100,6 +100,7 @@
 - [ ] Drag & resize zmian (odlozone — skupienie na nawigacji)
 - [x] Filtrowanie kalendarza po pracowniku / stanowisku (kompaktowe dropdowny)
 - [x] Widok „Moje zmiany” dla pracownika (lista zamiast tabeli, domyslnie dla pracownikow)
+- [x] **Mobile-first UX w przegladarce**: responsywnosc wszystkich widokow (Pulpit, Grafik, Moje zmiany, Podsumowanie, Zespol, Ogloszenia, Dostepnosc, Ustawienia, Profil); brak overflow, czytelny tekst, skalowanie przy 30+ pracownikach; bottom nav, sticky kolumny w tabelach
 
 ### 2.5 Onboarding — zrobione ✅
 - [x] Kreator pierwszego uruchomienia: załóż firmę → zaproś zespół → ustaw godziny → dodaj pierwszą zmianę
