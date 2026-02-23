@@ -47,7 +47,7 @@ export default function PodsumowaniePage() {
       </div>
 
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div className="inline-flex rounded-lg border border-brand-warm bg-white p-0.5">
+        <div className="inline-flex w-fit rounded-lg border border-brand-warm bg-white p-0.5">
           <button
             onClick={() => setViewMode("week")}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
