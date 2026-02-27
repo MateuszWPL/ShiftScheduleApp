@@ -1,5 +1,6 @@
 "use client";
 
+import { paths } from "@/lib/app-paths";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   getShifts,
@@ -387,7 +388,7 @@ export function ScheduleGrid({
             <p className="text-sm font-medium text-brand-dark-muted">Brak pracowników w zespole</p>
             <p className="text-xs text-brand-dark-soft mt-1 mb-4">Zaproś członków, aby zobaczyć grafik.</p>
             <Link
-              href="/team"
+              href={paths.team}
               className="inline-flex items-center gap-1.5 text-sm font-medium text-brand hover:underline"
             >
               Przejdź do pracowników

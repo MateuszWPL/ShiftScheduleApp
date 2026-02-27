@@ -5,6 +5,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import Link from "next/link";
+import { paths } from "@/lib/app-paths";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
 
@@ -45,7 +46,7 @@ function VerifyEmailContent() {
 
       // Przekieruj do logowania po 3 sekundach
       setTimeout(() => {
-        router.push("/");
+        router.push(paths.home);
       }, 3000);
     } catch (error: any) {
       setStatus("error");
@@ -81,7 +82,7 @@ function VerifyEmailContent() {
           <h1 className="text-2xl font-bold text-green-900">Email zweryfikowany!</h1>
           <p className="text-brand-dark-muted">{message}</p>
           <p className="text-sm text-brand-dark-muted">Przekierowywanie do logowania...</p>
-          <Link href="/">
+          <Link href={paths.home}>
             <Button>Przejdź do logowania</Button>
           </Link>
         </div>
@@ -102,7 +103,7 @@ function VerifyEmailContent() {
         <h1 className="text-2xl font-bold text-red-900">Błąd weryfikacji</h1>
         <p className="text-brand-dark-muted">{message || "Nieprawidłowy lub wygasły token weryfikacyjny."}</p>
         <div className="space-y-2">
-          <Link href="/">
+          <Link href={paths.home}>
             <Button variant="outline" className="w-full">
               Wróć do strony głównej
             </Button>

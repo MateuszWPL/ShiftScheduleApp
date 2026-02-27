@@ -5,17 +5,18 @@ import { Logo } from "@/components/brand/Logo";
 import Link from "next/link";
 
 interface NavbarProps {
+  homeHref?: string;
   onLoginClick: () => void;
   onRegisterClick: () => void;
 }
 
-export function Navbar({ onLoginClick, onRegisterClick }: NavbarProps) {
+export function Navbar({ homeHref = "/", onLoginClick, onRegisterClick }: NavbarProps) {
   return (
     <nav className="w-full border-b border-brand-warm bg-white">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
-          <Link href="/" className="flex items-center min-w-0 shrink">
+          <Link href={homeHref} className="flex items-center min-w-0 shrink">
             <Logo showPl />
           </Link>
 

@@ -2,12 +2,13 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { paths } from "@/lib/app-paths";
 
 export default function PanelPage() {
   const router = useRouter();
 
   useEffect(() => {
-    router.replace("/grafik");
+    router.replace(paths.grafik);
   }, [router]);
 
   return (

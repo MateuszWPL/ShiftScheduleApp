@@ -22,6 +22,7 @@ import { Avatar } from "@/components/ui/avatar";
 import { NotificationBell } from "@/components/dashboard/NotificationBell";
 import { Logo } from "@/components/brand/Logo";
 import Link from "next/link";
+import { paths } from "@/lib/app-paths";
 
 interface Props {
   children: React.ReactNode;
@@ -69,25 +70,25 @@ export function DashboardLayout({ children, userRole, userName, userAvatar, onLo
   const isAdmin = userRole === "OWNER" || userRole === "MANAGER";
 
   const mainNav: NavItem[] = [
-    { href: "/", label: "Pulpit", icon: <LayoutDashboard className="h-4 w-4" />, tourId: "nav-pulpit" },
-    { href: "/grafik", label: "Grafik", icon: <Calendar className="h-4 w-4" />, tourId: "nav-grafik" },
-    { href: "/podsumowanie", label: "Podsumowanie", icon: <BarChart3 className="h-4 w-4" />, tourId: "nav-podsumowanie" },
-    { href: "/dostepnosc", label: "Dostępność", icon: <CalendarCheck className="h-4 w-4" />, show: userRole === "EMPLOYEE" },
+    { href: paths.home, label: "Pulpit", icon: <LayoutDashboard className="h-4 w-4" />, tourId: "nav-pulpit" },
+    { href: paths.grafik, label: "Grafik", icon: <Calendar className="h-4 w-4" />, tourId: "nav-grafik" },
+    { href: paths.podsumowanie, label: "Podsumowanie", icon: <BarChart3 className="h-4 w-4" />, tourId: "nav-podsumowanie" },
+    { href: paths.dostepnosc, label: "Dostępność", icon: <CalendarCheck className="h-4 w-4" />, show: userRole === "EMPLOYEE" },
   ];
 
   const teamNav: NavItem[] = [
-    { href: "/team", label: "Pracownicy", icon: <Users className="h-4 w-4" />, tourId: "nav-team" },
-    { href: "/announcements", label: "Ogłoszenia", icon: <Megaphone className="h-4 w-4" /> },
+    { href: paths.team, label: "Pracownicy", icon: <Users className="h-4 w-4" />, tourId: "nav-team" },
+    { href: paths.announcements, label: "Ogłoszenia", icon: <Megaphone className="h-4 w-4" /> },
   ];
 
   const premiumNav: NavItem[] = [
-    { href: "/reports", label: "Raporty", icon: <PieChart className="h-4 w-4" />, premium: true },
-    { href: "/export", label: "Eksport", icon: <FileDown className="h-4 w-4" />, premium: true },
-    { href: "/templates", label: "Szablony", icon: <Copy className="h-4 w-4" />, premium: true, show: isAdmin },
+    { href: `${paths.home}/reports`, label: "Raporty", icon: <PieChart className="h-4 w-4" />, premium: true },
+    { href: `${paths.home}/export`, label: "Eksport", icon: <FileDown className="h-4 w-4" />, premium: true },
+    { href: `${paths.home}/templates`, label: "Szablony", icon: <Copy className="h-4 w-4" />, premium: true, show: isAdmin },
   ];
 
   const isActive = (href: string) => {
-    if (href === "/") return pathname === "/";
+    if (href === paths.home) return pathname === paths.home || pathname === "/app";
     return pathname.startsWith(href);
   };
 
@@ -112,7 +113,7 @@ export function DashboardLayout({ children, userRole, userName, userAvatar, onLo
       <aside className="w-64 bg-white border-r border-brand-warm flex flex-col hidden md:flex shadow-sm">
         {/* Logo area */}
         <div className="px-5 py-5 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2 min-w-0">
+          <Link href={paths.home} className="flex items-center gap-2 min-w-0">
             <Logo variant="icon" className="w-8 h-8 flex-shrink-0" />
             <div className="min-w-0">
               <h1 className="text-sm font-bold text-brand-dark tracking-tight truncate">Staffer</h1>
@@ -131,9 +132,9 @@ export function DashboardLayout({ children, userRole, userName, userAvatar, onLo
 
         {/* Bottom section */}
         <div className="border-t border-brand-warm p-3 space-y-1">
-          <NavLink href="/profile" label="Mój Profil" icon={<User className="h-4 w-4" />} active={isActive("/profile")} tourId="nav-profile" />
+          <NavLink href={paths.profile} label="Mój Profil" icon={<User className="h-4 w-4" />} active={isActive(paths.profile)} tourId="nav-profile" />
           {isAdmin && (
-            <NavLink href="/settings" label="Ustawienia" icon={<Settings className="h-4 w-4" />} active={isActive("/settings")} />
+            <NavLink href={paths.settings} label="Ustawienia" icon={<Settings className="h-4 w-4" />} active={isActive(paths.settings)} />
           )}
         </div>
 
@@ -176,13 +177,13 @@ export function DashboardLayout({ children, userRole, userName, userAvatar, onLo
           <div className="overflow-x-auto [-webkit-overflow-scrolling:touch] border-t border-brand-warm/60 hide-scrollbar">
             <nav className="flex justify-start gap-0 px-2 py-1.5 min-w-max">
               {[
-                { href: "/", icon: <LayoutDashboard className="h-4 w-4 shrink-0" />, label: "Pulpit", tourId: "nav-pulpit" },
-                { href: "/grafik", icon: <Calendar className="h-4 w-4 shrink-0" />, label: "Grafik", tourId: "nav-grafik" },
-                { href: "/podsumowanie", icon: <BarChart3 className="h-4 w-4 shrink-0" />, label: "Podsum.", tourId: "nav-podsumowanie" },
-                ...(userRole === "EMPLOYEE" ? [{ href: "/dostepnosc", icon: <CalendarCheck className="h-4 w-4 shrink-0" />, label: "Dostępn.", tourId: "nav-dostepnosc" }] : []),
-                { href: "/team", icon: <Users className="h-4 w-4 shrink-0" />, label: "Zespół", tourId: "nav-team" },
-                { href: "/profile", icon: <User className="h-4 w-4 shrink-0" />, label: "Profil", tourId: "nav-profile" },
-                ...(isAdmin ? [{ href: "/settings", icon: <Settings className="h-4 w-4 shrink-0" />, label: "Ustawienia", tourId: "nav-settings" }] : []),
+                { href: paths.home, icon: <LayoutDashboard className="h-4 w-4 shrink-0" />, label: "Pulpit", tourId: "nav-pulpit" },
+                { href: paths.grafik, icon: <Calendar className="h-4 w-4 shrink-0" />, label: "Grafik", tourId: "nav-grafik" },
+                { href: paths.podsumowanie, icon: <BarChart3 className="h-4 w-4 shrink-0" />, label: "Podsum.", tourId: "nav-podsumowanie" },
+                ...(userRole === "EMPLOYEE" ? [{ href: paths.dostepnosc, icon: <CalendarCheck className="h-4 w-4 shrink-0" />, label: "Dostępn.", tourId: "nav-dostepnosc" }] : []),
+                { href: paths.team, icon: <Users className="h-4 w-4 shrink-0" />, label: "Zespół", tourId: "nav-team" },
+                { href: paths.profile, icon: <User className="h-4 w-4 shrink-0" />, label: "Profil", tourId: "nav-profile" },
+                ...(isAdmin ? [{ href: paths.settings, icon: <Settings className="h-4 w-4 shrink-0" />, label: "Ustawienia", tourId: "nav-settings" }] : []),
               ].map((item) => (
                 <Link
                   key={item.href}

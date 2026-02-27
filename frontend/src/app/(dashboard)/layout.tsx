@@ -44,6 +44,7 @@ export default function DashboardGroupLayout({
     return (
         <div className="min-h-screen bg-brand-surface">
         <Navbar
+          homeHref="/app"
           onLoginClick={() => setAuthMode("login")}
           onRegisterClick={() => setAuthMode("register")}
         />

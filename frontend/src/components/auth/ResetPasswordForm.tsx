@@ -5,6 +5,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { resetPassword } from "@/lib/api";
+import { paths } from "@/lib/app-paths";
 
 export function ResetPasswordForm() {
   const searchParams = useSearchParams();
@@ -19,7 +20,7 @@ export function ResetPasswordForm() {
   useEffect(() => {
     if (!token) {
       toast.error("Brak tokenu resetu hasła");
-      router.push("/");
+      router.push(paths.home);
     }
   }, [token, router]);
 
@@ -45,7 +46,7 @@ export function ResetPasswordForm() {
       
       // Przekieruj do logowania po 2 sekundach
       setTimeout(() => {
-        router.push("/");
+        router.push(paths.home);
       }, 2000);
     } catch (error: any) {
       toast.error("Błąd resetu hasła", {

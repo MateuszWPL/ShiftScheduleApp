@@ -17,6 +17,9 @@
 /.next/
 /out/
 
+# velite
+.velite
+
 # production
 /build
 
