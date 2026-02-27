@@ -124,10 +124,18 @@ export class PositionsService {
       ),
     ]);
 
-    return this.getEmployeePositions(targetUserId);
+    return this.getEmployeePositions(userId, targetUserId);
   }
 
-  async getEmployeePositions(targetUserId: string) {
+  async getEmployeePositions(requesterId: string, targetUserId: string) {
+    const membership = await this.requireMember(requesterId);
+    const targetUser = await this.prisma.user.findUnique({
+      where: { id: targetUserId },
+      select: { teamId: true },
+    });
+    if (!targetUser || targetUser.teamId !== membership.teamId) {
+      throw new ForbiddenException('Brak dostępu do stanowisk tego pracownika.');
+    }
     return this.prisma.employeePosition.findMany({
       where: { userId: targetUserId },
       include: { position: true },

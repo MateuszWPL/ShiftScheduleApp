@@ -1,8 +1,9 @@
-import { IsString, IsNotEmpty, IsNumber, IsOptional, Min } from 'class-validator';
+import { IsString, IsNotEmpty, IsNumber, IsOptional, Min, MaxLength } from 'class-validator';
 
 export class CreateShadowProfileDto {
   @IsString()
   @IsNotEmpty()
+  @MaxLength(100)
   name: string;
 
   @IsNumber()
@@ -16,6 +17,7 @@ export class CreateShadowProfileDto {
 
   @IsOptional()
   @IsString()
+  @MaxLength(20)
   phoneNumber?: string;
 }
 

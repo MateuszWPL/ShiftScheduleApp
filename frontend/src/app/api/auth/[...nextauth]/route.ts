@@ -4,6 +4,10 @@ import CredentialsProvider from "next-auth/providers/credentials";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
 
+if (process.env.NODE_ENV === "production" && !process.env.NEXTAUTH_SECRET) {
+  throw new Error("NEXTAUTH_SECRET must be set in production");
+}
+
 export const authOptions: NextAuthOptions = {
   providers: [
     GoogleProvider({
@@ -60,6 +64,17 @@ export const authOptions: NextAuthOptions = {
   secret: process.env.NEXTAUTH_SECRET,
   session: {
     strategy: "jwt",
+  },
+  cookies: {
+    sessionToken: {
+      name: "next-auth.session-token",
+      options: {
+        httpOnly: true,
+        sameSite: "lax",
+        secure: process.env.NODE_ENV === "production",
+        path: "/",
+      },
+    },
   },
   callbacks: {
     async jwt({ token, user, account }) {

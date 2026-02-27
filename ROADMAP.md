@@ -111,29 +111,28 @@
 
 ### 2.6 Bezpieczenstwo produkcyjne
 
-#### 2.6.1 Audyt bezpieczenstwa (w trakcie)
-Audyt systematyczny — sprawdzenie wszystkich endpointów i warstw aplikacji wedlug checklisty ponizej. Realizowac punkt po punkcie, dokumentowac wyniki.
+#### 2.6.1 Audyt bezpieczenstwa ✅
+Audyt zakończony. Wszystkie punkty przeanalizowane; elementy do rozbudowy w 2.6.2.
 
 **Checklista audytu (OWASP ASVS + WSTG):**
-- [ ] **Autoryzacja (Access Control)** — kazdy endpoint sprawdzony pod katem IDOR: czy zalogowany uzytkownik moze dostac dane innego zespolu/pracownika? Weryfikacja teamId, membership w kazdym serwisie
-- [ ] **Autentykacja** — JWT: walidacja algorytmu (wykluczyc "none"), exp/iat/nbf, issuer, audience; NextAuth: secret w env, SameSite cookies, secure flag
-- [ ] **Walidacja wejsciowa** — wszystkie DTO z class-validator; sprawdzenie SQL injection, NoSQL injection, command injection; maksymalne dlugosci stringow
-- [ ] **XSS** — escapowanie outputu, brak `dangerouslySetInnerHTML` bez sanityzacji; Content-Security-Policy
-- [ ] **CSRF** — ochrona formularzy i mutacji; token CSRF lub SameSite=Strict dla cookies
-- [ ] **Sesje** — logout invaliduje token po stronie serwera (jaka lista/revoke?); mozliwosc "wyloguj ze wszystkich urzadzen"
-- [ ] **Rate limiting** — per-user (np. userId w kluczu throttlera), rozne limity dla auth vs API; endpointy publiczne (login, rejestracja) osobno
-- [ ] **Naglowki bezpieczenstwa** — HSTS, CSP, X-Frame-Options, X-Content-Type-Options; Helmet skonfigurowany
-- [ ] **Dane wrazliwe** — tokeny/sekrety tylko w env; brak PII w logach; szyfrowanie wrażliwych kolumn (pgcrypto) — opcjonalnie
-- [ ] **Obsluga bledow** — brak ujawniania stack trace w produkcji; Sentry/obsluga bledow
-- [ ] **CORS** — whitelist origins; brak `*` w produkcji
-- [ ] **Backup** — strategia backupow PostgreSQL (pg_dump / pgBackRest); test restore; retencja
+- [x] **Autoryzacja (Access Control)** — kazdy endpoint sprawdzony pod katem IDOR: czy zalogowany uzytkownik moze dostac dane innego zespolu/pracownika? Weryfikacja teamId, membership w kazdym serwisie. Wyniki: [docs/AUDYT_2_6_1_AUTORYZACJA.md](docs/AUDYT_2_6_1_AUTORYZACJA.md) — naprawiono 2 luki (getAllUsers, getEmployeePositions)
+- [x] **Autentykacja** — JWT: walidacja algorytmu (wykluczyc "none"), exp/iat; NextAuth: secret w env, SameSite cookies, secure flag. Wyniki: [docs/AUDYT_2_6_1_AUTENTYKACJA.md](docs/AUDYT_2_6_1_AUTENTYKACJA.md)
+- [x] **Walidacja wejsciowa** — wszystkie DTO z class-validator; SQL injection (Prisma param), brak command injection; dodano MaxLength (login, create-shift, create-shadow-profile)
+- [x] **XSS** — React escapuje output; brak dangerouslySetInnerHTML; CSP dodany w next.config
+- [x] **CSRF** — SameSite=Lax na cookies NextAuth; API używa Bearer JWT (brak cookies); NextAuth ma wbudowany CSRF dla auth
+- [x] **Sesje** — logout czyści klient (cookie+cache); JWT bez blacklisty (ważny do exp); „wyloguj wszędzie” → 2.6.2 (blacklista jti / Redis)
+- [x] **Rate limiting** — Throttler: global 100/min; auth: login 5/min, register 3/min, reset 2–5/min; per-IP (per-user → 2.6.2)
+- [x] **Naglowki bezpieczenstwa** — Helmet na backendzie; frontend: X-Frame-Options DENY, X-Content-Type-Options nosniff, CSP, Referrer-Policy; HSTS zwykle z reverse proxy
+- [x] **Dane wrazliwe** — sekrety z env; logi zawierają emaile (PII) — do ograniczenia; pgcrypto opcjonalnie
+- [x] **Obsluga bledow** — NestJS HttpException bez stack; nieobsłużone 500 mogą ujawnić stack — Sentry/exception filter → 2.6.2
+- [x] **CORS** — whitelist FRONTEND_URL; dev: localhost; credentials; brak `*`
+- [x] **Backup** — strategia w zal. A.9; wdrożenie na poziomie infra (Railway/Neon) — 2.6.2
 
-#### 2.6.2 Pozostale zadania
-- [ ] CSRF protection (szczegoly w zał. A)
-- [ ] Rate limiting per-user (szczegoly w zal. A)
-- [ ] Sesje: wylogowanie ze wszystkich urzadzen (szczegoly w zal. A)
-- [ ] Logowanie bledow (Sentry lub podobne)
-- [ ] Backup bazy danych (strategia w zal. A)
+#### 2.6.2 Pozostale zadania (po audycie 2.6.1)
+- [x] Rate limiting per-user — PerUserThrottlerGuard: klucz user-{userId} lub ip-{ip}; Redis storage opcjonalnie przy skalowaniu
+- [x] Sesje: wylogowanie ze wszystkich urzadzen — User.tokenVersion, JWT payload v, endpoint revoke-all, przycisk w Profilu
+- [ ] Logowanie bledow (Sentry) + exception filter (brak stack w prod)
+- [ ] Backup bazy — wdrozenie na infra (pg_dump / Neon)
 
 ---
 

@@ -609,6 +609,17 @@ export async function requestPasswordReset(email: string) {
   return res.json();
 }
 
+export async function revokeAllSessions(): Promise<{ success: boolean; message: string }> {
+  const res = await authenticatedFetch(`${API_URL}/auth/revoke-all`, {
+    method: "POST",
+  });
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.message || "Błąd unieważniania sesji");
+  }
+  return res.json();
+}
+
 export async function resetPassword(token: string, password: string) {
   const res = await fetch(`${API_URL}/auth/reset-password`, {
     method: "POST",

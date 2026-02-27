@@ -36,10 +36,12 @@ export async function GET() {
       {
         sub: dbUser.id,
         email: dbUser.email,
+        v: dbUser.tokenVersion ?? 0,
       },
       secret,
       {
         expiresIn: "7d",
+        algorithm: "HS256",
       }
     );
 

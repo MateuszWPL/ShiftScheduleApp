@@ -98,6 +98,7 @@ export class AuthService {
       sub: user.id,
       email: user.email,
       role: user.role,
+      v: (user as any).tokenVersion ?? 0,
     };
 
     const token = this.jwtService.sign(payload);
@@ -236,6 +237,15 @@ export class AuthService {
     return {
       message: 'Jeśli konto istnieje, email z linkiem resetu hasła został wysłany.',
     };
+  }
+
+  async revokeAllSessions(userId: string) {
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { tokenVersion: { increment: 1 } },
+    });
+    this.logger.log(`User ${userId} revoked all sessions`);
+    return { success: true, message: 'Wszystkie sesje zostały unieważnione.' };
   }
 
   async resetPassword(resetPasswordDto: ResetPasswordDto) {

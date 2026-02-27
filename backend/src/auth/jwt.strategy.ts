@@ -6,6 +6,7 @@ import { PrismaService } from '../prisma/prisma.service';
 export interface JwtPayload {
   sub: string; // userId
   email: string;
+  v?: number; // tokenVersion — do unieważnienia sesji (wyloguj wszędzie)
   iat?: number;
   exp?: number;
 }
@@ -23,6 +24,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
       secretOrKey: secret,
+      algorithms: ['HS256'],
     });
   }
 
@@ -38,6 +40,12 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 
     if (!user) {
       throw new UnauthorizedException('User not found');
+    }
+
+    const tokenVersion = (payload as any).v ?? 0;
+    const userVersion = (user as any).tokenVersion ?? 0;
+    if (tokenVersion !== userVersion) {
+      throw new UnauthorizedException('Sesja unieważniona. Zaloguj się ponownie.');
     }
 
     // Zwracamy user object, który będzie dostępny w @Request() jako req.user

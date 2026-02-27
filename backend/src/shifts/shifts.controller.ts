@@ -185,8 +185,8 @@ export class ShiftsController {
 
   @SkipThrottle()
   @Get('users/all')
-  getAllUsers() {
-    return this.shiftsService.getAllUsers();
+  getAllUsers(@CurrentUser() user: User) {
+    return this.shiftsService.getAllUsers(user.userId);
   }
 
   @Public()

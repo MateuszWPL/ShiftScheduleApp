@@ -1,4 +1,4 @@
-import { IsString, IsDateString, IsEnum, IsOptional } from 'class-validator';
+import { IsString, IsDateString, IsEnum, IsOptional, MaxLength } from 'class-validator';
 import { ShiftStatus } from '@prisma/client';
 import { IsEndTimeAfterStartTime } from './create-shift-custom.validator';
 
@@ -12,6 +12,7 @@ export class CreateShiftDto {
 
   @IsOptional()
   @IsString({ message: 'roleName jest wymagane' })
+  @MaxLength(100)
   roleName?: string;
 
   @IsOptional()

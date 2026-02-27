@@ -1,5 +1,6 @@
 import { Module, MiddlewareConsumer, NestModule } from '@nestjs/common';
-import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { ThrottlerModule } from '@nestjs/throttler';
+import { PerUserThrottlerGuard } from './common/guards/per-user-throttler.guard';
 import { APP_GUARD } from '@nestjs/core';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -39,7 +40,7 @@ import { RequestLoggerMiddleware } from './common/middleware/request-logger.midd
     AppService,
     {
       provide: APP_GUARD,
-      useClass: ThrottlerGuard,
+      useClass: PerUserThrottlerGuard,
     },
   ],
 })

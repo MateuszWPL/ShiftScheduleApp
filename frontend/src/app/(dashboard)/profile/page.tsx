@@ -1,14 +1,15 @@
 "use client";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { getMyProfile, uploadAvatar, updateUserProfile, User, getAvatarUrl } from "@/lib/api";
+import { getMyProfile, uploadAvatar, updateUserProfile, revokeAllSessions, User, getAvatarUrl } from "@/lib/api";
 import { useDashboardUser } from "@/components/providers/DashboardUserContext";
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
-import { Lock, User as UserIcon, Phone, Mail, Upload, X, Info, Camera } from "lucide-react";
+import { Lock, User as UserIcon, Phone, Mail, Upload, X, Info, Camera, LogOut } from "lucide-react";
+import { useLogout } from "@/hooks/useLogout";
 
 export default function ProfilePage() {
   const { dbUser, currentUser, invalidateQueries } = useDashboardUser();
@@ -77,6 +78,16 @@ export default function ProfilePage() {
   });
 
   const isEmployee = user?.role === "EMPLOYEE";
+  const logout = useLogout();
+
+  const revokeAllMutation = useMutation({
+    mutationFn: revokeAllSessions,
+    onSuccess: () => {
+      toast.success("Wszystkie sesje unieważnione. Zostaniesz wylogowany.");
+      logout();
+    },
+    onError: (err: Error) => toast.error("Błąd", { description: err.message }),
+  });
 
   if (!user) {
     return (
@@ -305,6 +316,29 @@ export default function ProfilePage() {
             )}
           </div>
         </div>
+      </div>
+
+      {/* Bezpieczeństwo */}
+      <div className="bg-white border border-brand-warm rounded-xl p-4 shadow-sm">
+        <h3 className="text-sm font-semibold text-brand-dark mb-2 flex items-center gap-2">
+          <Lock className="h-4 w-4" /> Bezpieczeństwo
+        </h3>
+        <p className="text-xs text-brand-dark-muted mb-3">
+          Wylogowanie ze wszystkich urządzeń unieważni sesje na telefonie, tablecie i komputerze. Zostaniesz wylogowany i będziesz musiał się zalogować ponownie.
+        </p>
+        <Button
+          variant="outline"
+          onClick={() => {
+            if (confirm("Czy na pewno chcesz wylogować ze wszystkich urządzeń?")) {
+              revokeAllMutation.mutate();
+            }
+          }}
+          disabled={revokeAllMutation.isPending}
+          className="border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
+        >
+          <LogOut className="h-4 w-4 mr-2" />
+          {revokeAllMutation.isPending ? "Wylogowywanie..." : "Wyloguj ze wszystkich urządzeń"}
+        </Button>
       </div>
 
       {/* Role badge - always visible */}

@@ -45,11 +45,14 @@ export class PositionsController {
     return this.positionsService.assignPositionsToEmployee(user.userId, targetUserId, dto.positionIds);
   }
 
-  /** Get positions assigned to an employee */
+  /** Get positions assigned to an employee (requester must be in same team) */
   @SkipThrottle()
   @Get('employees/:userId')
-  getEmployeePositions(@Param('userId') targetUserId: string) {
-    return this.positionsService.getEmployeePositions(targetUserId);
+  getEmployeePositions(
+    @CurrentUser() user: any,
+    @Param('userId') targetUserId: string,
+  ) {
+    return this.positionsService.getEmployeePositions(user.userId, targetUserId);
   }
 
   /** One-time migration: create positions from existing shift roleNames */

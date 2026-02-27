@@ -1,6 +1,8 @@
-import { Controller, Post, Body, Param, HttpCode, HttpStatus, Get } from '@nestjs/common';
+import { Controller, Post, Body, Param, HttpCode, HttpStatus, Get, UseGuards } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import { AuthService } from './auth.service';
+import { JwtAuthGuard } from './auth.guard';
+import { CurrentUser } from './decorators/user.decorator';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { ResendVerificationDto } from './dto/resend-verification.dto';
@@ -57,6 +59,13 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   async resetPassword(@Body() resetPasswordDto: ResetPasswordDto) {
     return this.authService.resetPassword(resetPasswordDto);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('revoke-all')
+  @HttpCode(HttpStatus.OK)
+  async revokeAllSessions(@CurrentUser() user: { userId: string }) {
+    return this.authService.revokeAllSessions(user.userId);
   }
 }
 

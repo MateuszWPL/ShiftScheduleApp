@@ -28,6 +28,7 @@ model User {
   status                 UserStatus          @default(ACTIVE)
   nickname               String?
   notes                  String?
+  tokenVersion           Int                 @default(0)
   shiftAssignments       ShiftAssignment[]
   availabilitySlots      AvailabilitySlot[]
   memberships            TeamMembership[]

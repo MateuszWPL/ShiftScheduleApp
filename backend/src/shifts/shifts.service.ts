@@ -549,8 +549,16 @@ export class ShiftsService {
     });
   }
 
-  getAllUsers() {
+  /** Lista użytkowników zespołu (tylko członkowie aktywnego zespołu). */
+  async getAllUsers(userId: string) {
+    const membership = await this.prisma.teamMembership.findFirst({
+      where: { userId, status: MembershipStatus.ACTIVE },
+    });
+    if (!membership) {
+      return [];
+    }
     return this.prisma.user.findMany({
+      where: { teamId: membership.teamId },
       select: {
         id: true,
         email: true,

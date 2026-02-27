@@ -14,6 +14,7 @@ import { AuthController } from './auth.controller';
       secret: process.env.JWT_SECRET || process.env.NEXTAUTH_SECRET,
       signOptions: {
         expiresIn: '7d',
+        algorithm: 'HS256',
       },
     }),
     PrismaModule,
