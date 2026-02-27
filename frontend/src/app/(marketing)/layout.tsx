@@ -22,27 +22,36 @@ export default function MarketingLayout({
 }) {
   return (
     <div className="min-h-screen bg-brand-surface">
-      <header className="sticky top-0 z-50 w-full border-b border-brand-warm bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/80">
+      <header className="sticky top-0 z-50 w-full border-b border-white/60 bg-white/70 backdrop-blur-xl supports-[backdrop-filter]:bg-white/60 shadow-sm shadow-black/5">
         <div className="container mx-auto flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
           <Link href="/" className="flex items-center min-w-0 shrink">
             <Logo showPl />
           </Link>
-          <nav className="flex items-center gap-4">
+          <nav className="flex items-center gap-4 sm:gap-6">
             <Link
               href="/cennik"
-              className="text-sm font-medium text-brand-dark-muted hover:text-brand-dark transition-colors hidden sm:inline"
+              className="text-sm font-medium text-brand-dark-muted hover:text-brand-dark transition-colors duration-200 hidden sm:inline"
             >
               Cennik
             </Link>
             <Link
               href="/blog"
-              className="text-sm font-medium text-brand-dark-muted hover:text-brand-dark transition-colors hidden sm:inline"
+              className="text-sm font-medium text-brand-dark-muted hover:text-brand-dark transition-colors duration-200 hidden sm:inline"
             >
               Blog
             </Link>
-            <Button asChild>
-              <a href={APP_URL} className="cursor-pointer">
-                Zaloguj się
+            <Link
+              href={APP_URL}
+              className="text-sm font-medium text-brand-dark-muted hover:text-brand-dark transition-colors duration-200 hidden sm:inline"
+            >
+              Zaloguj się
+            </Link>
+            <Button asChild variant="glass">
+              <a
+                href={APP_URL}
+                className="cursor-pointer transition-all duration-200 hover:scale-[1.02]"
+              >
+                Zacznij za darmo
               </a>
             </Button>
           </nav>
