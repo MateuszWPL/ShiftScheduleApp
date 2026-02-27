@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { paths } from "@/lib/app-paths";
 import { Button } from "@/components/ui/button";
 import {
   Building2,
@@ -23,7 +24,7 @@ import {
 const STEPS = [
   {
     id: "welcome",
-    title: "Witaj w ShiftApp!",
+    title: "Witaj w Staffer!",
     desc: "Założyłeś firmę. W kilku krokach skonfigurujesz grafik.",
     icon: Sparkles,
     next: "invite",
@@ -90,7 +91,7 @@ export function OnboardingWizard({
       if (onAddFirstShift) {
         onAddFirstShift();
       } else {
-        router.push("/grafik");
+        router.push(paths.grafik);
       }
     }
   };
@@ -105,7 +106,7 @@ export function OnboardingWizard({
     if (onAddFirstShift) {
       onAddFirstShift();
     } else {
-      router.push("/grafik");
+      router.push(paths.grafik);
     }
   };
 
@@ -120,13 +121,13 @@ export function OnboardingWizard({
   const goToSettings = () => {
     setOnboardingWizardDone();
     onClose();
-    router.push("/settings");
+    router.push(paths.settings);
   };
 
   const goToGrafik = () => {
     setOnboardingWizardDone();
     onClose();
-    router.push("/grafik");
+    router.push(paths.grafik);
     if (onAddFirstShift) setTimeout(onAddFirstShift, 300);
   };
 

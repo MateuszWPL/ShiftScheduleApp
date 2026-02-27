@@ -134,7 +134,7 @@ export function ManageEmployeeDialog({ managerId, targetUser, onClose }: Props) 
         <div className="sticky top-0 bg-white border-b p-6 flex items-center justify-between">
           <div>
             <h2 className="text-xl font-bold">Edytuj pracownika</h2>
-            <p className="text-sm text-gray-500 mt-1">{targetUser.email}</p>
+            <p className="text-sm text-brand-dark-muted mt-1">{targetUser.email}</p>
           </div>
           <Button variant="ghost" size="sm" onClick={onClose}>
             <X className="h-4 w-4" />
@@ -143,7 +143,7 @@ export function ManageEmployeeDialog({ managerId, targetUser, onClose }: Props) 
 
         <div className="p-6 space-y-5">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+            <label className="block text-sm font-medium text-brand-dark mb-2 flex items-center gap-2">
               <UserIcon className="h-4 w-4" />
               Imię i Nazwisko *
             </label>
@@ -157,7 +157,7 @@ export function ManageEmployeeDialog({ managerId, targetUser, onClose }: Props) 
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+            <label className="block text-sm font-medium text-brand-dark mb-2 flex items-center gap-2">
               <Tag className="h-4 w-4" />
               Pseudonim (opcjonalny)
             </label>
@@ -168,14 +168,14 @@ export function ManageEmployeeDialog({ managerId, targetUser, onClose }: Props) 
               onChange={(e) => setNickname(e.target.value)}
               className="w-full"
             />
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="text-xs text-brand-dark-muted mt-1">
               Widoczny dla całego zespołu
             </p>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+              <label className="block text-sm font-medium text-brand-dark mb-2 flex items-center gap-2">
                 <DollarSign className="h-4 w-4" />
                 Stawka godzinowa (PLN/h)
               </label>
@@ -188,13 +188,13 @@ export function ManageEmployeeDialog({ managerId, targetUser, onClose }: Props) 
                 onChange={(e) => setHourlyRate(e.target.value)}
                 className="w-full"
               />
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-xs text-brand-dark-muted mt-1">
                 Zostaw puste aby usunąć
               </p>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+              <label className="block text-sm font-medium text-brand-dark mb-2 flex items-center gap-2">
                 <Clock className="h-4 w-4" />
                 Max. godziny/tydzień
               </label>
@@ -208,7 +208,7 @@ export function ManageEmployeeDialog({ managerId, targetUser, onClose }: Props) 
                 onChange={(e) => setMaxHours(e.target.value)}
                 className="w-full"
               />
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-xs text-brand-dark-muted mt-1">
                 Zostaw puste aby usunąć
               </p>
             </div>
@@ -217,7 +217,7 @@ export function ManageEmployeeDialog({ managerId, targetUser, onClose }: Props) 
           {/* Position assignment */}
           {positions.length > 0 && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+              <label className="block text-sm font-medium text-brand-dark mb-2 flex items-center gap-2">
                 <Briefcase className="h-4 w-4" />
                 Stanowiska
               </label>
@@ -238,7 +238,7 @@ export function ManageEmployeeDialog({ managerId, targetUser, onClose }: Props) 
                       className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm border transition-colors ${
                         isSelected
                           ? "border-transparent text-white shadow-sm"
-                          : "border-slate-200 text-slate-600 hover:border-slate-300 bg-white"
+                          : "border-brand-warm text-brand-dark-muted hover:border-brand bg-white"
                       }`}
                       style={isSelected ? { backgroundColor: pos.color } : {}}
                     >
@@ -251,14 +251,14 @@ export function ManageEmployeeDialog({ managerId, targetUser, onClose }: Props) 
                   );
                 })}
               </div>
-              <p className="text-xs text-gray-500 mt-1.5">
+              <p className="text-xs text-brand-dark-muted mt-1.5">
                 Kliknij, aby przypisać lub usunąć stanowisko. Pracownik może mieć wiele stanowisk.
               </p>
             </div>
           )}
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+            <label className="block text-sm font-medium text-brand-dark mb-2 flex items-center gap-2">
               <Tag className="h-4 w-4" />
               Dodatkowe umiejętności
             </label>
@@ -269,13 +269,13 @@ export function ManageEmployeeDialog({ managerId, targetUser, onClose }: Props) 
               onChange={(e) => setSkillsInput(e.target.value)}
               className="w-full"
             />
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="text-xs text-brand-dark-muted mt-1">
               Oddziel przecinkami. Dodatkowe tagi i certyfikaty.
             </p>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+            <label className="block text-sm font-medium text-brand-dark mb-2 flex items-center gap-2">
               <FileText className="h-4 w-4" />
               Notatki administracyjne
             </label>
@@ -286,7 +286,7 @@ export function ManageEmployeeDialog({ managerId, targetUser, onClose }: Props) 
               className="w-full p-2 border rounded-md min-h-[100px] resize-y text-sm"
               maxLength={1000}
             />
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="text-xs text-brand-dark-muted mt-1">
               {notes.length}/1000 znaków. Widoczne tylko dla administratorów.
             </p>
           </div>

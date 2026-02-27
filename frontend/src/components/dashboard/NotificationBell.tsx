@@ -93,15 +93,15 @@ export function NotificationBell({ align = "right" }: { align?: "left" | "right"
       </button>
 
       {open && (
-        <div className={`fixed top-24 left-2 right-2 w-auto z-50 md:absolute md:top-full md:mt-2 md:left-auto md:right-0 md:w-[360px] md:max-w-[360px] bg-white rounded-xl shadow-2xl border border-slate-200 overflow-hidden ${align === "left" ? "md:left-0 md:right-auto" : ""}`}>
+        <div className={`fixed top-24 left-2 right-2 w-auto z-50 md:absolute md:top-full md:mt-2 md:left-auto md:right-0 md:w-[360px] md:max-w-[360px] bg-white rounded-xl shadow-2xl border border-brand-warm overflow-hidden ${align === "left" ? "md:left-0 md:right-auto" : ""}`}>
           <div className="flex items-center justify-between px-4 py-3 border-b border-brand-warm bg-brand-surface">
-            <h3 className="font-semibold text-slate-800 text-sm">Powiadomienia</h3>
+            <h3 className="font-semibold text-brand-dark text-sm">Powiadomienia</h3>
             <div className="flex items-center gap-1">
               {unreadCount > 0 && (
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-7 text-xs gap-1 text-blue-600"
+                  className="h-7 text-xs gap-1 text-brand"
                   onClick={() => markAllReadMut.mutate()}
                   disabled={markAllReadMut.isPending}
                 >
@@ -117,10 +117,10 @@ export function NotificationBell({ align = "right" }: { align?: "left" | "right"
 
           <div className="max-h-[400px] overflow-y-auto">
             {isLoading ? (
-              <div className="p-6 text-center text-slate-500 text-sm">Ładowanie...</div>
+              <div className="p-6 text-center text-brand-dark-muted text-sm">Ładowanie...</div>
             ) : notifications.length === 0 ? (
-              <div className="p-6 text-center text-slate-400 text-sm">
-                <Bell className="h-8 w-8 mx-auto mb-2 text-slate-300" />
+              <div className="p-6 text-center text-brand-dark-soft text-sm">
+                <Bell className="h-8 w-8 mx-auto mb-2 text-brand-dark-soft" />
                 Brak powiadomień
               </div>
             ) : (
@@ -128,7 +128,7 @@ export function NotificationBell({ align = "right" }: { align?: "left" | "right"
                 <div
                   key={n.id}
                   className={`flex items-start gap-3 px-4 py-3 border-b border-brand-warm/30 transition-colors cursor-pointer hover:bg-brand-warm-light ${
-                    !n.read ? "bg-blue-50/40" : ""
+                    !n.read ? "bg-brand-muted/40" : ""
                   }`}
                   onClick={() => {
                     if (!n.read) markReadMut.mutate(n.id);
@@ -138,14 +138,14 @@ export function NotificationBell({ align = "right" }: { align?: "left" | "right"
                     {TYPE_ICONS[n.type] || "🔔"}
                   </span>
                   <div className="flex-1 min-w-0">
-                    <p className={`text-sm ${!n.read ? "font-semibold text-slate-800" : "text-slate-700"}`}>
+                    <p className={`text-sm ${!n.read ? "font-semibold text-brand-dark" : "text-brand-dark"}`}>
                       {n.title}
                     </p>
-                    <p className="text-xs text-slate-500 mt-0.5 line-clamp-2">{n.message}</p>
-                    <p className="text-[10px] text-slate-400 mt-1">{timeAgo(n.createdAt)}</p>
+                    <p className="text-xs text-brand-dark-muted mt-0.5 line-clamp-2">{n.message}</p>
+                    <p className="text-[10px] text-brand-dark-soft mt-1">{timeAgo(n.createdAt)}</p>
                   </div>
                   {!n.read && (
-                    <div className="w-2 h-2 rounded-full bg-blue-500 flex-shrink-0 mt-2" />
+                    <div className="w-2 h-2 rounded-full bg-brand flex-shrink-0 mt-2" />
                   )}
                 </div>
               ))

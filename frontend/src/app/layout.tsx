@@ -6,8 +6,16 @@ import AuthProvider from "@/components/providers/AuthProvider";
 import { Toaster } from "sonner";
 
 export const metadata: Metadata = {
-  title: "Staffer.pl",
-  description: "Zarządzanie zmianami",
+  title: {
+    default: "Staffer.pl — Zarządzanie grafikami zmian",
+    template: "%s | Staffer.pl",
+  },
+  description:
+    "Prosty system do tworzenia grafiku zmian, zarządzania zespołem i giełdy zmian. Dla restauracji, sklepów i usług.",
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://staffer.pl"),
+  openGraph: {
+    type: "website",
+  },
 };
 
 export default function RootLayout({
@@ -16,7 +24,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="pl">
       <body>
         <AuthProvider>        {/* <--- DODAJEMY */}
           <QueryProvider>

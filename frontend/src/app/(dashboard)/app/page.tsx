@@ -41,6 +41,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { paths } from "@/lib/app-paths";
 
 function getWeekMonday(): Date {
   const d = new Date();
@@ -268,7 +269,7 @@ export default function PulpitPage() {
           <div className="bg-white rounded-xl border border-brand-warm overflow-hidden">
             <div className="flex items-center justify-between px-5 py-3 border-b border-brand-warm">
               <h2 className="font-semibold text-brand-dark text-sm">Najbliższe zmiany</h2>
-              <Link href="/grafik" className="text-xs text-brand hover:text-brand-light font-medium flex items-center gap-0.5">
+              <Link href={paths.grafik} className="text-xs text-brand hover:text-brand-light font-medium flex items-center gap-0.5">
                 Zobacz grafik <ChevronRight className="h-3 w-3" />
               </Link>
             </div>
@@ -276,7 +277,7 @@ export default function PulpitPage() {
               <div className="px-5 py-8 text-center">
                 <Calendar className="h-8 w-8 mx-auto mb-2 text-brand-dark-soft" />
                 <p className="text-sm text-brand-dark-muted">Brak nadchodzących zmian</p>
-                <Link href="/grafik" className="text-xs text-brand hover:underline mt-1 inline-block">
+                <Link href={paths.grafik} className="text-xs text-brand hover:underline mt-1 inline-block">
                   Przejdź do grafiku
                 </Link>
               </div>
@@ -322,7 +323,7 @@ export default function PulpitPage() {
                     </span>
                   )}
                 </div>
-                <Link href="/announcements" className="text-xs text-brand hover:text-brand-light font-medium flex items-center gap-0.5">
+                <Link href={paths.announcements} className="text-xs text-brand hover:text-brand-light font-medium flex items-center gap-0.5">
                   Wszystkie <ChevronRight className="h-3 w-3" />
                 </Link>
               </div>
@@ -484,7 +485,7 @@ export default function PulpitPage() {
         isOpen={wizardOpen}
         onClose={() => setWizardOpen(false)}
         inviteCode={teamSettings?.team?.inviteCode ?? dbUser?.team?.inviteCode ?? null}
-        onAddFirstShift={() => router.push("/grafik?addShift=1")}
+        onAddFirstShift={() => router.push(`${paths.grafik}?addShift=1`)}
       />
     </div>
   );

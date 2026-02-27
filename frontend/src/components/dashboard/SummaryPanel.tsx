@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { getScheduleSummary, type ScheduleSummary, type SummaryEmployee } from "@/lib/api";
 import { Clock, AlertTriangle, CheckCircle2 } from "lucide-react";
 import Link from "next/link";
+import { paths } from "@/lib/app-paths";
 
 interface SummaryPanelProps {
   from: string;
@@ -42,7 +43,7 @@ export function SummaryPanel({ from, to, periodLabel }: SummaryPanelProps) {
         </div>
         <p className="text-sm text-brand-dark-muted">Brak pracowników lub zmian w tym okresie.</p>
         <Link
-          href="/grafik"
+          href={paths.grafik}
           className="inline-flex items-center gap-1.5 text-xs font-medium text-brand hover:underline mt-3"
         >
           Przejdź do grafiku

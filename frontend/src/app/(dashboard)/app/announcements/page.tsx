@@ -13,6 +13,7 @@ import { useDashboardUser } from "@/components/providers/DashboardUserContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
+import { AnnouncementsEmptyIllustration } from "@/components/brand/illustrations";
 import {
   Megaphone,
   Plus,
@@ -266,7 +267,9 @@ export default function AnnouncementsPage() {
         </div>
       ) : announcements.length === 0 ? (
         <div className="bg-white border border-brand-warm rounded-xl p-12 text-center">
-          <Megaphone className="h-10 w-10 mx-auto mb-3 text-brand-dark-soft" />
+          <div className="flex justify-center mb-3">
+            <AnnouncementsEmptyIllustration className="max-h-[80px]" />
+          </div>
           <p className="text-sm font-medium text-brand-dark-muted">Brak ogłoszeń</p>
           <p className="text-xs text-brand-dark-soft mt-1 mb-4">
             {isAdmin ? "Utwórz pierwsze ogłoszenie, aby poinformować zespół." : "Tu pojawią się ogłoszenia od zespołu."}
@@ -349,7 +352,7 @@ export default function AnnouncementsPage() {
                               deleteMutation.mutate(a.id);
                             }
                           }}
-                          className="p-1.5 rounded-lg text-brand-dark-soft hover:text-red-500 hover:bg-red-50 transition-colors"
+                          className="p-1.5 rounded-lg text-brand-dark-soft hover:text-red-500 hover:bg-red-50 cursor-pointer transition-colors duration-150"
                           title="Usuń ogłoszenie"
                         >
                           <Trash2 className="h-4 w-4" />

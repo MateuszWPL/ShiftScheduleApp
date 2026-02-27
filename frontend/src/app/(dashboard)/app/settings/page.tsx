@@ -19,6 +19,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
+import { paths } from "@/lib/app-paths";
 import {
   Settings,
   Building2,
@@ -121,7 +122,7 @@ export default function SettingsPage() {
 
   useEffect(() => {
     if (dbUser && !isAdmin) {
-      router.replace("/");
+      router.replace(paths.home);
     }
   }, [dbUser, isAdmin, router]);
 

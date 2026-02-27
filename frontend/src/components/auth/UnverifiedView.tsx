@@ -13,7 +13,7 @@ export function UnverifiedView({ email, userName }: UnverifiedViewProps) {
   const logout = useLogout();
 
   return (
-    <div className="flex h-screen items-center justify-center bg-slate-100">
+    <div className="flex h-screen items-center justify-center bg-brand-surface">
       <div className="max-w-md w-full p-8 bg-white rounded-xl shadow-lg text-center space-y-6">
         <div className="flex justify-center">
           <div className="p-4 bg-yellow-50 rounded-full">
@@ -24,17 +24,17 @@ export function UnverifiedView({ email, userName }: UnverifiedViewProps) {
         </div>
         
         <div className="space-y-2">
-          <h1 className="text-2xl font-bold text-slate-900">Zweryfikuj swój email</h1>
+          <h1 className="text-2xl font-bold text-brand-dark">Zweryfikuj swój email</h1>
           <p className="text-gray-600">
             Witaj, {userName}!
           </p>
         </div>
 
-        <div className="p-4 bg-blue-50 border border-blue-100 rounded-lg text-left">
+        <div className="p-4 bg-brand-blue-muted/50 border border-brand-blue/30 rounded-lg text-left">
           <p className="text-sm text-blue-900 mb-2">
             Aby korzystać z aplikacji, musisz zweryfikować swój adres email.
           </p>
-          <p className="text-sm text-blue-700">
+          <p className="text-sm text-brand-dark-muted">
             Wysłaliśmy email weryfikacyjny na adres <strong>{email}</strong>.
             Kliknij link w emailu aby zweryfikować konto.
           </p>
@@ -47,7 +47,7 @@ export function UnverifiedView({ email, userName }: UnverifiedViewProps) {
           </Button>
         </div>
 
-        <p className="text-xs text-gray-500">
+        <p className="text-xs text-brand-dark-muted">
           Po weryfikacji emaila będziesz mógł zalogować się ponownie i korzystać z aplikacji.
         </p>
       </div>

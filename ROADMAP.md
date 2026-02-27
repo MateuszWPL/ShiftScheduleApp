@@ -19,9 +19,14 @@
 - Zabezpieczenia: Helmet, rate limiting, walidacja inputow, CORS, JWT
 
 ### Co nie dziala / do usuniecia:
-- Zamiana zmian (Swap Requests) — do usuniecia, niepotrzebne
+- Zamiana zmian (Swap Requests) — usuniete
 - Panel Menadzera — juz przekierowany na Grafik
-- Strona ustawien (Settings) — placeholder, do zrobienia
+- Strona ustawien (Settings) — zrobiona
+
+### Domeny i hosting (aktualnie):
+- **staffer.pl** — landing, blog, cennik (Vercel)
+- **app.staffer.pl** — aplikacja (Vercel)
+- Frontend: Vercel | Backend: Railway/Neon (planowane)
 
 ---
 
@@ -214,16 +219,17 @@ Audyt zakończony. Wszystkie punkty przeanalizowane; elementy do rozbudowy w 2.6
 - [x] Wdrozenie wlasnej palety kolorow (brand colors: #FF8400, #8FACDB, #F9DFC6, #0B0829)
 - [ ] Dark mode (opcjonalnie)
 - [x] Mikro-interakcje (cursor-pointer, hovers, transitions 150ms, active:scale na przyciskach, touch-manipulation na mobilce)
-- [ ] Spójny design system (wszystkie komponenty)
-- [ ] Ikony i ilustracje brandowe
+- [x] Spójny design system (wszystkie komponenty – brand, semantic success/warning/error)
+- [x] Ikony i ilustracje brandowe (Logo SVG, favicon, ilustracje empty state)
 
-### 4.2 Landing Page
-- [ ] Strona glowna z prezentacja funkcji
-- [ ] Sekcja cennikowa (pricing)
-- [ ] Testimonials / social proof
-- [ ] CTA do rejestracji
-- [ ] SEO (meta tags, Open Graph, sitemap)
-- [ ] Blog / baza wiedzy
+### 4.2 Landing Page — zrobione
+- [x] Strona glowna z prezentacja funkcji (hero, features, testimonials)
+- [x] Sekcja cennikowa (pricing) — /cennik
+- [x] Testimonials / social proof
+- [x] CTA do rejestracji (link do app.staffer.pl)
+- [x] SEO (meta tags, Open Graph, sitemap.ts, robots.ts)
+- [x] Blog / baza wiedzy — Velite + MD, content/blog/*.md
+- [x] Domeny: staffer.pl, www.staffer.pl, app.staffer.pl (middleware host-based routing)
 
 ### 4.3 Prawne i compliance
 - [ ] Polityka prywatnosci (RODO/GDPR)
@@ -262,7 +268,7 @@ FAZA 3.3  Eksport danych
 FAZA 3.4  Szablony grafiku
 FAZA 3.5+ Wiele lokalizacji, role, API, push
 ---
-FAZA 4    Landing page, kolory, prawne, DevOps
+FAZA 4    Kolory, prawne, DevOps (landing + domeny — done)
 ```
 
 ---
@@ -378,4 +384,4 @@ FAZA 4    Landing page, kolory, prawne, DevOps
 - **Email**: Resend API
 - **Pliki**: Cloudinary (avatary)
 - **Platnosci** (planowane): Stripe
-- **Hosting** (planowane): Vercel (frontend) + Railway/Fly.io (backend) + Neon (PostgreSQL)
+- **Hosting**: Vercel (frontend, domeny staffer.pl / app.staffer.pl) + Railway/Neon (backend/DB planowane)

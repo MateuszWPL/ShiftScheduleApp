@@ -1,5 +1,6 @@
 "use client";
 
+import { paths } from "@/lib/app-paths";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   getShifts,
@@ -26,6 +27,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
+import { TeamEmptyIllustration } from "@/components/brand/illustrations";
 import { useState, useCallback, useMemo } from "react";
 
 function toLocalDateKey(d: Date): string {
@@ -380,11 +382,13 @@ export function ScheduleGrid({
           </div>
         ) : employeesOnly.length === 0 ? (
           <div className="p-12 text-center">
-            <Users className="h-10 w-10 mx-auto mb-3 text-brand-dark-soft" />
+            <div className="flex justify-center mb-3">
+              <TeamEmptyIllustration className="max-h-[80px]" />
+            </div>
             <p className="text-sm font-medium text-brand-dark-muted">Brak pracowników w zespole</p>
             <p className="text-xs text-brand-dark-soft mt-1 mb-4">Zaproś członków, aby zobaczyć grafik.</p>
             <Link
-              href="/team"
+              href={paths.team}
               className="inline-flex items-center gap-1.5 text-sm font-medium text-brand hover:underline"
             >
               Przejdź do pracowników

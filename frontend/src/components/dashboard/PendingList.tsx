@@ -52,25 +52,25 @@ export function PendingList({ currentUserRole }: Props) {
   });
 
   if (currentUserRole !== "OWNER" && currentUserRole !== "MANAGER") return null;
-  if (isLoading) return <div className="p-4 text-sm text-gray-500">Ładowanie oczekujących...</div>;
+  if (isLoading) return <div className="p-4 text-sm text-brand-dark-muted">Ładowanie oczekujących...</div>;
 
   return (
     <div className="bg-white rounded-lg shadow-sm border p-4">
       <div className="flex justify-between items-center mb-4">
-        <h3 className="font-bold text-slate-800">Oczekujące zgłoszenia</h3>
-        <span className="text-xs text-gray-400">{pending?.length || 0}</span>
+        <h3 className="font-bold text-brand-dark">Oczekujące zgłoszenia</h3>
+        <span className="text-xs text-brand-dark-soft">{pending?.length || 0}</span>
       </div>
 
       {(!pending || pending.length === 0) && (
-        <p className="text-sm text-gray-500">Brak oczekujących zgłoszeń.</p>
+        <p className="text-sm text-brand-dark-muted">Brak oczekujących zgłoszeń.</p>
       )}
 
       <div className="space-y-3">
         {pending?.map((item: PendingMember) => (
           <div key={item.id} className="flex justify-between items-center p-3 border rounded-lg">
             <div>
-              <p className="text-sm font-bold text-slate-900">{item.user.name || "Nowy użytkownik"}</p>
-              <p className="text-xs text-gray-500">{item.user.email}</p>
+              <p className="text-sm font-bold text-brand-dark">{item.user.name || "Nowy użytkownik"}</p>
+              <p className="text-xs text-brand-dark-muted">{item.user.email}</p>
             </div>
             <div className="flex gap-2">
               <Button
