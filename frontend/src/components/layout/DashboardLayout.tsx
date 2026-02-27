@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { Avatar } from "@/components/ui/avatar";
 import { NotificationBell } from "@/components/dashboard/NotificationBell";
+import { Logo } from "@/components/brand/Logo";
 import Link from "next/link";
 
 interface Props {
@@ -111,15 +112,13 @@ export function DashboardLayout({ children, userRole, userName, userAvatar, onLo
       <aside className="w-64 bg-white border-r border-brand-warm flex flex-col hidden md:flex shadow-sm">
         {/* Logo area */}
         <div className="px-5 py-5 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-brand flex items-center justify-center">
-              <Calendar className="h-4 w-4 text-white" />
-            </div>
-            <div>
-              <h1 className="text-base font-bold text-brand-dark tracking-tight">ShiftApp</h1>
+          <Link href="/" className="flex items-center gap-2 min-w-0">
+            <Logo variant="icon" className="w-8 h-8 flex-shrink-0" />
+            <div className="min-w-0">
+              <h1 className="text-sm font-bold text-brand-dark tracking-tight truncate">Staffer</h1>
               <p className="text-[10px] text-brand-dark-muted font-medium uppercase tracking-wider">{roleLabel}</p>
             </div>
-          </div>
+          </Link>
           <NotificationBell align="left" />
         </div>
 
@@ -162,12 +161,10 @@ export function DashboardLayout({ children, userRole, userName, userAvatar, onLo
         {/* Mobile header + top nav */}
         <header className="md:hidden sticky top-0 z-40 bg-white border-b border-brand-warm shadow-sm">
           <div className="flex justify-between items-center px-4 py-2">
-            <div className="flex items-center gap-2 shrink-0">
-              <div className="w-7 h-7 rounded-lg bg-brand flex items-center justify-center">
-                <Calendar className="h-3.5 w-3.5 text-white" />
-              </div>
-              <span className="font-bold text-brand-dark text-sm">ShiftApp</span>
-            </div>
+            <Link href="/" className="flex items-center gap-2 shrink-0">
+              <Logo variant="icon" className="w-7 h-7 flex-shrink-0" />
+              <span className="font-bold text-brand-dark text-sm">Staffer</span>
+            </Link>
             <div className="flex items-center gap-1 shrink-0">
               <NotificationBell />
               <button onClick={onLogout} className="p-2 rounded-lg text-brand-dark-muted hover:text-red-500 cursor-pointer transition-colors duration-150">

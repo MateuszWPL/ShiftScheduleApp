@@ -23,7 +23,7 @@ import {
 const STEPS = [
   {
     id: "welcome",
-    title: "Witaj w ShiftApp!",
+    title: "Witaj w Staffer!",
     desc: "Założyłeś firmę. W kilku krokach skonfigurujesz grafik.",
     icon: Sparkles,
     next: "invite",

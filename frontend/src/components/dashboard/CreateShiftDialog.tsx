@@ -333,7 +333,7 @@ export function CreateShiftDialog({
               <Clock className="inline h-3.5 w-3.5 mr-1 text-brand-dark-soft" />
               Godziny <span className="text-red-500">*</span>
               {durationStr && (
-                <span className="ml-2 font-normal text-blue-600 text-xs">
+                <span className="ml-2 font-normal text-brand text-xs">
                   ({durationStr})
                 </span>
               )}

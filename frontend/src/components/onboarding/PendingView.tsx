@@ -26,14 +26,14 @@ export function PendingView({ userName, onLogout }: Props) {
           </p>
         </div>
 
-        <div className="p-4 bg-blue-50 border border-blue-100 rounded-lg text-left space-y-2">
+        <div className="p-4 bg-brand-blue-muted/50 border border-brand-blue/30 rounded-lg text-left space-y-2">
           <div className="flex items-start gap-2">
-            <Mail className="w-5 h-5 text-blue-600 mt-0.5" />
+            <Mail className="w-5 h-5 text-brand-blue mt-0.5" />
             <div className="flex-1">
-              <p className="text-sm font-medium text-blue-900">
+              <p className="text-sm font-medium text-brand-dark">
                 Twoja prośba o dołączenie została wysłana
               </p>
-              <p className="text-xs text-blue-700 mt-1">
+              <p className="text-xs text-brand-dark-muted mt-1">
                 Manager otrzyma powiadomienie i wkrótce rozpatrzy Twoją prośbę. 
                 Gdy zostaniesz zaakceptowany, otrzymasz dostęp do grafiku zmian.
               </p>

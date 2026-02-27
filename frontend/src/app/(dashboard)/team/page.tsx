@@ -11,6 +11,7 @@ import { useState } from "react";
 import { Users, Phone, Mail, DollarSign, Clock, Edit, Info } from "lucide-react";
 import Link from "next/link";
 import { ManageEmployeeDialog } from "@/components/dashboard/ManageEmployeeDialog";
+import { TeamEmptyIllustration } from "@/components/brand/illustrations";
 
 export default function TeamPage() {
   const { dbUser, currentUser } = useDashboardUser();
@@ -179,7 +180,9 @@ export default function TeamPage() {
 
       {members && members.length === 0 && (
         <div className="bg-white border border-brand-warm rounded-xl p-12 text-center">
-          <Users className="h-10 w-10 text-brand-dark-soft mx-auto mb-3" />
+          <div className="flex justify-center mb-3">
+            <TeamEmptyIllustration className="max-h-[90px]" />
+          </div>
           <p className="text-sm font-medium text-brand-dark-muted">Brak członków zespołu</p>
           <p className="text-xs text-brand-dark-soft mt-1 mb-4">Zaproś pracowników kodem zaproszenia.</p>
           {isAdmin && (

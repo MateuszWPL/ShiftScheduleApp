@@ -214,8 +214,8 @@ Audyt zakończony. Wszystkie punkty przeanalizowane; elementy do rozbudowy w 2.6
 - [x] Wdrozenie wlasnej palety kolorow (brand colors: #FF8400, #8FACDB, #F9DFC6, #0B0829)
 - [ ] Dark mode (opcjonalnie)
 - [x] Mikro-interakcje (cursor-pointer, hovers, transitions 150ms, active:scale na przyciskach, touch-manipulation na mobilce)
-- [ ] Spójny design system (wszystkie komponenty)
-- [ ] Ikony i ilustracje brandowe
+- [x] Spójny design system (wszystkie komponenty – brand, semantic success/warning/error)
+- [x] Ikony i ilustracje brandowe (Logo SVG, favicon, ilustracje empty state)
 
 ### 4.2 Landing Page
 - [ ] Strona glowna z prezentacja funkcji

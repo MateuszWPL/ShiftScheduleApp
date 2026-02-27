@@ -25,7 +25,7 @@ export function TeamList({ currentUserId, currentUserRole }: Props) {
 
   const [editingUser, setEditingUser] = useState<User | null>(null);
 
-  if (isLoading) return <div className="p-4 text-sm text-gray-500">Ładowanie zespołu...</div>;
+  if (isLoading) return <div className="p-4 text-sm text-brand-dark-muted">Ładowanie zespołu...</div>;
 
   const isBoss = currentUserRole === 'OWNER' || currentUserRole === 'MANAGER';
 
@@ -33,7 +33,7 @@ export function TeamList({ currentUserId, currentUserRole }: Props) {
     <>
       <div className="bg-white rounded-lg shadow-sm border p-4">
         <div className="flex justify-between items-center mb-4">
-          <h3 className="font-bold text-slate-800">Twój Zespół</h3>
+          <h3 className="font-bold text-brand-dark">Twój Zespół</h3>
           <Badge variant="outline">{members?.length || 0} osób</Badge>
         </div>
 
@@ -42,16 +42,16 @@ export function TeamList({ currentUserId, currentUserRole }: Props) {
             <div key={member.id} className="flex justify-between items-center p-3 border rounded-lg hover:bg-brand-warm-light transition">
               <div>
                 <div className="flex items-center gap-2">
-                  <p className="text-sm font-bold text-slate-900">{member.name}</p>
+                  <p className="text-sm font-bold text-brand-dark">{member.name}</p>
                   <Badge variant={member.role === 'OWNER' ? 'default' : 'secondary'} className="text-[10px] h-5">
                     {member.role}
                   </Badge>
                 </div>
 
                 <div className="flex items-center gap-2 mt-0.5">
-                  <p className="text-xs text-gray-400">{member.email}</p>
+                  <p className="text-xs text-brand-dark-soft">{member.email}</p>
                   {member.phoneNumber && (
-                    <span className="text-[10px] text-slate-500 flex items-center gap-1 bg-slate-100 px-1.5 rounded">
+                    <span className="text-[10px] text-brand-dark-muted flex items-center gap-1 bg-brand-warm-light px-1.5 rounded">
                       <Phone className="h-3 w-3" /> {member.phoneNumber}
                     </span>
                   )}
@@ -60,12 +60,12 @@ export function TeamList({ currentUserId, currentUserRole }: Props) {
                 {member.role === 'EMPLOYEE' && (
                   <div className="flex gap-1 mt-2 flex-wrap">
                     {member.skills && member.skills.map((skill, idx) => (
-                      <span key={idx} className="text-[10px] bg-blue-50 text-blue-700 px-1.5 py-0.5 rounded border border-blue-100">
+                      <span key={idx} className="text-[10px] bg-brand-blue-muted text-brand-blue px-1.5 py-0.5 rounded border border-brand-blue/30">
                         {skill}
                       </span>
                     ))}
                     {(!member.skills || member.skills.length === 0) && (
-                      <span className="text-[10px] text-gray-300 italic">Brak tagów</span>
+                      <span className="text-[10px] text-brand-dark-soft italic">Brak tagów</span>
                     )}
                   </div>
                 )}
@@ -77,7 +77,7 @@ export function TeamList({ currentUserId, currentUserRole }: Props) {
                   size="sm"
                   onClick={() => setEditingUser(member)}
                 >
-                  <Settings2 className="h-4 w-4 text-gray-500" />
+                  <Settings2 className="h-4 w-4 text-brand-dark-muted" />
                 </Button>
               )}
             </div>

@@ -22,7 +22,7 @@ export function UserSwitcher({ currentUserId, onUserChange }: Props) {
 
   return (
     <div className="flex items-center gap-2 bg-white p-2 rounded shadow-sm border">
-      <span className="text-sm font-medium text-gray-500">Grasz jako:</span>
+      <span className="text-sm font-medium text-brand-dark-muted">Grasz jako:</span>
       <select
         className="p-1 border rounded text-sm font-bold"
         value={currentUserId}

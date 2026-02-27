@@ -58,10 +58,10 @@ function VerifyEmailContent() {
 
   if (status === "loading") {
     return (
-      <div className="flex h-screen items-center justify-center bg-slate-100">
+      <div className="flex h-screen items-center justify-center bg-brand-surface">
         <div className="max-w-md w-full p-8 bg-white rounded-xl shadow-lg text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Weryfikowanie emaila...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand mx-auto mb-4"></div>
+          <p className="text-brand-dark-muted">Weryfikowanie emaila...</p>
         </div>
       </div>
     );
@@ -69,7 +69,7 @@ function VerifyEmailContent() {
 
   if (status === "success") {
     return (
-      <div className="flex h-screen items-center justify-center bg-slate-100">
+      <div className="flex h-screen items-center justify-center bg-brand-surface">
         <div className="max-w-md w-full p-8 bg-white rounded-xl shadow-lg text-center space-y-4">
           <div className="flex justify-center">
             <div className="p-4 bg-green-50 rounded-full">
@@ -79,8 +79,8 @@ function VerifyEmailContent() {
             </div>
           </div>
           <h1 className="text-2xl font-bold text-green-900">Email zweryfikowany!</h1>
-          <p className="text-gray-600">{message}</p>
-          <p className="text-sm text-gray-500">Przekierowywanie do logowania...</p>
+          <p className="text-brand-dark-muted">{message}</p>
+          <p className="text-sm text-brand-dark-muted">Przekierowywanie do logowania...</p>
           <Link href="/">
             <Button>Przejdź do logowania</Button>
           </Link>
@@ -90,7 +90,7 @@ function VerifyEmailContent() {
   }
 
   return (
-    <div className="flex h-screen items-center justify-center bg-slate-100">
+    <div className="flex h-screen items-center justify-center bg-brand-surface">
       <div className="max-w-md w-full p-8 bg-white rounded-xl shadow-lg text-center space-y-4">
         <div className="flex justify-center">
           <div className="p-4 bg-red-50 rounded-full">
@@ -100,7 +100,7 @@ function VerifyEmailContent() {
           </div>
         </div>
         <h1 className="text-2xl font-bold text-red-900">Błąd weryfikacji</h1>
-        <p className="text-gray-600">{message || "Nieprawidłowy lub wygasły token weryfikacyjny."}</p>
+        <p className="text-brand-dark-muted">{message || "Nieprawidłowy lub wygasły token weryfikacyjny."}</p>
         <div className="space-y-2">
           <Link href="/">
             <Button variant="outline" className="w-full">
@@ -116,10 +116,10 @@ function VerifyEmailContent() {
 export default function VerifyEmailPage() {
   return (
     <Suspense fallback={
-      <div className="flex h-screen items-center justify-center bg-slate-100">
+      <div className="flex h-screen items-center justify-center bg-brand-surface">
         <div className="max-w-md w-full p-8 bg-white rounded-xl shadow-lg text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Ładowanie...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand mx-auto mb-4"></div>
+          <p className="text-brand-dark-muted">Ładowanie...</p>
         </div>
       </div>
     }>
