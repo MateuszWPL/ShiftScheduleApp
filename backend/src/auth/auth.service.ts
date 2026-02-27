@@ -110,6 +110,7 @@ export class AuthService {
         email: user.email,
         name: user.name,
         emailVerified: user.emailVerified,
+        tokenVersion: (user as any).tokenVersion ?? 0,
       },
     };
   }

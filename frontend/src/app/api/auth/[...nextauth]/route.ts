@@ -54,6 +54,7 @@ export const authOptions: NextAuthOptions = {
             email: data.user.email,
             name: data.user.name,
             accessToken: data.access_token,
+            tokenVersionAtLogin: data.user.tokenVersion ?? 0,
           };
         } catch (error: any) {
           throw new Error(error.message || "Błąd logowania");
@@ -81,9 +82,19 @@ export const authOptions: NextAuthOptions = {
       if (user) {
         token.email = user.email;
         token.name = user.name;
-        
         if ((user as any).accessToken) {
           token.accessToken = (user as any).accessToken;
+        }
+        if ((user as any).tokenVersionAtLogin !== undefined) {
+          token.tokenVersionAtLogin = (user as any).tokenVersionAtLogin;
+        } else if (account?.provider === "google" && user?.email) {
+          const syncRes = await fetch(
+            `${API_URL}/shifts/users/sync?email=${encodeURIComponent(user.email!)}&name=${encodeURIComponent(user.name || "")}`
+          );
+          if (syncRes.ok) {
+            const dbUser = await syncRes.json();
+            token.tokenVersionAtLogin = dbUser.tokenVersion ?? 0;
+          }
         }
       }
       return token;
@@ -97,6 +108,9 @@ export const authOptions: NextAuthOptions = {
         };
         if (token.accessToken) {
           (session as any).accessToken = token.accessToken;
+        }
+        if (token.tokenVersionAtLogin !== undefined) {
+          (session as any).tokenVersionAtLogin = token.tokenVersionAtLogin;
         }
       }
       return session;

@@ -26,6 +26,15 @@ export async function GET() {
 
     const dbUser = await syncResponse.json();
 
+    const tokenVersionAtLogin = (session as any).tokenVersionAtLogin ?? 0;
+    const currentTokenVersion = dbUser.tokenVersion ?? 0;
+    if (tokenVersionAtLogin !== currentTokenVersion) {
+      return NextResponse.json(
+        { error: "Session invalidated. Please log in again." },
+        { status: 401 }
+      );
+    }
+
     const secret = process.env.JWT_SECRET || process.env.NEXTAUTH_SECRET;
 
     if (!secret) {

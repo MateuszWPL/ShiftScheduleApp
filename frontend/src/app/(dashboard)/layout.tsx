@@ -10,7 +10,7 @@ import { PendingView } from "@/components/onboarding/PendingView";
 import { OnboardingView } from "@/components/onboarding/OnboardingView";
 import { useLogout } from "@/hooks/useLogout";
 import { getAvatarUrl } from "@/lib/api";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export default function DashboardGroupLayout({
   children,
@@ -20,6 +20,12 @@ export default function DashboardGroupLayout({
   const gate = useDashboardGate();
   const logout = useLogout();
   const [authMode, setAuthMode] = useState<"login" | "register" | "reset" | undefined>(undefined);
+
+  useEffect(() => {
+    const handler = () => logout();
+    window.addEventListener("session-invalidated", handler);
+    return () => window.removeEventListener("session-invalidated", handler);
+  }, [logout]);
 
   if (gate.status === "loading" || gate.status === "syncing") {
     return (

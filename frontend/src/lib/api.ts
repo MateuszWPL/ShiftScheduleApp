@@ -73,6 +73,9 @@ async function getAuthToken(): Promise<string | null> {
     if (!res.ok) {
       if (res.status === 401) {
         tokenCache = null;
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(new CustomEvent("session-invalidated"));
+        }
       }
       return null;
     }
