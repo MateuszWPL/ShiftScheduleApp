@@ -46,7 +46,8 @@ export default function CennikPage() {
             Prosty cennik
           </h1>
           <p className="mt-4 text-brand-dark-muted">
-            Zacznij za darmo. Rozbuduj plan, gdy Twój zespół urośnie.
+            Zacznij za darmo. Rozbuduj plan, gdy Twój zespół urośnie. Bez karty
+            kredytowej.
           </p>
         </div>
 
@@ -54,10 +55,10 @@ export default function CennikPage() {
           {PLANS.map((plan) => (
             <div
               key={plan.name}
-              className={`relative rounded-2xl border p-8 ${
+              className={`relative rounded-2xl border p-8 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg ${
                 plan.highlighted
-                  ? "border-brand bg-brand-muted/20 shadow-lg"
-                  : "border-brand-warm bg-white"
+                  ? "border-brand bg-brand-muted/20 shadow-xl shadow-brand/20 hover:shadow-2xl hover:shadow-brand/25 ring-2 ring-brand/15"
+                  : "border-brand-warm bg-white hover:border-brand/20"
               }`}
             >
               {plan.highlighted && (
@@ -85,7 +86,8 @@ export default function CennikPage() {
               </ul>
               <Button
                 asChild
-                className={`mt-8 w-full cursor-pointer ${
+                variant={plan.highlighted ? "default" : "glass"}
+                className={`mt-8 w-full cursor-pointer transition-all duration-200 hover:scale-[1.02] ${
                   plan.highlighted
                     ? "bg-brand hover:bg-brand-light"
                     : "bg-brand-dark hover:bg-brand-dark-light"
