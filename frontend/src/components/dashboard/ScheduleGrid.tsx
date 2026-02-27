@@ -510,7 +510,7 @@ export function ScheduleGrid({
                               }
 
                               if (isAdmin && onShiftClick) {
-                                cardClasses += " cursor-pointer hover:shadow-md hover:-translate-y-px";
+                                cardClasses += " cursor-pointer hover:shadow-md hover:-translate-y-px transition-shadow transition-transform duration-150";
                               }
 
                               return (
@@ -547,7 +547,7 @@ export function ScheduleGrid({
                                         )}
                                         {isAdmin && (
                                           <button
-                                            className="opacity-0 group-hover/shift:opacity-100 transition-opacity p-0.5 rounded hover:bg-red-50 text-brand-dark-soft hover:text-red-500"
+                                            className="opacity-0 group-hover/shift:opacity-100 transition-opacity p-0.5 rounded hover:bg-red-50 text-brand-dark-soft hover:text-red-500 cursor-pointer"
                                             title="Usuń zmianę"
                                             onClick={(e) => {
                                               e.stopPropagation();

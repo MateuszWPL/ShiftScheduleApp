@@ -23,13 +23,13 @@ export function Navbar({ onLoginClick, onRegisterClick }: NavbarProps) {
             <Button
               variant="ghost"
               onClick={onLoginClick}
-              className="text-brand-dark-muted hover:text-brand-dark"
+              className="text-brand-dark-muted hover:text-brand-dark cursor-pointer"
             >
               Zaloguj się
             </Button>
             <Button
               onClick={onRegisterClick}
-              className="bg-brand hover:bg-brand-light text-white"
+              className="bg-brand hover:bg-brand-light text-white cursor-pointer"
             >
               Zacznij za darmo
             </Button>

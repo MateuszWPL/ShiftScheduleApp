@@ -136,7 +136,7 @@ export function CopyWeekDialog({ isOpen, onClose, currentWeekStart, onNavigateTo
               </p>
             </div>
           </div>
-          <button onClick={handleClose} className="p-2 rounded-lg hover:bg-brand-warm-light transition-colors text-brand-dark-muted hover:text-brand-dark">
+          <button onClick={handleClose} className="p-2 rounded-lg hover:bg-brand-warm-light transition-colors duration-150 text-brand-dark-muted hover:text-brand-dark cursor-pointer">
             <X className="h-5 w-5" />
           </button>
         </div>

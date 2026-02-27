@@ -78,7 +78,7 @@ export function LoginForm({ onSwitchToRegister, onSwitchToReset }: LoginFormProp
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
-          className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-brand focus:border-brand"
+          className="w-full p-2 border border-brand-warm rounded-md focus:outline-none focus:ring-2 focus:ring-brand focus:border-brand transition-colors duration-150"
           placeholder="twoj@email.pl"
         />
       </div>
@@ -93,7 +93,7 @@ export function LoginForm({ onSwitchToRegister, onSwitchToReset }: LoginFormProp
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
-          className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-brand focus:border-brand"
+          className="w-full p-2 border border-brand-warm rounded-md focus:outline-none focus:ring-2 focus:ring-brand focus:border-brand transition-colors duration-150"
           placeholder="Wprowadź hasło"
         />
       </div>
@@ -108,7 +108,7 @@ export function LoginForm({ onSwitchToRegister, onSwitchToReset }: LoginFormProp
           onClick={() => {
             if (onSwitchToReset) onSwitchToReset();
           }}
-          className="text-sm text-blue-600 hover:underline"
+          className="text-sm text-brand hover:text-brand-light cursor-pointer transition-colors duration-150 hover:underline"
         >
           Zapomniałeś hasła?
         </button>
@@ -125,7 +125,7 @@ export function LoginForm({ onSwitchToRegister, onSwitchToReset }: LoginFormProp
       <Button
         type="button"
         onClick={() => signIn("google", { callbackUrl: "/" })}
-        className="w-full bg-white text-brand-dark border border-gray-300 hover:bg-brand-warm-light flex items-center justify-center gap-2"
+        className="w-full bg-white text-brand-dark border border-brand-warm hover:bg-brand-warm-light flex items-center justify-center gap-2 cursor-pointer transition-colors duration-150"
       >
         <GoogleIcon />
         Zaloguj się przez Google
@@ -136,7 +136,7 @@ export function LoginForm({ onSwitchToRegister, onSwitchToReset }: LoginFormProp
         <button
           type="button"
           onClick={onSwitchToRegister}
-          className="text-blue-600 hover:underline"
+          className="text-brand hover:text-brand-light cursor-pointer transition-colors duration-150 hover:underline font-medium"
         >
           Zarejestruj się
         </button>

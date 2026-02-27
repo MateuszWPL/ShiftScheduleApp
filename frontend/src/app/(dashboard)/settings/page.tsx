@@ -305,7 +305,7 @@ export default function SettingsPage() {
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`flex items-center gap-2 px-3 sm:px-4 py-2 rounded-lg text-sm font-medium transition-colors flex-1 min-w-0 justify-center shrink-0 touch-manipulation ${
+            className={`flex items-center gap-2 px-3 sm:px-4 py-2 rounded-lg text-sm font-medium cursor-pointer transition-colors duration-150 flex-1 min-w-0 justify-center shrink-0 touch-manipulation active:bg-brand-warm-light/80 ${
               activeTab === tab.id
                 ? "bg-brand/10 text-brand"
                 : "text-brand-dark-muted hover:text-brand-dark hover:bg-brand-warm-light"

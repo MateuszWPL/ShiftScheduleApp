@@ -360,7 +360,7 @@ export default function PulpitPage() {
                       {!a.isRead && (
                         <button
                           onClick={() => readAnnouncementMutation.mutate(a.id)}
-                          className="p-1 rounded-lg text-brand-dark-soft hover:text-brand-blue hover:bg-brand-blue-muted transition-colors flex-shrink-0"
+                          className="p-1 rounded-lg text-brand-dark-soft hover:text-brand-blue hover:bg-brand-blue-muted transition-colors duration-150 flex-shrink-0 cursor-pointer"
                           title="Oznacz jako przeczytane"
                         >
                           <Eye className="h-3.5 w-3.5" />
@@ -423,7 +423,7 @@ export default function PulpitPage() {
                 </code>
                 <button
                   onClick={handleCopyCode}
-                  className="p-2 rounded-lg hover:bg-brand-muted text-brand-dark-muted hover:text-brand transition-colors"
+                  className="p-2 rounded-lg hover:bg-brand-muted text-brand-dark-muted hover:text-brand transition-colors duration-150 cursor-pointer"
                   title="Kopiuj kod"
                 >
                   {codeCopied ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}

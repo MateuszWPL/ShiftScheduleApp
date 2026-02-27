@@ -339,7 +339,7 @@ export function TimeBlockStrip({
                   e.stopPropagation();
                   onDeleteBlock(b.id!);
                 }}
-                className="ml-0.5 text-white/70 hover:text-white text-xs font-bold opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
+                className="ml-0.5 text-white/70 hover:text-white text-xs font-bold opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 cursor-pointer"
                 aria-label="Usuń"
               >
                 ×

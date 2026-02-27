@@ -40,7 +40,7 @@ export function RequestPasswordResetForm({ onBack }: RequestPasswordResetFormPro
             <strong>{email}</strong>. Sprawdź skrzynkę pocztową.
           </p>
         </div>
-        <Button onClick={onBack} variant="outline" className="w-full">
+        <Button onClick={onBack} variant="outline" className="w-full cursor-pointer">
           Wróć do logowania
         </Button>
       </div>
@@ -59,7 +59,7 @@ export function RequestPasswordResetForm({ onBack }: RequestPasswordResetFormPro
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
-          className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-brand focus:border-brand"
+          className="w-full p-2 border border-brand-warm rounded-md focus:outline-none focus:ring-2 focus:ring-brand focus:border-brand transition-colors duration-150"
           placeholder="twoj@email.pl"
         />
       </div>
@@ -72,7 +72,7 @@ export function RequestPasswordResetForm({ onBack }: RequestPasswordResetFormPro
         type="button"
         onClick={onBack}
         variant="outline"
-        className="w-full"
+        className="w-full cursor-pointer"
         disabled={isLoading}
       >
         Wróć do logowania

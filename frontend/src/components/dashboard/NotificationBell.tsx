@@ -109,7 +109,7 @@ export function NotificationBell({ align = "right" }: { align?: "left" | "right"
                   Oznacz wszystkie
                 </Button>
               )}
-              <button onClick={() => setOpen(false)} className="p-1 rounded hover:bg-slate-200 text-slate-400">
+              <button onClick={() => setOpen(false)} className="p-1 rounded hover:bg-brand-warm-light text-brand-dark-soft cursor-pointer transition-colors duration-150">
                 <X className="h-4 w-4" />
               </button>
             </div>

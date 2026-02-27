@@ -90,23 +90,23 @@ export function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
   if (isRegistered) {
     return (
       <div className="space-y-4">
-        <div className="p-4 bg-blue-50 border border-blue-100 rounded-lg text-center">
+        <div className="p-4 bg-brand-blue-muted/50 border border-brand-blue/30 rounded-lg text-center">
           <div className="flex justify-center mb-2">
-            <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-8 h-8 text-brand-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
             </svg>
           </div>
-          <h3 className="font-semibold text-blue-900 mb-2">Sprawdź swoją skrzynkę pocztową!</h3>
-          <p className="text-sm text-blue-700 mb-4">
+          <h3 className="font-semibold text-brand-dark mb-2">Sprawdź swoją skrzynkę pocztową!</h3>
+          <p className="text-sm text-brand-dark-muted mb-4">
             Wysłaliśmy email weryfikacyjny na adres <strong>{email}</strong>.
             Kliknij link w emailu aby zweryfikować konto.
           </p>
           <ResendVerificationButton email={email} />
-          <p className="text-xs text-gray-500 mt-4">
+          <p className="text-xs text-brand-dark-muted mt-4">
             Po weryfikacji możesz się zalogować.
           </p>
         </div>
-        <Button variant="outline" className="w-full" onClick={() => onSwitchToLogin()}>
+        <Button variant="outline" className="w-full cursor-pointer" onClick={() => onSwitchToLogin()}>
           Przejdź do logowania
         </Button>
       </div>
@@ -116,7 +116,7 @@ export function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
-        <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+        <label htmlFor="email" className="block text-sm font-medium text-brand-dark mb-1">
           Email
         </label>
         <input
@@ -125,13 +125,13 @@ export function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
-          className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full p-2 border border-brand-warm rounded-md focus:outline-none focus:ring-2 focus:ring-brand focus:border-brand transition-colors duration-150"
           placeholder="twoj@email.pl"
         />
       </div>
 
       <div>
-        <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+        <label htmlFor="name" className="block text-sm font-medium text-brand-dark mb-1">
           Imię i Nazwisko
         </label>
         <input
@@ -142,13 +142,13 @@ export function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
           required
           minLength={2}
           maxLength={50}
-          className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full p-2 border border-brand-warm rounded-md focus:outline-none focus:ring-2 focus:ring-brand focus:border-brand transition-colors duration-150"
           placeholder="Jan Kowalski"
         />
       </div>
 
       <div>
-        <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+        <label htmlFor="password" className="block text-sm font-medium text-brand-dark mb-1">
           Hasło
         </label>
         <input
@@ -158,16 +158,16 @@ export function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
           onChange={(e) => setPassword(e.target.value)}
           required
           minLength={8}
-          className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full p-2 border border-brand-warm rounded-md focus:outline-none focus:ring-2 focus:ring-brand focus:border-brand transition-colors duration-150"
           placeholder="Minimum 8 znaków"
         />
-        <p className="text-xs text-gray-500 mt-1">
+        <p className="text-xs text-brand-dark-muted mt-1">
           Min. 8 znaków, 1 wielka litera, 1 cyfra
         </p>
       </div>
 
       <div>
-        <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">
+        <label htmlFor="confirmPassword" className="block text-sm font-medium text-brand-dark mb-1">
           Potwierdź Hasło
         </label>
         <input
@@ -177,7 +177,7 @@ export function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
           onChange={(e) => setConfirmPassword(e.target.value)}
           required
           minLength={8}
-          className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full p-2 border border-brand-warm rounded-md focus:outline-none focus:ring-2 focus:ring-brand focus:border-brand transition-colors duration-150"
           placeholder="Powtórz hasło"
         />
       </div>
@@ -188,27 +188,27 @@ export function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
 
       {/* Separator */}
       <div className="relative flex py-2 items-center">
-        <div className="flex-grow border-t border-gray-200"></div>
-        <span className="flex-shrink mx-4 text-gray-400 text-sm">LUB</span>
-        <div className="flex-grow border-t border-gray-200"></div>
+        <div className="flex-grow border-t border-brand-warm"></div>
+        <span className="flex-shrink mx-4 text-brand-dark-muted text-sm">LUB</span>
+        <div className="flex-grow border-t border-brand-warm"></div>
       </div>
 
       {/* Google Sign In */}
       <Button
         type="button"
         onClick={() => signIn("google", { callbackUrl: "/" })}
-        className="w-full bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 flex items-center justify-center gap-2"
+        className="w-full bg-white text-brand-dark border border-brand-warm hover:bg-brand-warm-light flex items-center justify-center gap-2 transition-colors duration-150"
       >
         <GoogleIcon />
         Zarejestruj się przez Google
       </Button>
 
-      <p className="text-sm text-center text-gray-600">
+      <p className="text-sm text-center text-brand-dark-muted">
         Masz już konto?{" "}
         <button
           type="button"
           onClick={onSwitchToLogin}
-          className="text-blue-600 hover:underline"
+          className="text-brand hover:text-brand-light cursor-pointer transition-colors duration-150 hover:underline font-medium"
         >
           Zaloguj się
         </button>

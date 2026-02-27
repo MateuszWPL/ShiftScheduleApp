@@ -143,6 +143,17 @@
   padding-bottom: env(safe-area-inset-bottom, 0);
 }
 
+/* Subtle interactions – transitions, hovers, touch feedback */
+.interactive {
+  @apply cursor-pointer transition-colors duration-150;
+}
+.interactive-press {
+  @apply transition-transform duration-150 active:scale-[0.98];
+}
+/* Inputs – smooth focus */
+input, select, textarea {
+  @apply transition-colors duration-150;
+}
 /* Hide scrollbar but keep scroll */
 .hide-scrollbar {
   -ms-overflow-style: none;

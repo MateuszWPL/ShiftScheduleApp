@@ -44,7 +44,7 @@ function NavLink({ href, label, icon, active, premium, tourId }: NavItem & { act
     <Link
       href={href}
       data-tour={tourId}
-      className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+      className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium cursor-pointer touch-manipulation transition-colors duration-150 active:bg-brand-warm-light/80 ${
         active
           ? "bg-brand/10 text-brand"
           : "text-brand-dark-muted hover:text-brand-dark hover:bg-brand-warm-light"
@@ -148,7 +148,7 @@ export function DashboardLayout({ children, userRole, userName, userAvatar, onLo
             </div>
             <button
               onClick={onLogout}
-              className="p-1.5 rounded-lg text-brand-dark-soft hover:text-red-500 hover:bg-red-50 transition-colors"
+              className="p-1.5 rounded-lg text-brand-dark-soft hover:text-red-500 hover:bg-red-50 cursor-pointer transition-colors duration-150"
               title="Wyloguj"
             >
               <LogOut className="h-4 w-4" />
@@ -170,7 +170,7 @@ export function DashboardLayout({ children, userRole, userName, userAvatar, onLo
             </div>
             <div className="flex items-center gap-1 shrink-0">
               <NotificationBell />
-              <button onClick={onLogout} className="p-2 rounded-lg text-brand-dark-muted hover:text-red-500">
+              <button onClick={onLogout} className="p-2 rounded-lg text-brand-dark-muted hover:text-red-500 cursor-pointer transition-colors duration-150">
                 <LogOut className="h-4 w-4" />
               </button>
             </div>
@@ -191,7 +191,7 @@ export function DashboardLayout({ children, userRole, userName, userAvatar, onLo
                   key={item.href}
                   href={item.href}
                   {...(item.tourId ? { "data-tour": item.tourId as string } : {})}
-                  className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-colors shrink-0 touch-manipulation ${
+                  className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium cursor-pointer transition-colors duration-150 shrink-0 touch-manipulation active:bg-brand-warm-light/80 ${
                     isActive(item.href)
                       ? "bg-brand/10 text-brand"
                       : "text-brand-dark-muted hover:bg-brand-warm-light"

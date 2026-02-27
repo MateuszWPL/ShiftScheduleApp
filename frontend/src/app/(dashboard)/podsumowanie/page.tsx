@@ -50,7 +50,7 @@ export default function PodsumowaniePage() {
         <div className="inline-flex w-fit rounded-lg border border-brand-warm bg-white p-0.5">
           <button
             onClick={() => setViewMode("week")}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium cursor-pointer transition-colors duration-150 ${
               viewMode === "week" ? "bg-brand text-white" : "text-brand-dark-muted hover:text-brand-dark"
             }`}
           >
@@ -59,7 +59,7 @@ export default function PodsumowaniePage() {
           </button>
           <button
             onClick={() => setViewMode("month")}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium cursor-pointer transition-colors duration-150 ${
               viewMode === "month" ? "bg-brand text-white" : "text-brand-dark-muted hover:text-brand-dark"
             }`}
           >

@@ -524,7 +524,7 @@ export default function GrafikPage() {
           <div className="inline-flex rounded-lg border border-brand-warm bg-white p-0.5">
             <button
               onClick={() => setViewMode("table")}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium cursor-pointer transition-colors duration-150 ${
                 viewMode === "table" ? "bg-brand text-white" : "text-brand-dark-muted hover:text-brand-dark"
               }`}
             >
@@ -533,7 +533,7 @@ export default function GrafikPage() {
             </button>
             <button
               onClick={() => setViewMode("my")}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium cursor-pointer transition-colors duration-150 ${
                 viewMode === "my" ? "bg-brand text-white" : "text-brand-dark-muted hover:text-brand-dark"
               }`}
             >
@@ -570,7 +570,7 @@ export default function GrafikPage() {
             {(filterEmployeeId || filterPositionId) && (
               <button
                 onClick={() => { setFilterEmployeeId(null); setFilterPositionId(null); }}
-                className="text-xs text-brand hover:underline"
+                className="text-xs text-brand hover:underline cursor-pointer transition-colors duration-150"
               >
                 Wyczyść
               </button>
