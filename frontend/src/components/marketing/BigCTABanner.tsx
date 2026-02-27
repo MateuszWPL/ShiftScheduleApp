@@ -4,53 +4,83 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { APP_URL } from "@/lib/site-config";
 import { TrustBadges } from "./TrustBadges";
-import { LandingImage } from "./LandingImage";
+import { Check } from "lucide-react";
+
+const PLUSY = [
+  "Grafik w kilka minut, nie godzin",
+  "Giełda zmian bez grupek na WhatsApp",
+  "Dostępności i konflikty na jednym ekranie",
+  "Powiadomienia o nowym grafiku i zmianach",
+  "Bez Excela, bez papieru, bez chaosu",
+];
 
 export function BigCTABanner() {
   return (
-    <section className="py-20 sm:py-28 bg-brand-dark overflow-hidden">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
-          <motion.div
-            className="text-center lg:text-left"
-            initial={{ opacity: 0, x: -24 }}
-            whileInView={{ opacity: 1, x: 0 }}
+    <section className="relative py-24 sm:py-32 overflow-hidden">
+      <div
+        className="absolute inset-0 bg-gradient-to-br from-brand via-brand-light to-brand-blue/30"
+        aria-hidden
+      />
+      {/* Opcjonalna grafika w tle — dodaj BannerBg.png do public/landing/ */}
+      <div
+        className="absolute inset-0 bg-cover bg-center opacity-[0.08]"
+        style={{ backgroundImage: "url('/landing/BannerBg.png')" }}
+      />
+      <div className="container relative mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-4xl mx-auto text-center">
+          <motion.h2
+            className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white leading-tight"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
           >
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white leading-tight">
-              Przejmij kontrolę nad czasem pracy już dzisiaj, ze Stafferem
-            </h2>
-            <p className="mt-6 text-lg text-white/80 max-w-xl">
-              Prosty grafik, giełda zmian i komunikacja w jednym miejscu. Dołącz do
-              zespołów, które już nie marnują czasu na Excel i grupy na WhatsApp.
-            </p>
-            <div className="mt-8">
-              <TrustBadges variant="dark" className="justify-center lg:justify-start" />
-            </div>
-            <div className="mt-10 flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-              <Button
-                asChild
-                size="lg"
-                className="cursor-pointer bg-brand hover:bg-brand-light text-white font-semibold shadow-xl shadow-brand/30 hover:shadow-2xl transition-all hover:scale-[1.02]"
+            Przejmij kontrolę nad czasem pracy już dzisiaj, ze Stafferem
+          </motion.h2>
+          <motion.p
+            className="mt-6 text-lg text-white/90 max-w-2xl mx-auto"
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+          >
+            Prosty grafik, giełda zmian i komunikacja w jednym miejscu. Dołącz do
+            zespołów, które już nie marnują czasu.
+          </motion.p>
+
+          <ul className="mt-10 flex flex-wrap justify-center gap-4">
+            {PLUSY.map((item, i) => (
+              <motion.li
+                key={item}
+                className="flex items-center gap-2 text-white/95 text-sm sm:text-base"
+                initial={{ opacity: 0, x: -10 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.05 }}
               >
-                <a href={APP_URL}>Wypróbuj za darmo</a>
-              </Button>
-            </div>
-          </motion.div>
+                <span className="w-5 h-5 rounded-full bg-white/30 flex items-center justify-center flex-shrink-0">
+                  <Check className="w-3 h-3" />
+                </span>
+                {item}
+              </motion.li>
+            ))}
+          </ul>
+
+          <div className="mt-10">
+            <TrustBadges variant="dark" className="justify-center" />
+          </div>
 
           <motion.div
-            className="relative aspect-[4/3] max-w-xl mx-auto lg:max-w-none rounded-2xl overflow-hidden ring-2 ring-white/20 shadow-2xl"
-            initial={{ opacity: 0, x: 24 }}
-            whileInView={{ opacity: 1, x: 0 }}
+            className="mt-10 flex flex-col sm:flex-row gap-4 justify-center"
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
             viewport={{ once: true }}
           >
-            <LandingImage
-              src="/landing/BigCTAGraphic.png"
-              alt="Staffer — grafik zmian"
-              placeholderText="Zrzut ekranu aplikacji"
-              fill
-              sizes="(max-width: 1024px) 100vw, 50vw"
-            />
+            <Button
+              asChild
+              size="lg"
+              className="cursor-pointer bg-white text-brand hover:bg-white/90 font-semibold shadow-xl transition-all hover:scale-[1.02]"
+            >
+              <a href={APP_URL}>Wypróbuj za darmo</a>
+            </Button>
           </motion.div>
         </div>
       </div>

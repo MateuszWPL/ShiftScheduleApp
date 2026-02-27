@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { motion } from "framer-motion";
+import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Play } from "lucide-react";
 import { APP_URL } from "@/lib/site-config";
@@ -9,12 +9,17 @@ import { LandingImage } from "./LandingImage";
 import { TrustBadges } from "./TrustBadges";
 import { VideoPopup } from "./VideoPopup";
 
-const stagger = {
-  animate: {
-    transition: { staggerChildren: 0.12, delayChildren: 0.1 },
-  },
-};
+const ROTATING_TEXTS = [
+  "bez chaosu",
+  "w 5 minut",
+  "bez Excela",
+  "dla Twojego zespołu",
+  "bez grupek na WhatsApp",
+];
 
+const stagger = {
+  animate: { transition: { staggerChildren: 0.12, delayChildren: 0.1 } },
+};
 const item = {
   initial: { opacity: 0, y: 20 },
   animate: { opacity: 1, y: 0 },
@@ -22,6 +27,15 @@ const item = {
 
 export function HeroSection() {
   const [videoOpen, setVideoOpen] = useState(false);
+  const [rotatingIndex, setRotatingIndex] = useState(0);
+
+  useEffect(() => {
+    const t = setInterval(
+      () => setRotatingIndex((i) => (i + 1) % ROTATING_TEXTS.length),
+      3000
+    );
+    return () => clearInterval(t);
+  }, []);
 
   return (
     <>
@@ -43,11 +57,22 @@ export function HeroSection() {
               </motion.p>
               <motion.h1
                 variants={item}
-                className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-brand-dark"
+                className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-brand-dark min-h-[1.2em] flex flex-wrap items-baseline gap-2"
               >
                 Grafik zmian{" "}
-                <span className="bg-gradient-to-r from-brand via-brand-light to-brand bg-clip-text text-transparent">
-                  bez chaosu
+                <span className="inline-block min-w-[200px] sm:min-w-[280px] text-left">
+                  <AnimatePresence mode="wait">
+                    <motion.span
+                      key={rotatingIndex}
+                      className="bg-gradient-to-r from-brand via-brand-light to-brand bg-clip-text text-transparent"
+                      initial={{ opacity: 0, y: 12 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -12 }}
+                      transition={{ duration: 0.3 }}
+                    >
+                      {ROTATING_TEXTS[rotatingIndex]}
+                    </motion.span>
+                  </AnimatePresence>
                 </span>
               </motion.h1>
               <motion.p
@@ -58,10 +83,7 @@ export function HeroSection() {
                 prostej aplikacji. Dla restauracji, sklepów i usług.
               </motion.p>
 
-              <motion.div
-                variants={item}
-                className="mt-8 flex flex-col sm:flex-row gap-4 justify-center lg:justify-start items-center sm:items-start"
-              >
+              <motion.div variants={item} className="mt-8">
                 <Button
                   asChild
                   size="lg"
@@ -69,16 +91,6 @@ export function HeroSection() {
                 >
                   <a href={APP_URL}>Zacznij za darmo</a>
                 </Button>
-                <button
-                  type="button"
-                  onClick={() => setVideoOpen(true)}
-                  className="inline-flex items-center gap-2 text-brand-dark font-medium hover:text-brand transition-colors group"
-                >
-                  <span className="w-10 h-10 rounded-full bg-brand/20 flex items-center justify-center group-hover:bg-brand/30 transition-colors">
-                    <Play className="h-4 w-4 ml-0.5 text-brand" fill="currentColor" />
-                  </span>
-                  Zobacz jak to działa
-                </button>
               </motion.div>
 
               <motion.div variants={item} className="mt-8">
@@ -92,16 +104,28 @@ export function HeroSection() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4, duration: 0.5 }}
             >
-              <div className="absolute inset-0 rounded-2xl shadow-2xl shadow-brand-dark/15 ring-2 ring-brand-warm/40 overflow-hidden">
+              <button
+                type="button"
+                onClick={() => setVideoOpen(true)}
+                className="group absolute inset-0 rounded-2xl overflow-hidden shadow-2xl shadow-brand-dark/15 ring-2 ring-brand-warm/40 cursor-pointer"
+              >
                 <LandingImage
                   src="/landing/HeroProduct.png"
-                  alt="Zrzut ekranu aplikacji Staffer — grafik zmian"
+                  alt="Kliknij, aby zobaczyć demo"
                   placeholderText="Zrzut ekranu aplikacji"
                   fill
                   sizes="(max-width: 1024px) 100vw, 50vw"
                   priority
                 />
-              </div>
+                <div className="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <span className="w-20 h-20 rounded-full bg-white/90 flex items-center justify-center shadow-xl">
+                    <Play className="h-10 w-10 ml-1 text-brand" fill="currentColor" />
+                  </span>
+                </div>
+                <span className="absolute bottom-4 left-1/2 -translate-x-1/2 text-sm font-medium text-white/90 bg-black/40 px-4 py-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
+                  Zobacz demo
+                </span>
+              </button>
             </motion.div>
           </div>
         </div>
