@@ -31,8 +31,8 @@ export function middleware(request: NextRequest) {
     }
   }
 
-  // Na staffer.pl / www / localhost: redirect /app* do app.staffer.pl (tylko w produkcji)
-  if (!host.includes("localhost") && pathname.startsWith("/app")) {
+  // Na staffer.pl / www.staffer.pl: redirect /app* do app.staffer.pl (NIE na app.staffer.pl - inaczej pętla!)
+  if (!host.includes("localhost") && !isAppHost(host) && pathname.startsWith("/app")) {
     return NextResponse.redirect(new URL(`https://${APP_HOST}${pathname}`, request.url), 301);
   }
 
