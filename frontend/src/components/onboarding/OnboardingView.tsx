@@ -62,11 +62,11 @@ export function OnboardingView({ userId, userName, onSuccess, onLogout }: Props)
   });
 
   return (
-    <div className="flex h-screen items-center justify-center bg-slate-100">
+    <div className="flex h-screen items-center justify-center bg-brand-surface">
       <div className="max-w-md w-full p-8 bg-white rounded-xl shadow-lg space-y-8">
         <div className="text-center">
           <h1 className="text-2xl font-bold">Witaj, {userName}!</h1>
-          <p className="text-gray-500">Wybierz swoją ścieżkę.</p>
+          <p className="text-brand-dark-muted">Wybierz swoją ścieżkę.</p>
         </div>
 
         <div className="space-y-4 pt-4 border-t">
@@ -75,7 +75,7 @@ export function OnboardingView({ userId, userName, onSuccess, onLogout }: Props)
             <input
               type="text"
               placeholder="Kod Zespołu"
-              className="flex-1 p-2 border rounded bg-slate-50"
+              className="flex-1 p-2 border rounded bg-brand-warm-light"
               value={inviteCode}
               onChange={(e) => setInviteCode(e.target.value)}
               disabled={joinTeamMutation.isPending}
@@ -90,14 +90,14 @@ export function OnboardingView({ userId, userName, onSuccess, onLogout }: Props)
         </div>
 
         <div className="relative flex py-2 items-center">
-          <div className="flex-grow border-t border-gray-200"></div>
-          <span className="flex-shrink mx-4 text-gray-400 text-sm">LUB</span>
-          <div className="flex-grow border-t border-gray-200"></div>
+          <div className="flex-grow border-t border-brand-warm"></div>
+          <span className="flex-shrink mx-4 text-brand-dark-muted text-sm">LUB</span>
+          <div className="flex-grow border-t border-brand-warm"></div>
         </div>
 
         {/* ZAŁÓŻ */}
         <div className="space-y-4">
-          <h2 className="font-semibold text-slate-900">Załóż nową firmę</h2>
+          <h2 className="font-semibold text-brand-dark">Załóż nową firmę</h2>
           <div className="flex gap-2">
             <input
               type="text"

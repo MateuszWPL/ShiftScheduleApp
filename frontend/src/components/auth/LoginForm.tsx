@@ -69,7 +69,7 @@ export function LoginForm({ onSwitchToRegister, onSwitchToReset }: LoginFormProp
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
-        <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+        <label htmlFor="email" className="block text-sm font-medium text-brand-dark mb-1">
           Email
         </label>
         <input
@@ -78,13 +78,13 @@ export function LoginForm({ onSwitchToRegister, onSwitchToReset }: LoginFormProp
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
-          className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-brand focus:border-brand"
           placeholder="twoj@email.pl"
         />
       </div>
 
       <div>
-        <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+        <label htmlFor="password" className="block text-sm font-medium text-brand-dark mb-1">
           Hasło
         </label>
         <input
@@ -93,7 +93,7 @@ export function LoginForm({ onSwitchToRegister, onSwitchToReset }: LoginFormProp
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
-          className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-brand focus:border-brand"
           placeholder="Wprowadź hasło"
         />
       </div>
@@ -116,22 +116,22 @@ export function LoginForm({ onSwitchToRegister, onSwitchToReset }: LoginFormProp
 
       {/* Separator */}
       <div className="relative flex py-2 items-center">
-        <div className="flex-grow border-t border-gray-200"></div>
-        <span className="flex-shrink mx-4 text-gray-400 text-sm">LUB</span>
-        <div className="flex-grow border-t border-gray-200"></div>
+        <div className="flex-grow border-t border-brand-warm"></div>
+        <span className="flex-shrink mx-4 text-brand-dark-muted text-sm">LUB</span>
+        <div className="flex-grow border-t border-brand-warm"></div>
       </div>
 
       {/* Google Sign In */}
       <Button
         type="button"
         onClick={() => signIn("google", { callbackUrl: "/" })}
-        className="w-full bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 flex items-center justify-center gap-2"
+        className="w-full bg-white text-brand-dark border border-gray-300 hover:bg-brand-warm-light flex items-center justify-center gap-2"
       >
         <GoogleIcon />
         Zaloguj się przez Google
       </Button>
 
-      <p className="text-sm text-center text-gray-600">
+      <p className="text-sm text-center text-brand-dark-muted">
         Nie masz konta?{" "}
         <button
           type="button"

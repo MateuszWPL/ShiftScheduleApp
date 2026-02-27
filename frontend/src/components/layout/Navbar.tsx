@@ -10,12 +10,12 @@ interface NavbarProps {
 
 export function Navbar({ onLoginClick, onRegisterClick }: NavbarProps) {
   return (
-    <nav className="w-full border-b bg-white">
+    <nav className="w-full border-b border-brand-warm bg-white">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
           <Link href="/" className="flex items-center">
-            <span className="text-xl font-bold text-slate-900">Staffer.pl</span>
+            <span className="text-xl font-bold text-brand-dark">Staffer.pl</span>
           </Link>
 
           {/* Przyciski */}
@@ -23,13 +23,13 @@ export function Navbar({ onLoginClick, onRegisterClick }: NavbarProps) {
             <Button
               variant="ghost"
               onClick={onLoginClick}
-              className="text-slate-700 hover:text-slate-900"
+              className="text-brand-dark-muted hover:text-brand-dark"
             >
               Zaloguj się
             </Button>
             <Button
               onClick={onRegisterClick}
-              className="bg-orange-500 hover:bg-orange-600 text-white"
+              className="bg-brand hover:bg-brand-light text-white"
             >
               Zacznij za darmo
             </Button>

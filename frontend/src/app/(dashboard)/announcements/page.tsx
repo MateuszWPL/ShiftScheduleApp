@@ -169,7 +169,7 @@ export default function AnnouncementsPage() {
         <div className="bg-white border border-brand-warm rounded-xl p-5 shadow-sm space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="font-semibold text-brand-dark text-sm">Nowe ogłoszenie</h2>
-            <button onClick={resetForm} className="p-1 rounded-lg text-brand-dark-soft hover:text-brand-dark hover:bg-slate-100">
+            <button onClick={resetForm} className="p-1 rounded-lg text-brand-dark-soft hover:text-brand-dark hover:bg-brand-warm-light">
               <X className="h-4 w-4" />
             </button>
           </div>
@@ -213,7 +213,7 @@ export default function AnnouncementsPage() {
                       className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
                         selected
                           ? `${cfg.border} ${cfg.bg} ${cfg.badge.split(" ")[1]}`
-                          : "border-brand-warm text-brand-dark-muted hover:bg-slate-50"
+                          : "border-brand-warm text-brand-dark-muted hover:bg-brand-warm-light"
                       }`}
                     >
                       {cfg.icon}

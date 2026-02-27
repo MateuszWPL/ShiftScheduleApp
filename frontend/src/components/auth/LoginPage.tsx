@@ -33,8 +33,8 @@ export function LoginPage({ initialMode, onModeChange }: LoginPageProps) {
   if (mode === "login") {
     return (
       <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center">
-        <div className="max-w-md w-full p-8 bg-white rounded-xl shadow-lg">
-          <h1 className="text-2xl font-bold text-center mb-6">Zaloguj się</h1>
+        <div className="max-w-md w-full p-8 bg-white rounded-xl shadow-lg border border-brand-warm/50">
+          <h1 className="text-2xl font-bold text-center mb-6 text-brand-dark">Zaloguj się</h1>
           <LoginForm 
             onSwitchToRegister={() => handleModeChange("register")} 
             onSwitchToReset={() => handleModeChange("reset")}
@@ -47,8 +47,8 @@ export function LoginPage({ initialMode, onModeChange }: LoginPageProps) {
   if (mode === "reset") {
     return (
       <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center">
-        <div className="max-w-md w-full p-8 bg-white rounded-xl shadow-lg">
-          <h1 className="text-2xl font-bold text-center mb-6">Reset hasła</h1>
+        <div className="max-w-md w-full p-8 bg-white rounded-xl shadow-lg border border-brand-warm/50">
+          <h1 className="text-2xl font-bold text-center mb-6 text-brand-dark">Reset hasła</h1>
           <RequestPasswordResetForm onBack={() => handleModeChange("login")} />
         </div>
       </div>
@@ -58,8 +58,8 @@ export function LoginPage({ initialMode, onModeChange }: LoginPageProps) {
   if (mode === "register") {
     return (
       <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center">
-        <div className="max-w-md w-full p-8 bg-white rounded-xl shadow-lg">
-          <h1 className="text-2xl font-bold text-center mb-6">Zarejestruj się</h1>
+        <div className="max-w-md w-full p-8 bg-white rounded-xl shadow-lg border border-brand-warm/50">
+          <h1 className="text-2xl font-bold text-center mb-6 text-brand-dark">Zarejestruj się</h1>
           <RegisterForm onSwitchToLogin={() => handleModeChange("login")} />
         </div>
       </div>

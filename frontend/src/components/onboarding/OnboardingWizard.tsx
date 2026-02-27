@@ -137,7 +137,7 @@ export function OnboardingWizard({
     >
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
         {/* Header with skip */}
-        <div className="flex items-center justify-between px-5 py-3 border-b border-slate-100">
+        <div className="flex items-center justify-between px-5 py-3 border-b border-brand-warm">
           <div className="flex items-center gap-2">
             <span className="text-[10px] font-semibold text-brand-dark-muted uppercase tracking-wider">
               Krok {stepIndex + 1} z {STEPS.length}
@@ -145,7 +145,7 @@ export function OnboardingWizard({
           </div>
           <button
             onClick={handleSkip}
-            className="text-xs text-brand-dark-muted hover:text-brand-dark px-2 py-1 rounded-lg hover:bg-slate-100 transition-colors flex items-center gap-1"
+            className="text-xs text-brand-dark-muted hover:text-brand-dark px-2 py-1 rounded-lg hover:bg-brand-warm-light transition-colors flex items-center gap-1"
           >
             <X className="h-3.5 w-3.5" />
             Pomiń samouczek
@@ -158,7 +158,7 @@ export function OnboardingWizard({
             <div
               key={s.id}
               className={`h-1.5 rounded-full transition-all ${
-                i <= stepIndex ? "bg-brand w-6" : "bg-slate-200 w-1.5"
+                i <= stepIndex ? "bg-brand w-6" : "bg-brand-warm w-1.5"
               }`}
             />
           ))}
@@ -205,7 +205,7 @@ export function OnboardingWizard({
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between gap-3 px-5 py-4 bg-slate-50/80 border-t border-slate-100">
+        <div className="flex items-center justify-between gap-3 px-5 py-4 bg-brand-surface border-t border-brand-warm">
           <div>
             {"prev" in step && step.prev ? (
               <Button

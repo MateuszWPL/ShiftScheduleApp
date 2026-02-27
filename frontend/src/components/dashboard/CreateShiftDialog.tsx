@@ -219,14 +219,14 @@ export function CreateShiftDialog({
     >
       <div className="bg-white rounded-xl shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto">
         {/* Header */}
-        <div className="flex items-center justify-between p-5 pb-3 border-b border-slate-100">
+        <div className="flex items-center justify-between p-5 pb-3 border-b border-brand-warm">
           <div>
-            <h2 className="text-lg font-bold text-slate-800">
+            <h2 className="text-lg font-bold text-brand-dark">
               {isEdit ? "Edytuj zmianę" : "Dodaj zmianę"}
             </h2>
             {!isEdit && selectedEmployeeName && (
-              <p className="text-sm text-slate-500 mt-0.5">
-                Dla: <span className="font-medium text-slate-700">{selectedEmployeeName}</span>
+              <p className="text-sm text-brand-dark-muted mt-0.5">
+                Dla: <span className="font-medium text-brand-dark">{selectedEmployeeName}</span>
               </p>
             )}
           </div>
@@ -242,7 +242,7 @@ export function CreateShiftDialog({
 
         <div className="p-5 space-y-4">
           {!isEdit && (
-            <p className="text-xs text-slate-400">
+            <p className="text-xs text-brand-dark-soft">
               Zmiana zostanie utworzona jako{" "}
               <Badge
                 variant="outline"
@@ -255,14 +255,14 @@ export function CreateShiftDialog({
 
           {/* Position selector */}
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1.5">
-              <Briefcase className="inline h-3.5 w-3.5 mr-1 text-slate-400" />
+            <label className="block text-sm font-medium text-brand-dark mb-1.5">
+              <Briefcase className="inline h-3.5 w-3.5 mr-1 text-brand-dark-soft" />
               Stanowisko <span className="text-red-500">*</span>
             </label>
             {positions.length > 0 ? (
               <>
                 <select
-                  className="w-full p-2.5 border border-slate-300 rounded-lg bg-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
+                  className="w-full p-2.5 border border-brand-warm rounded-lg bg-white text-sm focus:ring-2 focus:ring-brand focus:border-brand outline-none transition-colors"
                   value={positionId}
                   onChange={(e) => {
                     setPositionId(e.target.value);
@@ -281,7 +281,7 @@ export function CreateShiftDialog({
                   <input
                     type="text"
                     placeholder="Nazwa stanowiska"
-                    className="w-full mt-2 p-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
+                    className="w-full mt-2 p-2.5 border border-brand-warm rounded-lg text-sm focus:ring-2 focus:ring-brand focus:border-brand outline-none transition-colors"
                     value={customRoleName}
                     onChange={(e) => {
                       setCustomRoleName(e.target.value);
@@ -296,7 +296,7 @@ export function CreateShiftDialog({
                       className="w-2.5 h-2.5 rounded-full"
                       style={{ backgroundColor: selectedPosition.color }}
                     />
-                    <span className="text-[11px] text-slate-400">
+                    <span className="text-[11px] text-brand-dark-soft">
                       {selectedPosition._count?.employees ?? 0} pracowników na tym stanowisku
                     </span>
                   </div>
@@ -306,7 +306,7 @@ export function CreateShiftDialog({
               <input
                 type="text"
                 placeholder="np. Kelner, Barista, Kucharz"
-                className="w-full p-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
+                className="w-full p-2.5 border border-brand-warm rounded-lg text-sm focus:ring-2 focus:ring-brand focus:border-brand outline-none transition-colors"
                 value={customRoleName}
                 onChange={(e) => setCustomRoleName(e.target.value)}
                 autoFocus
@@ -316,12 +316,12 @@ export function CreateShiftDialog({
 
           {/* Date */}
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1.5">
+            <label className="block text-sm font-medium text-brand-dark mb-1.5">
               Data <span className="text-red-500">*</span>
             </label>
             <input
               type="date"
-              className="w-full p-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
+              className="w-full p-2.5 border border-brand-warm rounded-lg text-sm focus:ring-2 focus:ring-brand focus:border-brand outline-none transition-colors"
               value={shiftDate}
               onChange={(e) => setShiftDate(e.target.value)}
             />
@@ -329,8 +329,8 @@ export function CreateShiftDialog({
 
           {/* Time picker row */}
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1.5">
-              <Clock className="inline h-3.5 w-3.5 mr-1 text-slate-400" />
+            <label className="block text-sm font-medium text-brand-dark mb-1.5">
+              <Clock className="inline h-3.5 w-3.5 mr-1 text-brand-dark-soft" />
               Godziny <span className="text-red-500">*</span>
               {durationStr && (
                 <span className="ml-2 font-normal text-blue-600 text-xs">
@@ -340,7 +340,7 @@ export function CreateShiftDialog({
             </label>
             <div className="flex items-center gap-2">
               <select
-                className="flex-1 p-2.5 border border-slate-300 rounded-lg bg-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
+                className="flex-1 p-2.5 border border-brand-warm rounded-lg bg-white text-sm focus:ring-2 focus:ring-brand focus:border-brand outline-none transition-colors"
                 value={startTime}
                 onChange={(e) => {
                   setStartTime(e.target.value);
@@ -361,9 +361,9 @@ export function CreateShiftDialog({
                   </option>
                 ))}
               </select>
-              <span className="text-slate-400 font-medium">—</span>
+              <span className="text-brand-dark-soft font-medium">—</span>
               <select
-                className="flex-1 p-2.5 border border-slate-300 rounded-lg bg-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
+                className="flex-1 p-2.5 border border-brand-warm rounded-lg bg-white text-sm focus:ring-2 focus:ring-brand focus:border-brand outline-none transition-colors"
                 value={endTime}
                 onChange={(e) => setEndTime(e.target.value)}
               >
@@ -379,16 +379,16 @@ export function CreateShiftDialog({
           {/* Assign to employee (only for create mode) */}
           {!isEdit && (
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1.5">
+              <label className="block text-sm font-medium text-brand-dark mb-1.5">
                 Przypisz do
                 {positionId && positionId !== "__custom__" && (
-                  <span className="ml-1 text-xs font-normal text-blue-500">
+                  <span className="ml-1 text-xs font-normal text-brand">
                     (filtrowane wg stanowiska)
                   </span>
                 )}
               </label>
               <select
-                className="w-full p-2.5 border border-slate-300 rounded-lg bg-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
+                className="w-full p-2.5 border border-brand-warm rounded-lg bg-white text-sm focus:ring-2 focus:ring-brand focus:border-brand outline-none transition-colors"
                 value={assignToId}
                 onChange={(e) => setAssignToId(e.target.value)}
               >
@@ -439,18 +439,18 @@ export function CreateShiftDialog({
 
           {/* Marketplace checkbox (only for create mode) */}
           {!isEdit && (
-            <label className="flex items-center gap-2.5 cursor-pointer p-2.5 rounded-lg border border-slate-200 hover:bg-slate-50 transition-colors">
+            <label className="flex items-center gap-2.5 cursor-pointer p-2.5 rounded-lg border border-brand-warm hover:bg-brand-warm-light transition-colors">
               <input
                 type="checkbox"
                 checked={isUpForGrabs}
                 onChange={(e) => setIsUpForGrabs(e.target.checked)}
-                className="rounded border-gray-300 h-4 w-4"
+                className="rounded border-brand-warm h-4 w-4"
               />
               <div>
-                <span className="text-sm font-medium text-slate-700">
+                <span className="text-sm font-medium text-brand-dark">
                   Wystaw na giełdę
                 </span>
-                <p className="text-xs text-slate-500 mt-0.5">
+                <p className="text-xs text-brand-dark-muted mt-0.5">
                   Pracownicy będą mogli przejąć tę zmianę
                 </p>
               </div>
@@ -458,7 +458,7 @@ export function CreateShiftDialog({
           )}
 
           {/* Actions */}
-          <div className="flex gap-2 justify-end pt-3 border-t border-slate-100">
+          <div className="flex gap-2 justify-end pt-3 border-t border-brand-warm">
             <Button variant="ghost" onClick={handleClose}>
               Anuluj
             </Button>

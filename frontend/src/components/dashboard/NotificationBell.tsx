@@ -94,7 +94,7 @@ export function NotificationBell({ align = "right" }: { align?: "left" | "right"
 
       {open && (
         <div className={`fixed top-24 left-2 right-2 w-auto z-50 md:absolute md:top-full md:mt-2 md:left-auto md:right-0 md:w-[360px] md:max-w-[360px] bg-white rounded-xl shadow-2xl border border-slate-200 overflow-hidden ${align === "left" ? "md:left-0 md:right-auto" : ""}`}>
-          <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 bg-slate-50">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-brand-warm bg-brand-surface">
             <h3 className="font-semibold text-slate-800 text-sm">Powiadomienia</h3>
             <div className="flex items-center gap-1">
               {unreadCount > 0 && (
@@ -127,7 +127,7 @@ export function NotificationBell({ align = "right" }: { align?: "left" | "right"
               notifications.map((n: Notification) => (
                 <div
                   key={n.id}
-                  className={`flex items-start gap-3 px-4 py-3 border-b border-slate-50 transition-colors cursor-pointer hover:bg-slate-50 ${
+                  className={`flex items-start gap-3 px-4 py-3 border-b border-brand-warm/30 transition-colors cursor-pointer hover:bg-brand-warm-light ${
                     !n.read ? "bg-blue-50/40" : ""
                   }`}
                   onClick={() => {

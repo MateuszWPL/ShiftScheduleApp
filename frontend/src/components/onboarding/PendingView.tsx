@@ -11,7 +11,7 @@ interface Props {
 
 export function PendingView({ userName, onLogout }: Props) {
   return (
-    <div className="flex h-screen items-center justify-center bg-slate-100">
+    <div className="flex h-screen items-center justify-center bg-brand-surface">
       <div className="max-w-md w-full p-8 bg-white rounded-xl shadow-lg space-y-6 text-center">
         <div className="flex justify-center">
           <div className="p-4 bg-yellow-50 rounded-full">
@@ -20,8 +20,8 @@ export function PendingView({ userName, onLogout }: Props) {
         </div>
 
         <div className="space-y-2">
-          <h1 className="text-2xl font-bold text-slate-900">Czekasz na akceptację</h1>
-          <p className="text-gray-600">
+          <h1 className="text-2xl font-bold text-brand-dark">Czekasz na akceptację</h1>
+          <p className="text-brand-dark-muted">
             Witaj, <span className="font-semibold">{userName}</span>!
           </p>
         </div>

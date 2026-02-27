@@ -11,7 +11,7 @@ export default function PanelPage() {
   }, [router]);
 
   return (
-    <div className="flex items-center justify-center h-64 text-slate-500">
+    <div className="flex items-center justify-center h-64 text-brand-dark-muted">
       Przekierowanie do grafiku...
     </div>
   );

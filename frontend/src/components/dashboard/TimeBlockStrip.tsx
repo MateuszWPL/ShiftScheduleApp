@@ -270,7 +270,7 @@ export function TimeBlockStrip({
     <div className={`select-none ${compact ? "" : ""}`}>
       {showLabel && label && (
         <div className="flex items-center justify-between mb-1">
-          <span className="text-sm font-medium text-slate-700">{label}</span>
+          <span className="text-sm font-medium text-brand-dark">{label}</span>
         </div>
       )}
 
@@ -278,8 +278,8 @@ export function TimeBlockStrip({
         ref={stripRef}
         role="slider"
         aria-label={`Pasmo godzin ${label || ""}`}
-        className={`relative w-full bg-slate-50 cursor-crosshair overflow-hidden touch-none ${
-          compact ? "rounded-none" : "rounded-lg border border-slate-200"
+        className={`relative w-full bg-brand-warm-light cursor-crosshair overflow-hidden touch-none ${
+          compact ? "rounded-none" : "rounded-lg border border-brand-warm"
         }`}
         style={{ height }}
         onMouseDown={handleStripMouseDown}
@@ -291,10 +291,10 @@ export function TimeBlockStrip({
             key={`line-${h}`}
             className={`absolute top-0 bottom-0 ${
               h % 6 === 0
-                ? "border-l border-slate-300"
+                ? "border-l border-brand-blue"
                 : h % 3 === 0
-                ? "border-l border-slate-200"
-                : "border-l border-slate-100"
+                ? "border-l border-brand-warm"
+                : "border-l border-brand-warm/50"
             }`}
             style={{ left: `${(h / 24) * 100}%` }}
           />
@@ -305,7 +305,7 @@ export function TimeBlockStrip({
           HOURS.filter((h) => h % 3 === 0).map((h) => (
             <span
               key={`label-${h}`}
-              className="absolute text-[9px] text-slate-400 pointer-events-none select-none"
+              className="absolute text-[9px] text-brand-dark-soft pointer-events-none select-none"
               style={{
                 left: `${(h / 24) * 100}%`,
                 top: "1px",
@@ -320,7 +320,7 @@ export function TimeBlockStrip({
         {blocks.map((b) => (
           <div
             key={b.id ?? `saved-${b.startMin}-${b.endMin}`}
-            className="absolute rounded-md bg-blue-500/80 border border-blue-600/40 flex items-center justify-between px-1 group"
+            className="absolute rounded-md bg-brand-blue/80 border border-brand-blue flex items-center justify-between px-1 group"
             style={{
               left: `${minToPercent(b.startMin)}%`,
               width: `${minToPercent(b.endMin - b.startMin)}%`,

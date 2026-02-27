@@ -124,7 +124,7 @@ export function CopyWeekDialog({ isOpen, onClose, currentWeekStart, onNavigateTo
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[85vh] flex flex-col overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-brand-warm">
           <div className="flex items-center gap-2.5">
             <div className="w-9 h-9 rounded-xl bg-brand-muted flex items-center justify-center">
               <Copy className="h-4 w-4 text-brand" />
@@ -136,7 +136,7 @@ export function CopyWeekDialog({ isOpen, onClose, currentWeekStart, onNavigateTo
               </p>
             </div>
           </div>
-          <button onClick={handleClose} className="p-2 rounded-lg hover:bg-gray-100 transition-colors text-brand-dark-muted hover:text-brand-dark">
+          <button onClick={handleClose} className="p-2 rounded-lg hover:bg-brand-warm-light transition-colors text-brand-dark-muted hover:text-brand-dark">
             <X className="h-5 w-5" />
           </button>
         </div>
@@ -148,7 +148,7 @@ export function CopyWeekDialog({ isOpen, onClose, currentWeekStart, onNavigateTo
               {/* Source week */}
               <div>
                 <label className="text-xs font-medium text-brand-dark-muted uppercase tracking-wider">Źródłowy tydzień</label>
-                <div className="mt-1.5 p-3 bg-gray-50 border border-gray-200 rounded-xl flex items-center gap-2">
+                <div className="mt-1.5 p-3 bg-brand-warm-light border border-brand-warm rounded-xl flex items-center gap-2">
                   <Clock className="h-4 w-4 text-brand-dark-soft" />
                   <span className="text-sm font-semibold text-brand-dark">{formatWeekRange(sourceMonday)}</span>
                 </div>
@@ -161,7 +161,7 @@ export function CopyWeekDialog({ isOpen, onClose, currentWeekStart, onNavigateTo
                   <button
                     onClick={() => setTargetOffset((v) => Math.max(-12, v - 1))}
                     disabled={targetOffset <= -12}
-                    className="w-9 h-9 rounded-lg border border-gray-200 flex items-center justify-center text-brand-dark-muted hover:bg-gray-50 disabled:opacity-30 transition-colors"
+                    className="w-9 h-9 rounded-lg border border-brand-warm flex items-center justify-center text-brand-dark-muted hover:bg-brand-warm-light disabled:opacity-30 transition-colors"
                   >
                     ‹
                   </button>
@@ -174,7 +174,7 @@ export function CopyWeekDialog({ isOpen, onClose, currentWeekStart, onNavigateTo
                   <button
                     onClick={() => setTargetOffset((v) => Math.min(12, v + 1))}
                     disabled={targetOffset >= 12}
-                    className="w-9 h-9 rounded-lg border border-gray-200 flex items-center justify-center text-brand-dark-muted hover:bg-gray-50 disabled:opacity-30 transition-colors"
+                    className="w-9 h-9 rounded-lg border border-brand-warm flex items-center justify-center text-brand-dark-muted hover:bg-brand-warm-light disabled:opacity-30 transition-colors"
                   >
                     ›
                   </button>
@@ -193,7 +193,7 @@ export function CopyWeekDialog({ isOpen, onClose, currentWeekStart, onNavigateTo
                 <div className="mt-1.5 space-y-2">
                   <label
                     className={`flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition-colors ${
-                      !structureOnly ? "border-brand bg-brand-muted/30" : "border-gray-200 hover:bg-gray-50"
+                      !structureOnly ? "border-brand bg-brand-muted/30" : "border-brand-warm hover:bg-brand-warm-light"
                     }`}
                   >
                     <input
@@ -210,7 +210,7 @@ export function CopyWeekDialog({ isOpen, onClose, currentWeekStart, onNavigateTo
                   </label>
                   <label
                     className={`flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition-colors ${
-                      structureOnly ? "border-brand bg-brand-muted/30" : "border-gray-200 hover:bg-gray-50"
+                      structureOnly ? "border-brand bg-brand-muted/30" : "border-brand-warm hover:bg-brand-warm-light"
                     }`}
                   >
                     <input
@@ -253,7 +253,7 @@ export function CopyWeekDialog({ isOpen, onClose, currentWeekStart, onNavigateTo
                     {preview.map((item, i) => (
                       <div
                         key={i}
-                        className="flex items-center justify-between gap-3 p-3 rounded-xl bg-gray-50 border border-gray-100 text-sm"
+                        className="flex items-center justify-between gap-3 p-3 rounded-xl bg-brand-warm-light border border-brand-warm text-sm"
                       >
                         <div className="min-w-0">
                           <div className="flex items-center gap-2">
@@ -284,7 +284,7 @@ export function CopyWeekDialog({ isOpen, onClose, currentWeekStart, onNavigateTo
         </div>
 
         {/* Footer */}
-        <div className="px-5 py-4 border-t border-gray-100 flex items-center justify-between gap-3">
+        <div className="px-5 py-4 border-t border-brand-warm flex items-center justify-between gap-3">
           {step === "preview" && (
             <Button
               variant="ghost"

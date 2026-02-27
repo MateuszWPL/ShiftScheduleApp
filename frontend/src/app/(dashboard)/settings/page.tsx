@@ -308,7 +308,7 @@ export default function SettingsPage() {
             className={`flex items-center gap-2 px-3 sm:px-4 py-2 rounded-lg text-sm font-medium transition-colors flex-1 min-w-0 justify-center shrink-0 touch-manipulation ${
               activeTab === tab.id
                 ? "bg-brand/10 text-brand"
-                : "text-brand-dark-muted hover:text-brand-dark hover:bg-slate-50"
+                : "text-brand-dark-muted hover:text-brand-dark hover:bg-brand-warm-light"
             }`}
           >
             {tab.icon}
@@ -428,7 +428,7 @@ export default function SettingsPage() {
                   {positions.map((pos) => (
                     <div
                       key={pos.id}
-                      className="flex items-center gap-3 p-3 rounded-lg border border-brand-warm bg-white hover:bg-slate-50/50 transition-colors group"
+                      className="flex items-center gap-3 p-3 rounded-lg border border-brand-warm bg-white hover:bg-brand-warm-light/50 transition-colors group"
                     >
                       {editingPosId === pos.id ? (
                         <>

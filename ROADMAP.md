@@ -132,7 +132,7 @@ Audyt zakończony. Wszystkie punkty przeanalizowane; elementy do rozbudowy w 2.6
 - [x] Rate limiting per-user — PerUserThrottlerGuard: klucz user-{userId} lub ip-{ip}; Redis storage opcjonalnie przy skalowaniu
 - [x] Sesje: wylogowanie ze wszystkich urzadzen — User.tokenVersion, JWT payload v, endpoint revoke-all, przycisk w Profilu
 - [ ] Logowanie bledow (Sentry) + exception filter (brak stack w prod)
-- [ ] Backup bazy — wdrozenie na infra (pg_dump / Neon)
+- [x] Backup bazy — skrypty pg_dump (scripts/), strategia w docs/BACKUP_DATABASE.md; Neon: PITR w console
 
 ---
 
@@ -211,7 +211,7 @@ Audyt zakończony. Wszystkie punkty przeanalizowane; elementy do rozbudowy w 2.6
 > Priorytet: KONCOWY | Cel: Wyglad, branding, launch
 
 ### 4.1 UI/UX — Kolory i branding
-- [ ] Wdrozenie wlasnej palety kolorow (brand colors)
+- [x] Wdrozenie wlasnej palety kolorow (brand colors: #FF8400, #8FACDB, #F9DFC6, #0B0829)
 - [ ] Dark mode (opcjonalnie)
 - [ ] Animacje i mikro-interakcje (framer-motion)
 - [ ] Spójny design system (wszystkie komponenty)

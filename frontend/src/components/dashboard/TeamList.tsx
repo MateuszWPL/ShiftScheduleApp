@@ -39,7 +39,7 @@ export function TeamList({ currentUserId, currentUserRole }: Props) {
 
         <div className="space-y-3">
           {members?.map((member: User) => (
-            <div key={member.id} className="flex justify-between items-center p-3 border rounded-lg hover:bg-slate-50 transition">
+            <div key={member.id} className="flex justify-between items-center p-3 border rounded-lg hover:bg-brand-warm-light transition">
               <div>
                 <div className="flex items-center gap-2">
                   <p className="text-sm font-bold text-slate-900">{member.name}</p>

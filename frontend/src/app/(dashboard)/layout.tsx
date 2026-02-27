@@ -29,10 +29,10 @@ export default function DashboardGroupLayout({
 
   if (gate.status === "loading" || gate.status === "syncing") {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+      <div className="min-h-screen flex items-center justify-center bg-brand-surface">
         <div className="text-center space-y-2">
-          <div className="animate-spin h-8 w-8 border-4 border-gray-300 border-t-blue-500 rounded-full mx-auto" />
-          <p className="text-sm text-gray-600">
+          <div className="animate-spin h-8 w-8 border-4 border-brand-warm border-t-brand rounded-full mx-auto" />
+          <p className="text-sm text-brand-dark-muted">
             {gate.status === "syncing" ? "Ładujemy Twoje konto..." : "Ładowanie..."}
           </p>
         </div>
@@ -42,7 +42,7 @@ export default function DashboardGroupLayout({
 
   if (gate.status === "unauthenticated") {
     return (
-      <div className="min-h-screen bg-slate-100">
+        <div className="min-h-screen bg-brand-surface">
         <Navbar
           onLoginClick={() => setAuthMode("login")}
           onRegisterClick={() => setAuthMode("register")}
@@ -88,8 +88,8 @@ export default function DashboardGroupLayout({
 
   if (gate.status !== "ready" || !gate.dbUser) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
-        <p className="text-sm text-gray-600">Przygotowujemy pulpit...</p>
+        <div className="min-h-screen flex items-center justify-center bg-brand-surface">
+        <p className="text-sm text-brand-dark-muted">Przygotowujemy pulpit...</p>
       </div>
     );
   }

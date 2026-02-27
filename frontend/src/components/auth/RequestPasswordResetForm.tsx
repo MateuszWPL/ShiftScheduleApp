@@ -50,7 +50,7 @@ export function RequestPasswordResetForm({ onBack }: RequestPasswordResetFormPro
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
-        <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+        <label htmlFor="email" className="block text-sm font-medium text-brand-dark mb-1">
           Email
         </label>
         <input
@@ -59,7 +59,7 @@ export function RequestPasswordResetForm({ onBack }: RequestPasswordResetFormPro
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
-          className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-brand focus:border-brand"
           placeholder="twoj@email.pl"
         />
       </div>

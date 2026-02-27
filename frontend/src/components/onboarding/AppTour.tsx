@@ -224,7 +224,7 @@ export function AppTour({ onClose, userRole = "EMPLOYEE" }: Props) {
                 <div
                   key={i}
                   className={`h-1.5 rounded-full w-1.5 transition-all ${
-                    i <= step ? "bg-brand" : "bg-slate-200"
+                    i <= step ? "bg-brand" : "bg-brand-warm"
                   }`}
                 />
               ))}
