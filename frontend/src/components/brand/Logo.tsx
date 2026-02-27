@@ -20,7 +20,7 @@ export function Logo({ variant = "full", className = "", showPl = true }: LogoPr
 
   if (variant === "icon") {
     return (
-      <svg viewBox="0 0 40 40" className={className} aria-hidden>
+      <svg viewBox="0 -1 40 42" className={className} aria-hidden>
         {icon}
       </svg>
     );
@@ -28,12 +28,12 @@ export function Logo({ variant = "full", className = "", showPl = true }: LogoPr
 
   return (
     <svg
-      viewBox="0 0 220 40"
-      className={`w-auto flex-shrink-0 ${className}`}
+      viewBox="0 -1 220 43"
+      className={`h-8 w-auto flex-shrink-0 ${className}`}
       preserveAspectRatio="xMinYMid meet"
       aria-label="Staffer"
     >
-      <g transform="translate(0, 6)">{icon}</g>
+      {icon}
       <text
         x="48"
         y="28"
