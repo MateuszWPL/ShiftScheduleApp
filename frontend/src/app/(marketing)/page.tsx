@@ -7,7 +7,7 @@ import { FeaturesSection } from "@/components/marketing/FeaturesSection";
 import { TestimonialsSection } from "@/components/marketing/TestimonialsSection";
 import { FAQSection } from "@/components/marketing/FAQSection";
 import { BigCTABanner } from "@/components/marketing/BigCTABanner";
-import { CTASection } from "@/components/marketing/CTASection";
+import { ContactSection } from "@/components/marketing/ContactSection";
 
 export default function MarketingHomePage() {
   return (
@@ -21,7 +21,7 @@ export default function MarketingHomePage() {
       <TestimonialsSection />
       <FAQSection />
       <BigCTABanner />
-      <CTASection />
+      <ContactSection />
     </div>
   );
 }

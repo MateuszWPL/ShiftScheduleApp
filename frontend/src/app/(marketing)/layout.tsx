@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
-import { AnnouncementBanner } from "@/components/marketing/AnnouncementBanner";
-import { MarketingNavbar } from "@/components/marketing/MarketingNavbar";
+import { LayoutHeader } from "@/components/marketing/LayoutHeader";
 import { MarketingFooter } from "@/components/marketing/MarketingFooter";
 
 export const metadata: Metadata = {
@@ -21,8 +20,7 @@ export default function MarketingLayout({
 }) {
   return (
     <div className="min-h-screen bg-brand-surface">
-      <AnnouncementBanner />
-      <MarketingNavbar />
+      <LayoutHeader />
       <main>{children}</main>
       <MarketingFooter />
     </div>

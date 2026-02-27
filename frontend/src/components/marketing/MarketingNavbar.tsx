@@ -21,13 +21,14 @@ export function MarketingNavbar() {
     { href: "/cennik", label: "Cennik" },
     { href: "/blog", label: "Blog" },
     { href: "#co-oferujemy", label: "Funkcje" },
+    { href: "/kontakt", label: "Kontakt" },
   ];
 
   return (
-    <header
-      className={`sticky top-0 z-50 w-full transition-all duration-300 ${
+    <nav
+      className={`w-full transition-all duration-300 ${
         scrolled
-          ? "bg-brand-dark/95 backdrop-blur-xl shadow-lg shadow-brand-dark/20 border-b border-brand-dark/50"
+          ? "bg-white/80 backdrop-blur-xl border-b border-brand-warm/40 shadow-lg shadow-black/5"
           : "bg-white/95 backdrop-blur-md border-b border-brand-warm/50"
       }`}
     >
@@ -39,32 +40,26 @@ export function MarketingNavbar() {
           <Logo showPl />
         </Link>
 
-        <nav className="hidden md:flex items-center gap-1">
+        <div className="hidden md:flex items-center gap-1">
           {navLinks.map((link) => (
             <Link
               key={link.href}
               href={link.href}
-              className={`px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 ${
-                scrolled
-                  ? "text-white/90 hover:text-white hover:bg-white/10"
-                  : "text-brand-dark-muted hover:text-brand-dark hover:bg-brand-warm-light/50"
-              }`}
+              className="px-4 py-2 text-sm font-medium rounded-lg text-brand-dark-muted hover:text-brand-dark hover:bg-brand-warm-light/50 transition-all duration-200"
             >
               {link.label}
             </Link>
           ))}
           <Link
             href={APP_URL}
-            className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${
-              scrolled ? "text-white/90 hover:text-white" : "text-brand-dark-muted hover:text-brand-dark"
-            }`}
+            className="px-4 py-2 text-sm font-medium rounded-lg text-brand-dark-muted hover:text-brand-dark"
           >
             Zaloguj się
           </Link>
-        </nav>
+        </div>
 
         <div className="hidden md:block">
-          <Button asChild size="lg" className="cursor-pointer bg-brand hover:bg-brand-light text-white font-semibold shadow-lg shadow-brand/25 hover:shadow-xl hover:shadow-brand/30 transition-all hover:scale-[1.02]">
+          <Button asChild size="lg" className="cursor-pointer bg-brand hover:bg-brand-light text-white font-semibold shadow-lg shadow-brand/25 transition-all hover:scale-[1.02]">
             <a href={APP_URL}>Zacznij za darmo</a>
           </Button>
         </div>
@@ -91,20 +86,14 @@ export function MarketingNavbar() {
               {link.label}
             </Link>
           ))}
-          <Link
-            href={APP_URL}
-            className="block py-2 text-brand-dark-muted"
-            onClick={() => setMobileOpen(false)}
-          >
+          <Link href={APP_URL} className="block py-2 text-brand-dark-muted" onClick={() => setMobileOpen(false)}>
             Zaloguj się
           </Link>
           <Button asChild className="w-full mt-4 cursor-pointer bg-brand text-white">
-            <a href={APP_URL} onClick={() => setMobileOpen(false)}>
-              Zacznij za darmo
-            </a>
+            <a href={APP_URL} onClick={() => setMobileOpen(false)}>Zacznij za darmo</a>
           </Button>
         </div>
       )}
-    </header>
+    </nav>
   );
 }

@@ -9,8 +9,8 @@ import {
   Mail,
   FileText,
   Shield,
-  Calendar,
   BarChart3,
+  Calendar,
   BookOpen,
 } from "lucide-react";
 
@@ -28,7 +28,7 @@ const LEGAL_LINKS = [
 
 export function MarketingFooter() {
   return (
-    <footer className="border-t border-brand-warm bg-brand-dark text-white">
+    <footer className="border-t border-brand-warm bg-[#252240] text-white">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-16">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 lg:gap-12">
           <div className="lg:col-span-1">
@@ -36,8 +36,8 @@ export function MarketingFooter() {
               <Logo variant="full" showPl inverted className="h-8" />
             </Link>
             <p className="mt-4 text-sm text-white/70 max-w-xs">
-              Prosty grafik zmian dla restauracji, sklepów i usług. Bez chaosu, bez
-              Excela.
+              Prosty grafik zmian dla restauracji, sklepów i usług. Bez chaosu,
+              bez Excela.
             </p>
             <Button
               asChild
@@ -89,11 +89,17 @@ export function MarketingFooter() {
             <h3 className="font-semibold text-sm uppercase tracking-wider text-white/90 mb-4">
               Kontakt
             </h3>
-            <a
-              href="mailto:kontakt@staffer.pl"
+            <Link
+              href="/kontakt"
               className="text-sm text-white/70 hover:text-white transition-colors inline-flex items-center gap-2"
             >
               <Mail className="h-4 w-4 opacity-60" />
+              Formularz kontaktowy
+            </Link>
+            <a
+              href="mailto:kontakt@staffer.pl"
+              className="block mt-2 text-sm text-white/70 hover:text-white transition-colors"
+            >
               kontakt@staffer.pl
             </a>
           </div>

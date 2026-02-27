@@ -1,6 +1,8 @@
 # ShiftApp B2B — Plan rozwoju aplikacji
 
-## Status aktualny
+## Status aktualny (luty 2025)
+
+**Etap:** FAZA 2 zakończona, FAZA 4 (marketing) w toku. Landing page przebudowany. Gotowe do monetyzacji (FAZA 3) lub dalszego polisha.
 
 ### Co mamy (gotowe):
 - Logowanie / rejestracja (Google OAuth + email/haslo)
@@ -222,7 +224,7 @@ Audyt zakończony. Wszystkie punkty przeanalizowane; elementy do rozbudowy w 2.6
 - [x] Spójny design system (wszystkie komponenty – brand, semantic success/warning/error)
 - [x] Ikony i ilustracje brandowe (Logo SVG, favicon, ilustracje empty state)
 
-### 4.2 Landing Page — zrobione
+### 4.2 Landing Page — zrobione ✅
 - [x] Strona glowna z prezentacja funkcji (hero, features, testimonials)
 - [x] Sekcja cennikowa (pricing) — /cennik
 - [x] Testimonials / social proof
@@ -230,6 +232,22 @@ Audyt zakończony. Wszystkie punkty przeanalizowane; elementy do rozbudowy w 2.6
 - [x] SEO (meta tags, Open Graph, sitemap.ts, robots.ts)
 - [x] Blog / baza wiedzy — Velite + MD, content/blog/*.md
 - [x] Domeny: staffer.pl, www.staffer.pl, app.staffer.pl (middleware host-based routing)
+
+### 4.2b Landing Page — przebudowa marketingowa (2025) ✅
+- [x] Navbar: glass effect przy scrollu, banner „14 dni za darmo” wraca przy powrocie na górę
+- [x] Hero: rotujący headline („bez chaosu”, „w 5 minut”, „bez Excela”…), video popup po kliknięciu grafiki
+- [x] Sekcja Stats: animowane liczniki, ikony ze spring animation
+- [x] „Wszystkie plany zawierają”: sticky lewa kolumna + scroll-driven zmiana opisu, siatka funkcji
+- [x] How it works: timeline ze scroll-podświetlaniem kroków
+- [x] Tabs „Co możesz zrobić w aplikacji” (Grafik, Giełda, Zespół…)
+- [x] Features: konkretny copy, hooki, layout horyzontalny
+- [x] Testimonials: slider, 6 opinii, przyciski nawigacji
+- [x] FAQ: 2×3 kolumny, zawsze rozwinięte, kreska pod pytaniem
+- [x] Banner CTA: pełna szerokość, gradient, lista plusów, TrustBadges
+- [x] Sekcja kontaktowa zamiast ostatniego CTA
+- [x] Strona /kontakt z formularzem
+- [x] Stopka: lżejszy kolor (#252240), link Kontakt
+- [ ] Grafiki: placeholdery w public/landing/ — do uzupełnienia przez użytkownika (HeroProduct, Step1–3, Tab*, BigCTAGraphic, BannerBg)
 
 ### 4.3 Prawne i compliance
 - [ ] Polityka prywatnosci (RODO/GDPR)
