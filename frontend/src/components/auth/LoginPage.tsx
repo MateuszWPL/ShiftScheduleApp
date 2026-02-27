@@ -35,8 +35,8 @@ export function LoginPage({ initialMode, onModeChange }: LoginPageProps) {
     return (
       <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center">
         <div className="max-w-md w-full p-8 bg-white rounded-xl shadow-lg border border-brand-warm/50">
-          <div className="flex justify-center mb-6">
-            <LoginWelcomeIllustration className="max-h-[80px]" />
+          <div className="flex justify-center items-center mb-6 min-h-[80px]">
+            <LoginWelcomeIllustration />
           </div>
           <h1 className="text-2xl font-bold text-center mb-6 text-brand-dark">Zaloguj się</h1>
           <LoginForm 
@@ -63,8 +63,8 @@ export function LoginPage({ initialMode, onModeChange }: LoginPageProps) {
     return (
       <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center">
         <div className="max-w-md w-full p-8 bg-white rounded-xl shadow-lg border border-brand-warm/50">
-          <div className="flex justify-center mb-6">
-            <LoginWelcomeIllustration className="max-h-[80px]" />
+          <div className="flex justify-center items-center mb-6 min-h-[80px]">
+            <LoginWelcomeIllustration />
           </div>
           <h1 className="text-2xl font-bold text-center mb-6 text-brand-dark">Zarejestruj się</h1>
           <RegisterForm onSwitchToLogin={() => handleModeChange("login")} />

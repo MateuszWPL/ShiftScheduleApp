@@ -28,8 +28,9 @@ export function Logo({ variant = "full", className = "", showPl = true }: LogoPr
 
   return (
     <svg
-      viewBox="0 0 200 40"
-      className={`h-full w-auto max-w-[200px] ${className}`}
+      viewBox="0 0 220 40"
+      className={`h-8 w-auto flex-shrink-0 ${className}`}
+      preserveAspectRatio="xMinYMid meet"
       aria-label="Staffer"
     >
       <g transform="translate(0, 6)">{icon}</g>
