@@ -21,7 +21,7 @@ export function LoginWelcomeIllustration({ className = "" }: { className?: strin
       <circle cx="85" cy="55" r="8" fill="#FF8400" />
       {/* Małe kółka – ludzie / zespoły */}
       <circle cx="55" cy="75" r="4" fill="#8FACDB" opacity="0.7" />
-      <circle cx="70" cy="80" r="4" fill="#8FACDB" opacity="0.5" />
+      <circle cx="70" cy="75" r="4" fill="#8FACDB" opacity="0.5" />
       <circle cx="85" cy="75" r="4" fill="#FF8400" opacity="0.7" />
     </svg>
   );

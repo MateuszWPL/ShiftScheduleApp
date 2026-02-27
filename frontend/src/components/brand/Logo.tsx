@@ -29,7 +29,7 @@ export function Logo({ variant = "full", className = "", showPl = true }: LogoPr
   return (
     <svg
       viewBox="0 0 220 40"
-      className={`h-8 w-auto flex-shrink-0 ${className}`}
+      className={`h-full max-h-8 w-auto flex-shrink-0 ${className}`}
       preserveAspectRatio="xMinYMid meet"
       aria-label="Staffer"
     >
