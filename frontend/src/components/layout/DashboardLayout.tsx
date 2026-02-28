@@ -1,6 +1,8 @@
 "use client";
 
 import { usePathname } from "next/navigation";
+import { useQuery } from "@tanstack/react-query";
+import { getPlanStatus } from "@/lib/api";
 import { AppTour } from "@/components/onboarding/AppTour";
 import { Button } from "@/components/ui/button";
 import {
@@ -17,7 +19,6 @@ import {
   Copy,
   Crown,
   Settings,
-  CreditCard,
 } from "lucide-react";
 import { Avatar } from "@/components/ui/avatar";
 import { NotificationBell } from "@/components/dashboard/NotificationBell";
@@ -71,6 +72,12 @@ export function DashboardLayout({ children, userRole, userName, userAvatar, onLo
   const isAdmin = userRole === "OWNER" || userRole === "MANAGER";
   const isOwner = userRole === "OWNER";
 
+  const { data: planStatus } = useQuery({
+    queryKey: ["plan-status"],
+    queryFn: getPlanStatus,
+  });
+  const hasPro = planStatus?.hasPro ?? false;
+
   const mainNav: NavItem[] = [
     { href: paths.home, label: "Pulpit", icon: <LayoutDashboard className="h-4 w-4" />, tourId: "nav-pulpit" },
     { href: paths.grafik, label: "Grafik", icon: <Calendar className="h-4 w-4" />, tourId: "nav-grafik" },
@@ -118,7 +125,15 @@ export function DashboardLayout({ children, userRole, userName, userAvatar, onLo
           <Link href={paths.home} className="flex items-center gap-2 min-w-0">
             <Logo variant="icon" className="w-8 h-8 flex-shrink-0" />
             <div className="min-w-0">
-              <h1 className="text-sm font-bold text-brand-dark tracking-tight truncate">Staffer</h1>
+              <h1 className="text-sm font-bold text-brand-dark tracking-tight truncate flex items-center gap-1.5">
+                Staffer
+                {hasPro && (
+                  <span className="inline-flex items-center gap-0.5 text-[9px] font-semibold text-brand bg-brand-muted px-1.5 py-0.5 rounded-full">
+                    <Crown className="h-2.5 w-2.5" />
+                    PRO
+                  </span>
+                )}
+              </h1>
               <p className="text-[10px] text-brand-dark-muted font-medium uppercase tracking-wider">{roleLabel}</p>
             </div>
           </Link>
@@ -132,10 +147,17 @@ export function DashboardLayout({ children, userRole, userName, userAvatar, onLo
           {renderSection("Premium", premiumNav)}
         </nav>
 
-        {/* Bottom section */}
+        {/* Bottom section: Mój Profil, Ustawienia */}
         <div className="border-t border-brand-warm p-3 space-y-1">
           <NavLink href={paths.profile} label="Mój Profil" icon={<User className="h-4 w-4" />} active={isActive(paths.profile)} tourId="nav-profile" />
-          {isOwner && (
+          {isAdmin && (
+            <NavLink href={paths.settings} label="Ustawienia" icon={<Settings className="h-4 w-4" />} active={isActive(paths.settings)} />
+          )}
+        </div>
+
+        {/* Ulepsz do Pro / Zarządzaj planem */}
+        {isOwner && (
+          <div className="border-t border-brand-warm p-3">
             <Link
               href={paths.billing}
               className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium cursor-pointer touch-manipulation transition-colors duration-150 active:bg-brand/20 ${
@@ -144,15 +166,11 @@ export function DashboardLayout({ children, userRole, userName, userAvatar, onLo
                   : "text-brand hover:bg-brand/10 bg-brand-muted/30"
               }`}
             >
-              <CreditCard className="h-4 w-4" />
-              <span className="flex-1">Rozliczenia</span>
-              <Crown className="h-3.5 w-3.5 text-brand" />
+              <Crown className="h-4 w-4" />
+              <span className="flex-1">{hasPro ? "Zarządzaj planem" : "Ulepsz do Pro"}</span>
             </Link>
-          )}
-          {isAdmin && (
-            <NavLink href={paths.settings} label="Ustawienia" icon={<Settings className="h-4 w-4" />} active={isActive(paths.settings)} />
-          )}
-        </div>
+          </div>
+        )}
 
         {/* User card */}
         {userName && (
@@ -160,7 +178,15 @@ export function DashboardLayout({ children, userRole, userName, userAvatar, onLo
             <Avatar src={userAvatar} name={userName} size="sm" />
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-brand-dark truncate">{userName}</p>
-              <p className="text-[10px] text-brand-dark-muted">{roleLabel}</p>
+              <p className="text-[10px] text-brand-dark-muted flex items-center gap-1">
+                {roleLabel}
+                {hasPro && (
+                  <span className="inline-flex items-center gap-0.5 text-brand font-semibold">
+                    <Crown className="h-2.5 w-2.5" />
+                    PRO
+                  </span>
+                )}
+              </p>
             </div>
             <button
               onClick={onLogout}
@@ -199,7 +225,7 @@ export function DashboardLayout({ children, userRole, userName, userAvatar, onLo
                 ...(userRole === "EMPLOYEE" ? [{ href: paths.dostepnosc, icon: <CalendarCheck className="h-4 w-4 shrink-0" />, label: "Dostępn.", tourId: "nav-dostepnosc" }] : []),
                 { href: paths.team, icon: <Users className="h-4 w-4 shrink-0" />, label: "Zespół", tourId: "nav-team" },
                 { href: paths.profile, icon: <User className="h-4 w-4 shrink-0" />, label: "Profil", tourId: "nav-profile" },
-                ...(isOwner ? [{ href: paths.billing, icon: <CreditCard className="h-4 w-4 shrink-0" />, label: "Rozliczenia", tourId: "nav-billing" }] : []),
+                ...(isOwner ? [{ href: paths.billing, icon: <Crown className="h-4 w-4 shrink-0" />, label: hasPro ? "Zarządzaj planem" : "Ulepsz do Pro", tourId: "nav-billing" }] : []),
                 ...(isAdmin ? [{ href: paths.settings, icon: <Settings className="h-4 w-4 shrink-0" />, label: "Ustawienia", tourId: "nav-settings" }] : []),
               ].map((item) => (
                 <Link

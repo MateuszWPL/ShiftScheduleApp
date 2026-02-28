@@ -18,6 +18,12 @@ import { CreateCheckoutSessionDto } from './dto/create-checkout.dto';
 export class BillingController {
   constructor(private readonly billingService: BillingService) {}
 
+  @Get('plan-status')
+  @UseGuards(JwtAuthGuard)
+  getPlanStatus(@CurrentUser() user: { userId: string }) {
+    return this.billingService.getPlanStatus(user.userId);
+  }
+
   @Get('subscription')
   @UseGuards(JwtAuthGuard)
   getSubscription(@CurrentUser() user: { userId: string }) {

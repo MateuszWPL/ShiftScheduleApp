@@ -40,6 +40,14 @@ export class BillingService {
     return membership;
   }
 
+  private async requireMember(userId: string) {
+    const membership = await this.prisma.teamMembership.findFirst({
+      where: { userId, status: MembershipStatus.ACTIVE },
+    });
+    if (!membership) throw new ForbiddenException('Brak aktywnego zespołu');
+    return membership;
+  }
+
   private async requireAdmin(userId: string) {
     const membership = await this.prisma.teamMembership.findFirst({
       where: { userId, status: MembershipStatus.ACTIVE },
@@ -49,6 +57,18 @@ export class BillingService {
       throw new ForbiddenException('Brak dostępu do rozliczeń');
     }
     return membership;
+  }
+
+  /** Status planu dla dowolnego członka zespołu (np. badge PRO) */
+  async getPlanStatus(userId: string) {
+    const membership = await this.requireMember(userId);
+    const sub = await this.prisma.subscription.findUnique({
+      where: { teamId: membership.teamId },
+    });
+    const planId = sub?.planId ?? 'free';
+    const status = sub?.status ?? 'free';
+    const hasPro = planId === 'pro' && (status === 'active' || status === 'trialing');
+    return { planId, hasPro };
   }
 
   async getSubscription(userId: string) {

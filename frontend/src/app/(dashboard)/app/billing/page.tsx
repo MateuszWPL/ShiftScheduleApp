@@ -40,6 +40,7 @@ export default function BillingPage() {
     if (success === "1") {
       toast.success("Płatność zakończona pomyślnie");
       queryClient.invalidateQueries({ queryKey: ["subscription"] });
+      queryClient.invalidateQueries({ queryKey: ["plan-status"] });
       router.replace(paths.billing, { scroll: false });
     }
     if (canceled === "1") {

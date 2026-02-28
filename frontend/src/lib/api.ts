@@ -939,6 +939,20 @@ export async function regenerateInviteCode(): Promise<{ inviteCode: string }> {
 }
 
 // --- Billing (Rozliczenia) ---
+export interface PlanStatusResponse {
+  planId: string;
+  hasPro: boolean;
+}
+
+export async function getPlanStatus(): Promise<PlanStatusResponse> {
+  const res = await authenticatedFetch(`${API_URL}/billing/plan-status`);
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.message || "Błąd pobierania statusu planu");
+  }
+  return res.json();
+}
+
 export interface SubscriptionResponse {
   planId: string;
   status: string;
