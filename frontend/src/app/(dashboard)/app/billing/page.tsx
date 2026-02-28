@@ -237,11 +237,11 @@ export default function BillingPage() {
           action: () => handleUpgrade(plan.id),
         };
       }
-      // Active subscription exists — change plan via API (e.g. Starter→Business)
+      // Active subscription — redirect to Stripe Portal (user confirms change there)
       return {
         label: `Ulepsz do ${plan.name}`,
         disabled: false,
-        action: () => handleChangePlan(plan.id as "starter" | "business"),
+        action: handlePortal,
       };
     }
     // Lower plan — downgrade zablokowany
