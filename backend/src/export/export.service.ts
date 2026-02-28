@@ -34,6 +34,12 @@ export class ExportService {
     return str;
   }
 
+  /** Format liczby tak, aby Excel nie interpretował jej jako daty (np. 12.5 -> "12.maj"). Prefix apostrofu wymusza tekst. */
+  private excelSafeNumber(val: number | null | undefined): string {
+    if (val == null) return '';
+    return `'${String(val)}`;
+  }
+
   private toCsvRow(values: (string | number | null | undefined)[]): string {
     return values.map((v) => this.escapeCsv(v)).join(';');
   }
@@ -159,12 +165,12 @@ export class ExportService {
       return this.toCsvRow([
         m.user.nickname || m.user.name,
         m.user.email,
-        rate,
-        totalHours,
+        this.excelSafeNumber(rate),
+        this.excelSafeNumber(totalHours),
         rec.shifts,
-        totalCost,
+        this.excelSafeNumber(totalCost),
         maxH ?? '',
-        overtime,
+        this.excelSafeNumber(overtime),
       ]);
     });
 
@@ -206,7 +212,7 @@ export class ExportService {
         m.user.nickname ?? '',
         m.user.email,
         roleLabels[m.role] ?? m.role,
-        Number(m.user.hourlyRate ?? 0),
+        this.excelSafeNumber(Number(m.user.hourlyRate ?? 0)),
         m.user.maxHours ?? '',
       ]),
     );
