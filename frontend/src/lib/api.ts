@@ -941,6 +941,10 @@ export async function regenerateInviteCode(): Promise<{ inviteCode: string }> {
 // --- Billing (Rozliczenia) ---
 export interface PlanStatusResponse {
   planId: string;
+  planLevel: number;
+  hasStarter: boolean;
+  hasBusiness: boolean;
+  /** @deprecated use hasStarter */
   hasPro: boolean;
 }
 

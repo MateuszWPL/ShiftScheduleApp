@@ -9,6 +9,7 @@ import { MembershipStatus, Role } from '@prisma/client';
 import type { Prisma } from '@prisma/client';
 import Stripe from 'stripe';
 import { CreateCheckoutSessionDto } from './dto/create-checkout.dto';
+import { EmailService } from '../email/email.service';
 
 const PLAN_HIERARCHY: Record<string, number> = {
   free: 0,
@@ -32,7 +33,10 @@ export class BillingService {
   private readonly logger = new Logger(BillingService.name);
   private stripe: Stripe | null = null;
 
-  constructor(private readonly prisma: PrismaService) {
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly emailService: EmailService,
+  ) {
     const key = process.env.STRIPE_SECRET_KEY;
     if (key) {
       this.stripe = new Stripe(key);
@@ -362,6 +366,31 @@ export class BillingService {
       case 'invoice.payment_failed': {
         const invoice = event.data.object as Stripe.Invoice;
         this.logger.warn(`Invoice payment failed: ${invoice.id} for customer ${invoice.customer}`);
+        // Znajdź zespół i wyślij email do ownera
+        try {
+          const customerId = invoice.customer as string;
+          if (customerId) {
+            const sub = await tx.subscription.findFirst({
+              where: { stripeCustomerId: customerId },
+              include: { team: true },
+            });
+            if (sub) {
+              const owner = await tx.user.findFirst({
+                where: { teamId: sub.teamId, role: Role.OWNER },
+              });
+              if (owner?.email) {
+                await this.emailService.sendPaymentFailedEmail(
+                  owner.email,
+                  owner.name,
+                  sub.team.name,
+                  invoice.id,
+                );
+              }
+            }
+          }
+        } catch (err) {
+          this.logger.error(`Error sending payment failed email: ${err}`);
+        }
         break;
       }
       default:

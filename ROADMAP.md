@@ -163,11 +163,11 @@ Audyt zakończony. Wszystkie punkty przeanalizowane; elementy do rozbudowy w 2.6
 - [x] trial_period_days: 14 dni darmowego trialu przy pierwszej subskrypcji
 - [x] Whitelist priceId (STRIPE_PRICE_PRO, STRIPE_PRICE_PRO_YEARLY) — ochrona przed podmiana planu
 - [x] URL success/cancel budowane z FRONTEND_URL (ochrona przed open redirect)
-- [x] Strona /billing z aktualnym planem i zarzadzaniem subskrypcja (tylko OWNER)
-- [x] Badge PRO w menu bocznym + bramki premium (Reports, Export, Templates — placeholder pages)
-- [ ] Middleware/guard sprawdzajacy plan przy dostepie do funkcji premium (backend) — **brakuje!** Aktualnie bramka jest tylko wizualna (frontend)
-- [ ] Strona /pricing z planami cenowymi (landing page ma /cennik, ale brak linkowania z app)
-- [ ] Obsluga invoice.payment_failed — aktualnie tylko logowanie, brak akcji (np. email do ownera, degradacja planu)
+- [x] Strona /billing z wyborem planu Starter/Business i zarzadzaniem subskrypcja (tylko OWNER)
+- [x] Badge planu w menu bocznym (dynamicznie: Starter/Business) + bramki premium (Reports, Export, Templates)
+- [x] PremiumGuard + @RequirePlan dekorator — backend guard sprawdzajacy plan (hierarchia: free < starter < business)
+- [x] Strona /cennik z 3 pakietami (FREE / STARTER 29zl / BUSINESS 79zl) + tabela porownawcza 26 funkcji
+- [x] Obsluga invoice.payment_failed — email do ownera z CTA do zarzadzania subskrypcja
 - [ ] Przelaczenie Stripe na tryb produkcyjny (live keys, Radar, konfiguracja webhookow prod)
 
 ### 3.2 Raporty i analizy [PREMIUM: Starter+]

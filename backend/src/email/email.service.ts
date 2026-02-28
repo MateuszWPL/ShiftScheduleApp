@@ -904,5 +904,47 @@ export class EmailService {
       // Nie rzucamy błędu - mail powitalny nie jest krytyczny
     }
   }
+
+  /** Email: payment failed — notify team owner */
+  async sendPaymentFailedEmail(
+    email: string,
+    name: string,
+    teamName: string,
+    invoiceId?: string,
+  ) {
+    const content = `
+      <h1 style="color: #dc2626; font-size: 22px; margin: 0 0 12px;">⚠️ Problem z płatnością</h1>
+      <p style="margin: 0 0 12px; line-height: 1.6;">
+        Cześć ${name}, nie udało się pobrać płatności za subskrypcję zespołu <strong>${teamName}</strong>.
+      </p>
+      <div style="background: #fef2f2; border-left: 4px solid #dc2626; padding: 16px; margin: 20px 0; border-radius: 8px;">
+        <p style="margin: 0; color: #991b1b; font-weight: 600;">
+          Zaktualizuj metodę płatności, aby uniknąć utraty dostępu do funkcji premium.
+        </p>
+        ${invoiceId ? `<p style="margin: 8px 0 0; color: #999; font-size: 12px;">ID faktury: ${invoiceId}</p>` : ''}
+      </div>
+      <p style="text-align: center; margin: 24px 0;">
+        <a href="${this.frontendUrl}/app/billing"
+           style="background-color: #FF8400; color: white; padding: 14px 28px;
+                  text-decoration: none; border-radius: 8px; font-weight: 600; display: inline-block;">
+          Zarządzaj subskrypcją
+        </a>
+      </p>
+      <p style="margin: 0; font-size: 13px; color: #555; line-height: 1.5;">
+        Stripe automatycznie ponowi próbę pobrania płatności. Jeśli problem się powtórzy,
+        Twój plan zostanie zmieniony na Darmowy.
+      </p>
+    `;
+
+    const text = `Cześć ${name},\n\nNie udało się pobrać płatności za subskrypcję zespołu ${teamName}.\n\nZaktualizuj metodę płatności: ${this.frontendUrl}/app/billing\n\nStaffer.pl`;
+
+    await this.send(
+      email,
+      `⚠️ Problem z płatnością — ${teamName} — Staffer.pl`,
+      this.wrapEmail(content, false),
+      text,
+      'Payment failed email',
+    );
+  }
 }
 

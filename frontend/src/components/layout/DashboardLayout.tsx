@@ -76,7 +76,8 @@ export function DashboardLayout({ children, userRole, userName, userAvatar, onLo
     queryKey: ["plan-status"],
     queryFn: getPlanStatus,
   });
-  const hasPro = planStatus?.hasPro ?? false;
+  const hasStarter = planStatus?.hasStarter ?? false;
+  const planLabel = planStatus?.planId === "business" ? "Business" : planStatus?.planId === "starter" ? "Starter" : "PRO";
 
   const mainNav: NavItem[] = [
     { href: paths.home, label: "Pulpit", icon: <LayoutDashboard className="h-4 w-4" />, tourId: "nav-pulpit" },
@@ -127,10 +128,10 @@ export function DashboardLayout({ children, userRole, userName, userAvatar, onLo
             <div className="min-w-0">
               <h1 className="text-sm font-bold text-brand-dark tracking-tight truncate flex items-center gap-1.5">
                 Staffer
-                {hasPro && (
+                {hasStarter && (
                   <span className="inline-flex items-center gap-0.5 text-[9px] font-semibold text-brand bg-brand-muted px-1.5 py-0.5 rounded-full">
                     <Crown className="h-2.5 w-2.5" />
-                    PRO
+                    {planLabel}
                   </span>
                 )}
               </h1>
@@ -167,7 +168,7 @@ export function DashboardLayout({ children, userRole, userName, userAvatar, onLo
               }`}
             >
               <Crown className="h-4 w-4" />
-              <span className="flex-1">{hasPro ? "Zarządzaj planem" : "Ulepsz do Pro"}</span>
+              <span className="flex-1">{hasStarter ? "Zarządzaj planem" : "Ulepsz plan"}</span>
             </Link>
           </div>
         )}
@@ -180,10 +181,10 @@ export function DashboardLayout({ children, userRole, userName, userAvatar, onLo
               <p className="text-sm font-medium text-brand-dark truncate">{userName}</p>
               <p className="text-[10px] text-brand-dark-muted flex items-center gap-1">
                 {roleLabel}
-                {hasPro && (
+                {hasStarter && (
                   <span className="inline-flex items-center gap-0.5 text-brand font-semibold">
                     <Crown className="h-2.5 w-2.5" />
-                    PRO
+                    {planLabel}
                   </span>
                 )}
               </p>
@@ -225,7 +226,7 @@ export function DashboardLayout({ children, userRole, userName, userAvatar, onLo
                 ...(userRole === "EMPLOYEE" ? [{ href: paths.dostepnosc, icon: <CalendarCheck className="h-4 w-4 shrink-0" />, label: "Dostępn.", tourId: "nav-dostepnosc" }] : []),
                 { href: paths.team, icon: <Users className="h-4 w-4 shrink-0" />, label: "Zespół", tourId: "nav-team" },
                 { href: paths.profile, icon: <User className="h-4 w-4 shrink-0" />, label: "Profil", tourId: "nav-profile" },
-                ...(isOwner ? [{ href: paths.billing, icon: <Crown className="h-4 w-4 shrink-0" />, label: hasPro ? "Zarządzaj planem" : "Ulepsz do Pro", tourId: "nav-billing" }] : []),
+                ...(isOwner ? [{ href: paths.billing, icon: <Crown className="h-4 w-4 shrink-0" />, label: hasStarter ? "Zarządzaj planem" : "Ulepsz plan", tourId: "nav-billing" }] : []),
                 ...(isAdmin ? [{ href: paths.settings, icon: <Settings className="h-4 w-4 shrink-0" />, label: "Ustawienia", tourId: "nav-settings" }] : []),
               ].map((item) => (
                 <Link
