@@ -1,8 +1,10 @@
 # ShiftApp B2B — Plan rozwoju aplikacji
 
-## Status aktualny (luty 2025)
+## Status aktualny (luty 2026)
 
-**Etap:** FAZA 2 zakończona, FAZA 4 (marketing) w toku. Landing page przebudowany. Gotowe do monetyzacji (FAZA 3) lub dalszego polisha.
+**Etap:** FAZA 1 ✅ | FAZA 2 ✅ | FAZA 3.1 Stripe (sandbox) ✅ | FAZA 4 (marketing/polish) — w toku.
+
+**Kamień milowy:** Płatności Stripe wpięte w trybie sandbox. Backend: BillingService (Checkout Session, Customer Portal, Webhook z idempotencją), model Subscription + StripeWebhookEvent w Prisma. Frontend: strona /billing, badge PRO w menu, placeholder pages (Reports, Export, Templates) z bramką "Ulepsz do Pro".
 
 ### Co mamy (gotowe):
 - Logowanie / rejestracja (Google OAuth + email/haslo)
@@ -19,11 +21,12 @@
 - Powiadomienia wewnętrzne (bell icon) — nowy grafik, przypisanie zmiany, gielda, usuniecie
 - Powiadomienia email (zaproszenie, akceptacja czlonkostwa)
 - Zabezpieczenia: Helmet, rate limiting, walidacja inputow, CORS, JWT
+- **Platnosci Stripe (sandbox)**: Checkout Session, Customer Portal, Webhook (idempotentny), model Subscription
+- Strona /billing (tylko OWNER), badge PRO, bramki premium (Reports, Export, Templates)
 
 ### Co nie dziala / do usuniecia:
 - Zamiana zmian (Swap Requests) — usuniete
 - Panel Menadzera — juz przekierowany na Grafik
-- Strona ustawien (Settings) — zrobiona
 
 ### Domeny i hosting (aktualnie):
 - **staffer.pl** — landing, blog, cennik (Vercel)
@@ -152,13 +155,20 @@ Audyt zakończony. Wszystkie punkty przeanalizowane; elementy do rozbudowy w 2.6
 - **Business (79 zl/mies)**: bez limitu pracownikow, wszystkie funkcje
 - **Enterprise (indywidualnie)**: wiele lokalizacji, API, priorytetowe wsparcie
 
-### 3.1 System subskrypcji (Stripe)
-- [ ] Integracja Stripe Checkout + Customer Portal
-- [ ] Model Subscription w bazie (planId, status, currentPeriodEnd, stripeCustomerId)
-- [ ] Webhook Stripe do obslugi platnosci, anulowania, zmiany planu
-- [ ] Middleware sprawdzajacy plan przy dostepie do funkcji premium
-- [ ] Strona /pricing z planami cenowymi
-- [ ] Strona /billing z historia platnosci i zarzadzaniem subskrypcja
+### 3.1 System subskrypcji (Stripe) — sandbox ✅, produkcja w toku
+- [x] Integracja Stripe Checkout + Customer Portal (BillingService: createCheckoutSession, createPortalSession)
+- [x] Model Subscription w bazie (planId, status, currentPeriodEnd, stripeCustomerId, stripeSubscriptionId)
+- [x] Model StripeWebhookEvent — idempotencja webhookow (deduplication po stripeEventId)
+- [x] Webhook Stripe do obslugi platnosci, anulowania, zmiany planu (checkout.session.completed, customer.subscription.updated/deleted, invoice.payment_failed)
+- [x] trial_period_days: 14 dni darmowego trialu przy pierwszej subskrypcji
+- [x] Whitelist priceId (STRIPE_PRICE_PRO, STRIPE_PRICE_PRO_YEARLY) — ochrona przed podmiana planu
+- [x] URL success/cancel budowane z FRONTEND_URL (ochrona przed open redirect)
+- [x] Strona /billing z aktualnym planem i zarzadzaniem subskrypcja (tylko OWNER)
+- [x] Badge PRO w menu bocznym + bramki premium (Reports, Export, Templates — placeholder pages)
+- [ ] Middleware/guard sprawdzajacy plan przy dostepie do funkcji premium (backend) — **brakuje!** Aktualnie bramka jest tylko wizualna (frontend)
+- [ ] Strona /pricing z planami cenowymi (landing page ma /cennik, ale brak linkowania z app)
+- [ ] Obsluga invoice.payment_failed — aktualnie tylko logowanie, brak akcji (np. email do ownera, degradacja planu)
+- [ ] Przelaczenie Stripe na tryb produkcyjny (live keys, Radar, konfiguracja webhookow prod)
 
 ### 3.2 Raporty i analizy [PREMIUM: Starter+]
 - [ ] Dashboard raportow: godziny pracy, koszty, frekwencja
@@ -395,11 +405,74 @@ FAZA 4    Kolory, prawne, DevOps (landing + domeny — done)
 
 ---
 
+## Ocena bezpieczenstwa (stan na luty 2026)
+
+### ✅ Co jest dobrze zrobione:
+- **Stripe Webhook** — weryfikacja Stripe-Signature (constructEvent), surowy body (rawBody: true w NestFactory), idempotencja (StripeWebhookEvent z unique stripeEventId), przetwarzanie w transakcji
+- **Autoryzacja platnosci** — tylko OWNER moze tworzyc Checkout/Portal, requireOwner() na kazdym endpoincie billing
+- **URL bezpieczenstwo** — success/cancel URL budowane z FRONTEND_URL (serwer), nie przyjmowane z klienta (ochrona open redirect)
+- **Price whitelist** — akceptowane tylko priceId z env (STRIPE_PRICE_PRO, STRIPE_PRICE_PRO_YEARLY)
+- **Webhook publiczny** — @Public() + @SkipThrottle() (poprawnie, bo Stripe sam retryuje)
+- **Helmet + CORS** — poprawna konfiguracja, whitelist domen, brak wildcard
+- **Walidacja wejsciowa** — ValidationPipe z whitelist + forbidNonWhitelisted
+- **Rate limiting** — globalne + per-user (PerUserThrottlerGuard)
+- **Token versioning** — User.tokenVersion do revoke sesji
+- **Env validation** — Bootstrap sprawdza JWT_SECRET/NEXTAUTH_SECRET, DATABASE_URL w produkcji
+
+### ⚠️ Ryzyka i braki:
+| Ryzyko | Priorytet | Opis |
+|--------|-----------|------|
+| **Brak backend guard na premium** | KRYTYCZNY | Strony Reports/Export/Templates blokowane tylko na frontendzie. Backend nie sprawdza planu — kazdy moze wywolac API jesli zna endpoint. Potrzebny PremiumGuard / PlanCheckMiddleware |
+| **Brak Sentry** | WYSOKI | Punkt 2.6.2 — nieobsluzane 500 moga ujawnic stack trace. Brak monitoringu bledow produkcyjnych |
+| **Brak RODO compliance** | WYSOKI | Brak polityki prywatnosci, regulaminu, cookie bannera — wymagane przed uruchomieniem produkcyjnym z danymi osobowymi |
+| **invoice.payment_failed — brak akcji** | SREDNI | Webhook loguje blad, ale nie podejmuje akcji (email do ownera, grace period, degradacja planu) |
+| **Brak CI/CD** | SREDNI | Brak automatycznego pipeline'u (testy, build, deploy). Reczny deploy zwieksza ryzyko bledow |
+| **Brak testow automatycznych** | SREDNI | Brak unit / e2e testow. Trudno weryfikowac zmiany bez regresji |
+| **Logi z PII** | NISKI | Logi moga zawierac emaile — do ograniczenia w produkcji |
+| **Brak HSTS** | NISKI | HSTS zalezy od reverse proxy (Vercel/Railway) — warto zweryfikowac |
+
+---
+
+## Co mozna zrobic lepiej (rekomendacje)
+
+### Priorytet KRYTYCZNY (przed produkcja Stripe):
+1. **PremiumGuard** — NestJS guard sprawdzajacy Subscription.planId przy endpointach premium. Bez tego frontend-only gating jest latwy do obejscia.
+2. **Stripe live mode** — przejscie z sandbox na produkcyjne klucze. Wlaczenie Stripe Radar (fraud detection). Konfiguracja webhookow produkcyjnych.
+3. **RODO / prawne** — polityka prywatnosci, regulamin, cookie banner. Wymagane prawnie przy danych osobowych i platnosciach.
+
+### Priorytet WYSOKI:
+4. **Sentry** — integracja monitoringu bledow + exception filter (brak stack w prod). Punkt 2.6.2.
+5. **Obsluga invoice.payment_failed** — email do ownera, grace period (np. 7 dni), automatyczna degradacja do free po braku platnosci.
+6. **CI/CD** — GitHub Actions: lint, build, testy, deploy na staging/prod.
+7. **Testy** — przynajmniej unit testy krytycznych serwisow (BillingService, AuthService, ShiftsService).
+
+### Priorytet SREDNI:
+8. **Webhook retry handling** — obsluga edge case'ow: customer.subscription.updated bez teamId w metadata.
+9. **Plan pricing page w app** — strona /pricing widoczna z poziomu aplikacji (a nie tylko landing).
+10. **Dark mode** — punkt 4.1, odroczony ale wart zrobienia.
+11. **Grafiki landing page** — uzupelnienie placeholderow w public/landing/.
+12. **Staging environment** — osobne srodowisko do testow przed deployem na produkcje.
+
+---
+
+## Pomysly na przyszlosc (po MVP produkcyjnym)
+
+- **Aplikacja mobilna (React Native / Expo)** — naturalne rozszerzenie po stabilizacji PWA
+- **Integracja z systemami kadrowymi** (Comarch, Sage, enova) — eksport danych do polskich systemow HR
+- **AI sugestie grafiku** — automatyczne generowanie grafiku na podstawie dostepnosci, historii, preferencji
+- **Multi-language (i18n)** — wersja angielska dla klientow miedzynarodowych
+- **Marketplace integracji** — Zapier/Make triggers dla zmian w grafiku
+- **Onboarding video** — krotkie video-walkthroughs zamiast tylko tour po aplikacji
+- **Metryki biznesowe dla ownera** — dashboard: retencja pracownikow, sredni czas react na gielda, fill rate zmian
+- **Powiadomienia SMS** — dla krytycznych sytuacji (np. nieobsadzona zmiana w ciagu 2h)
+
+---
+
 ## Notatki techniczne
 
 - **Stack**: Next.js 16 + NestJS 11 + PostgreSQL + Prisma
 - **Auth**: NextAuth.js (Google OAuth + Credentials)
 - **Email**: Resend API
 - **Pliki**: Cloudinary (avatary)
-- **Platnosci** (planowane): Stripe
+- **Platnosci**: Stripe (sandbox — Checkout Session, Customer Portal, Webhook)
 - **Hosting**: Vercel (frontend, domeny staffer.pl / app.staffer.pl) + Railway/Neon (backend/DB planowane)

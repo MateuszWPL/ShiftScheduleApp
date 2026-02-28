@@ -10,6 +10,23 @@ import type { Prisma } from '@prisma/client';
 import Stripe from 'stripe';
 import { CreateCheckoutSessionDto } from './dto/create-checkout.dto';
 
+const PLAN_HIERARCHY: Record<string, number> = {
+  free: 0,
+  starter: 1,
+  business: 2,
+};
+
+/** Rozpoznaje planId na podstawie priceId ze Stripe */
+function resolvePlanId(priceId: string | undefined): string {
+  if (!priceId) return 'starter';
+  const businessPrices = [
+    process.env.STRIPE_PRICE_BUSINESS,
+    process.env.STRIPE_PRICE_BUSINESS_YEARLY,
+  ].filter(Boolean);
+  if (businessPrices.includes(priceId)) return 'business';
+  return 'starter';
+}
+
 @Injectable()
 export class BillingService {
   private readonly logger = new Logger(BillingService.name);
@@ -59,7 +76,7 @@ export class BillingService {
     return membership;
   }
 
-  /** Status planu dla dowolnego członka zespołu (np. badge PRO) */
+  /** Status planu dla dowolnego członka zespołu (badge, bramki) */
   async getPlanStatus(userId: string) {
     const membership = await this.requireMember(userId);
     const sub = await this.prisma.subscription.findUnique({
@@ -67,8 +84,16 @@ export class BillingService {
     });
     const planId = sub?.planId ?? 'free';
     const status = sub?.status ?? 'free';
-    const hasPro = planId === 'pro' && (status === 'active' || status === 'trialing');
-    return { planId, hasPro };
+    const isActive = planId === 'free' || status === 'active' || status === 'trialing';
+    const planLevel = isActive ? (PLAN_HIERARCHY[planId] ?? 0) : 0;
+    return {
+      planId,
+      planLevel,
+      hasStarter: planLevel >= 1,
+      hasBusiness: planLevel >= 2,
+      /** @deprecated użyj hasStarter */
+      hasPro: planLevel >= 1,
+    };
   }
 
   /** Szczegóły subskrypcji — tylko OWNER (billing, portal) */
@@ -230,7 +255,7 @@ export class BillingService {
         const sub = await stripe.subscriptions.retrieve(subscriptionId);
         const stripeSub = sub as unknown as { current_period_end?: number; status: string; items: { data: { price?: { id?: string } }[] } };
         const priceId = stripeSub.items?.data?.[0]?.price?.id ?? '';
-        const planId = priceId === process.env.STRIPE_PRICE_PRO ? 'pro' : 'pro';
+        const planId = resolvePlanId(priceId);
         const periodEnd = stripeSub.current_period_end
           ? new Date(stripeSub.current_period_end * 1000)
           : null;
@@ -266,7 +291,7 @@ export class BillingService {
           items: obj.items as { data: { price?: { id?: string } }[] },
         };
         const priceId = stripeSub.items?.data?.[0]?.price?.id;
-        const planId = priceId === process.env.STRIPE_PRICE_PRO ? 'pro' : 'pro';
+        const planId = resolvePlanId(priceId);
         const periodEnd = stripeSub.current_period_end
           ? new Date(stripeSub.current_period_end * 1000)
           : null;
