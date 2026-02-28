@@ -71,10 +71,11 @@ export class BillingService {
     if (!priceId) {
       throw new BadRequestException('Price ID is required (set STRIPE_PRICE_PRO or pass priceId)');
     }
-    const baseUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
-    const billingReturn = `${baseUrl}/app/settings?tab=billing`;
-    const successUrl = dto.successUrl || `${billingReturn}&success=1`;
-    const cancelUrl = dto.cancelUrl || `${billingReturn}&canceled=1`;
+    // FRONTEND_URL może być lista oddzielona przecinkami (CORS) — bierzemy pierwszy URL
+    const baseUrl = (process.env.FRONTEND_URL || 'http://localhost:3000').split(',')[0].trim();
+    const billingReturn = `${baseUrl}/app/billing`;
+    const successUrl = dto.successUrl || `${billingReturn}?success=1`;
+    const cancelUrl = dto.cancelUrl || `${billingReturn}?canceled=1`;
 
     let sub = await this.prisma.subscription.findUnique({
       where: { teamId: membership.teamId },
@@ -134,8 +135,8 @@ export class BillingService {
       throw new BadRequestException('Brak aktywnej subskrypcji do zarządzania');
     }
     const stripe = this.ensureStripe();
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
-    const returnUrl = `${frontendUrl}/app/settings?tab=billing`;
+    const baseUrl = (process.env.FRONTEND_URL || 'http://localhost:3000').split(',')[0].trim();
+    const returnUrl = `${baseUrl}/app/billing`;
 
     const session = await stripe.billingPortal.sessions.create({
       customer: sub.stripeCustomerId,

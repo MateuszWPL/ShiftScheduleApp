@@ -17,6 +17,7 @@ import {
   Copy,
   Crown,
   Settings,
+  CreditCard,
 } from "lucide-react";
 import { Avatar } from "@/components/ui/avatar";
 import { NotificationBell } from "@/components/dashboard/NotificationBell";
@@ -68,6 +69,7 @@ export function DashboardLayout({ children, userRole, userName, userAvatar, onLo
   const pathname = usePathname();
   const roleLabel = userRole === "OWNER" ? "Właściciel" : userRole === "MANAGER" ? "Menedżer" : "Pracownik";
   const isAdmin = userRole === "OWNER" || userRole === "MANAGER";
+  const isOwner = userRole === "OWNER";
 
   const mainNav: NavItem[] = [
     { href: paths.home, label: "Pulpit", icon: <LayoutDashboard className="h-4 w-4" />, tourId: "nav-pulpit" },
@@ -133,6 +135,20 @@ export function DashboardLayout({ children, userRole, userName, userAvatar, onLo
         {/* Bottom section */}
         <div className="border-t border-brand-warm p-3 space-y-1">
           <NavLink href={paths.profile} label="Mój Profil" icon={<User className="h-4 w-4" />} active={isActive(paths.profile)} tourId="nav-profile" />
+          {isOwner && (
+            <Link
+              href={paths.billing}
+              className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium cursor-pointer touch-manipulation transition-colors duration-150 active:bg-brand/20 ${
+                pathname.startsWith(paths.billing)
+                  ? "bg-brand/15 text-brand"
+                  : "text-brand hover:bg-brand/10 bg-brand-muted/30"
+              }`}
+            >
+              <CreditCard className="h-4 w-4" />
+              <span className="flex-1">Rozliczenia</span>
+              <Crown className="h-3.5 w-3.5 text-brand" />
+            </Link>
+          )}
           {isAdmin && (
             <NavLink href={paths.settings} label="Ustawienia" icon={<Settings className="h-4 w-4" />} active={isActive(paths.settings)} />
           )}
@@ -183,6 +199,7 @@ export function DashboardLayout({ children, userRole, userName, userAvatar, onLo
                 ...(userRole === "EMPLOYEE" ? [{ href: paths.dostepnosc, icon: <CalendarCheck className="h-4 w-4 shrink-0" />, label: "Dostępn.", tourId: "nav-dostepnosc" }] : []),
                 { href: paths.team, icon: <Users className="h-4 w-4 shrink-0" />, label: "Zespół", tourId: "nav-team" },
                 { href: paths.profile, icon: <User className="h-4 w-4 shrink-0" />, label: "Profil", tourId: "nav-profile" },
+                ...(isOwner ? [{ href: paths.billing, icon: <CreditCard className="h-4 w-4 shrink-0" />, label: "Rozliczenia", tourId: "nav-billing" }] : []),
                 ...(isAdmin ? [{ href: paths.settings, icon: <Settings className="h-4 w-4 shrink-0" />, label: "Ustawienia", tourId: "nav-settings" }] : []),
               ].map((item) => (
                 <Link
@@ -192,7 +209,9 @@ export function DashboardLayout({ children, userRole, userName, userAvatar, onLo
                   className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium cursor-pointer transition-colors duration-150 shrink-0 touch-manipulation active:bg-brand-warm-light/80 ${
                     isActive(item.href)
                       ? "bg-brand/10 text-brand"
-                      : "text-brand-dark-muted hover:bg-brand-warm-light"
+                      : item.href === paths.billing
+                        ? "text-brand bg-brand-muted/50 hover:bg-brand/15"
+                        : "text-brand-dark-muted hover:bg-brand-warm-light"
                   }`}
                 >
                   {item.icon}

@@ -7,9 +7,6 @@ import {
   updateTeamSettings,
   updateTeamName,
   regenerateInviteCode,
-  getSubscription,
-  createCheckoutSession,
-  createPortalSession,
   getPositions,
   createPosition,
   updatePosition,
@@ -40,20 +37,16 @@ import {
   Pencil,
   Trash2,
   X,
-  CreditCard,
-  Crown,
-  ExternalLink,
 } from "lucide-react";
 
-type TabId = "company" | "positions" | "invite" | "notifications" | "schedule" | "billing";
+type TabId = "company" | "positions" | "invite" | "notifications" | "schedule";
 
-const TABS: { id: TabId; label: string; icon: React.ReactNode; ownerOnly?: boolean }[] = [
+const TABS: { id: TabId; label: string; icon: React.ReactNode }[] = [
   { id: "company", label: "Firma", icon: <Building2 className="h-4 w-4" /> },
   { id: "positions", label: "Stanowiska", icon: <Briefcase className="h-4 w-4" /> },
   { id: "invite", label: "Zaproszenia", icon: <Key className="h-4 w-4" /> },
   { id: "schedule", label: "Grafik", icon: <Clock className="h-4 w-4" /> },
   { id: "notifications", label: "Powiadomienia", icon: <Bell className="h-4 w-4" /> },
-  { id: "billing", label: "Rozliczenia", icon: <CreditCard className="h-4 w-4" />, ownerOnly: true },
 ];
 
 const POSITION_COLORS = [
@@ -104,7 +97,7 @@ export default function SettingsPage() {
   const searchParams = useSearchParams();
   const queryClient = useQueryClient();
   const tabParam = searchParams.get("tab") as TabId | null;
-  const [activeTab, setActiveTab] = useState<TabId>(tabParam && ["company", "positions", "invite", "notifications", "schedule", "billing"].includes(tabParam) ? tabParam : "company");
+  const [activeTab, setActiveTab] = useState<TabId>(tabParam && ["company", "positions", "invite", "notifications", "schedule"].includes(tabParam) ? tabParam : "company");
   const [codeCopied, setCodeCopied] = useState(false);
 
   // Form state
@@ -130,7 +123,7 @@ export default function SettingsPage() {
   const isOwner = dbUser?.role === "OWNER";
 
   useEffect(() => {
-    if (tabParam && ["company", "positions", "invite", "notifications", "schedule", "billing"].includes(tabParam)) {
+    if (tabParam && ["company", "positions", "invite", "notifications", "schedule"].includes(tabParam)) {
       setActiveTab(tabParam);
     }
   }, [tabParam]);
@@ -152,26 +145,6 @@ export default function SettingsPage() {
     queryFn: getPositions,
     enabled: isAdmin,
   });
-
-  const { data: subscription, isLoading: subscriptionLoading } = useQuery({
-    queryKey: ["subscription"],
-    queryFn: getSubscription,
-    enabled: isAdmin && isOwner,
-  });
-
-  useEffect(() => {
-    const success = searchParams.get("success");
-    const canceled = searchParams.get("canceled");
-    if (success === "1") {
-      toast.success("Płatność zakończona pomyślnie");
-      queryClient.invalidateQueries({ queryKey: ["subscription"] });
-      router.replace(paths.settings + "?tab=billing", { scroll: false });
-    }
-    if (canceled === "1") {
-      toast.info("Płatność anulowana");
-      router.replace(paths.settings + "?tab=billing", { scroll: false });
-    }
-  }, [searchParams, queryClient, router]);
 
   // Populate form when data loads
   useEffect(() => {
@@ -337,7 +310,7 @@ export default function SettingsPage() {
 
       {/* Tabs */}
       <div className="flex gap-1 bg-white border border-brand-warm rounded-xl p-1.5 overflow-x-auto [-webkit-overflow-scrolling:touch]">
-        {TABS.filter((t) => !t.ownerOnly || isOwner).map((tab) => (
+        {TABS.map((tab) => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
@@ -727,87 +700,6 @@ export default function SettingsPage() {
                 <Save className="h-3.5 w-3.5" />
                 Zapisz
               </Button>
-            </div>
-          </div>
-        )}
-
-        {/* BILLING TAB */}
-        {activeTab === "billing" && isOwner && (
-          <div className="p-6 space-y-5">
-            <div>
-              <h2 className="font-semibold text-brand-dark text-sm mb-1">Subskrypcja</h2>
-              <p className="text-xs text-brand-dark-muted mb-5">
-                Zarządzaj planem i płatnościami zespołu. Tylko właściciel może ulepszyć plan lub zmienić metodę płatności.
-              </p>
-
-              {subscriptionLoading ? (
-                <div className="text-sm text-brand-dark-soft text-center py-8">Ładowanie...</div>
-              ) : (
-                <div className="space-y-4">
-                  <div className="p-4 rounded-xl border border-brand-warm bg-brand-warm-light/30">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Crown className="h-5 w-5 text-brand" />
-                      <span className="font-semibold text-brand-dark">
-                        {subscription?.planId === "pro" ? "Plan Pro" : "Plan Darmowy"}
-                      </span>
-                      {subscription?.planId === "pro" && (
-                        <span className="text-xs font-medium text-brand bg-brand-muted px-2 py-0.5 rounded-full">29 zł/mies.</span>
-                      )}
-                    </div>
-                    <p className="text-xs text-brand-dark-muted">
-                      {subscription?.status === "active" || subscription?.status === "trialing"
-                        ? subscription?.currentPeriodEnd
-                          ? `Aktywny do ${new Date(subscription.currentPeriodEnd).toLocaleDateString("pl-PL")}`
-                          : "Aktywny"
-                        : subscription?.status === "canceled" || subscription?.status === "past_due"
-                          ? "Anulowany lub zaległy"
-                          : "Brak aktywnej subskrypcji płatnej"}
-                    </p>
-                  </div>
-
-                  <div className="flex flex-col sm:flex-row gap-2">
-                    {subscription?.planId !== "pro" && (
-                      <Button
-                        onClick={async () => {
-                          try {
-                            const { url } = await createCheckoutSession();
-                            if (url) window.location.href = url;
-                          } catch (e) {
-                            toast.error(e instanceof Error ? e.message : "Błąd");
-                          }
-                        }}
-                        className="gap-2 bg-brand hover:bg-brand-light text-white text-sm"
-                      >
-                        <Crown className="h-4 w-4" />
-                        Ulepsz do Pro
-                      </Button>
-                    )}
-                    {subscription?.stripeCustomerId && (
-                      <Button
-                        variant="outline"
-                        onClick={async () => {
-                          try {
-                            const { url } = await createPortalSession();
-                            if (url) window.location.href = url;
-                          } catch (e) {
-                            toast.error(e instanceof Error ? e.message : "Błąd");
-                          }
-                        }}
-                        className="gap-2 border-brand-warm text-brand-dark-muted hover:text-brand hover:border-brand/30 text-sm"
-                      >
-                        <ExternalLink className="h-4 w-4" />
-                        Zarządzaj subskrypcją
-                      </Button>
-                    )}
-                  </div>
-
-                  {!subscription?.stripeCustomerId && subscription?.planId === "free" && (
-                    <p className="text-[11px] text-brand-dark-soft">
-                      Po kliknięciu „Ulepsz do Pro” zostaniesz przekierowany do bezpiecznej strony Stripe w celu dokonania płatności.
-                    </p>
-                  )}
-                </div>
-              )}
             </div>
           </div>
         )}

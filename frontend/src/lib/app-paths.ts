@@ -15,4 +15,5 @@ export const paths = {
   announcements: `${APP_BASE}/announcements`,
   dostepnosc: `${APP_BASE}/dostepnosc`,
   podsumowanie: `${APP_BASE}/podsumowanie`,
+  billing: `${APP_BASE}/billing`,
 } as const;

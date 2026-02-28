@@ -15,7 +15,7 @@ export default function ReportsPage() {
         Ta funkcja jest dostępna w planie Pro. Ulepsz plan, aby uzyskać dostęp do raportów godzin, kosztów i frekwencji.
       </p>
       <Link
-        href={`${paths.settings}?tab=billing`}
+        href={paths.billing}
         className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-brand hover:bg-brand-light text-white text-sm font-medium transition-colors"
       >
         <Crown className="h-4 w-4" />
