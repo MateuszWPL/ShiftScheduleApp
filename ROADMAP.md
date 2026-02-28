@@ -179,11 +179,12 @@ Audyt zakończony. Wszystkie punkty przeanalizowane; elementy do rozbudowy w 2.6
 - [x] Filtrowanie raportow po okresie (5 predefiniowanych zakresow)
 - [x] Guard @RequirePlan('starter') na endpointach raportow
 
-### 3.3 Eksport danych [PREMIUM: Starter+] ✅
+### 3.3 Eksport danych [PREMIUM: Starter+] ✅ (z uwagami)
 - [x] Eksport grafiku do CSV (czytelny format do pobrania i druku)
 - [x] Eksport raportu godzin do CSV (do systemow kadrowych)
 - [x] Eksport listy pracowników do CSV
-- [ ] Eksport listy pracownikow
+- [x] Strona /print/schedule — wydruk grafiku („Drukuj / PDF”) — otwiera nową kartę, wywołuje window.print()
+- [x] **BUG (naprawiony):** Stawka pracownika (hourlyRate) w raporcie kosztów — wyświetlała się niepoprawnie (data zamiast kwoty). Naprawiono: konwersja Prisma Decimal na Number w reports.service.getCostsReport
 
 ### 3.4 Szablony grafiku [PREMIUM: Business+]
 - [ ] Zapisywanie calego tygodnia jako szablon (nazwa, opis)

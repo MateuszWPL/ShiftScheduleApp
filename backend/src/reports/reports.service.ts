@@ -147,7 +147,7 @@ export class ReportsService {
       return {
         userId: uid,
         name: m.user.nickname || m.user.name,
-        hourlyRate: m.user.hourlyRate ?? 0,
+        hourlyRate: Number(m.user.hourlyRate ?? 0),
         totalHours: Math.round(rec.hours * 10) / 10,
         totalCost: Math.round(rec.cost * 100) / 100,
         totalShifts: rec.shifts,
