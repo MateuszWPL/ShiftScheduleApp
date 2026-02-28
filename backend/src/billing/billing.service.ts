@@ -18,6 +18,13 @@ const PLAN_HIERARCHY: Record<string, number> = {
   business: 2,
 };
 
+/** Limity pracowników na plan (null = bez limitu) */
+const PLAN_LIMITS: Record<string, number | null> = {
+  free: 5,
+  starter: 15,
+  business: null,
+};
+
 /** Rozpoznaje planId na podstawie priceId ze Stripe */
 function resolvePlanId(priceId: string | undefined): string {
   if (!priceId) return 'starter';
@@ -81,7 +88,33 @@ export class BillingService {
     return membership;
   }
 
-  /** Status planu dla dowolnego członka zespołu (badge, bramki) */
+  /** Zlicza aktywnych członków zespołu */
+  private async getMemberCount(teamId: string): Promise<number> {
+    return this.prisma.teamMembership.count({
+      where: { teamId, status: MembershipStatus.ACTIVE },
+    });
+  }
+
+  /** Sprawdza czy zespół przekracza limit i aktualizuje flagę */
+  async checkAndUpdateLimitExceeded(teamId: string): Promise<boolean> {
+    const sub = await this.prisma.subscription.findUnique({
+      where: { teamId },
+    });
+    const planId = sub?.planId ?? 'free';
+    const limit = PLAN_LIMITS[planId] ?? null;
+    const memberCount = await this.getMemberCount(teamId);
+    const exceeded = limit !== null && memberCount > limit;
+
+    if (sub) {
+      await this.prisma.subscription.update({
+        where: { teamId },
+        data: { limitExceeded: exceeded },
+      });
+    }
+    return exceeded;
+  }
+
+  /** Status planu dla dowolnego członka zespołu (badge, bramki, limity) */
   async getPlanStatus(userId: string) {
     const membership = await this.requireMember(userId);
     const sub = await this.prisma.subscription.findUnique({
@@ -91,13 +124,42 @@ export class BillingService {
     const status = sub?.status ?? 'free';
     const isActive = planId === 'free' || status === 'active' || status === 'trialing';
     const planLevel = isActive ? (PLAN_HIERARCHY[planId] ?? 0) : 0;
+
+    const memberCount = await this.getMemberCount(membership.teamId);
+    const memberLimit = PLAN_LIMITS[planId] ?? null;
+    const limitExceeded = sub?.limitExceeded ?? (memberLimit !== null && memberCount > memberLimit);
+
     return {
       planId,
       planLevel,
+      status,
       hasStarter: planLevel >= 1,
       hasBusiness: planLevel >= 2,
       /** @deprecated użyj hasStarter */
       hasPro: planLevel >= 1,
+      memberCount,
+      memberLimit,
+      limitExceeded,
+    };
+  }
+
+  /** Szczegółowe limity zespołu — do wyświetlenia w UI */
+  async getTeamLimits(userId: string) {
+    const membership = await this.requireMember(userId);
+    const sub = await this.prisma.subscription.findUnique({
+      where: { teamId: membership.teamId },
+    });
+    const planId = sub?.planId ?? 'free';
+    const memberCount = await this.getMemberCount(membership.teamId);
+    const memberLimit = PLAN_LIMITS[planId] ?? null;
+    const limitExceeded = sub?.limitExceeded ?? false;
+
+    return {
+      planId,
+      memberCount,
+      memberLimit,
+      limitExceeded,
+      canAddMembers: memberLimit === null || memberCount < memberLimit,
     };
   }
 
@@ -203,7 +265,7 @@ export class BillingService {
     return { url: session.url };
   }
 
-  /** Zmiana planu (upgrade/downgrade) — aktualizacja subskrypcji Stripe */
+  /** Zmiana planu (tylko upgrade) — aktualizacja subskrypcji Stripe */
   async changePlan(userId: string, dto: ChangePlanDto) {
     const membership = await this.requireOwner(userId);
     const sub = await this.prisma.subscription.findUnique({
@@ -218,6 +280,15 @@ export class BillingService {
     }
     if (sub.planId === dto.targetPlanId) {
       throw new BadRequestException('Już masz ten plan');
+    }
+
+    // Blokada downgrade — tylko upgrade dozwolony
+    const currentLevel = PLAN_HIERARCHY[sub.planId] ?? 0;
+    const targetLevel = PLAN_HIERARCHY[dto.targetPlanId] ?? 0;
+    if (targetLevel <= currentLevel) {
+      throw new BadRequestException(
+        'Nie można obniżyć planu. Aby przejść na niższy plan, anuluj obecną subskrypcję.',
+      );
     }
 
     const stripe = this.ensureStripe();
@@ -444,6 +515,13 @@ export class BillingService {
           where: { stripeSubscriptionId: stripeSubId },
         });
         if (existing) {
+          // Sprawdź limity przed degradacją
+          const memberCount = await tx.teamMembership.count({
+            where: { teamId: existing.teamId, status: MembershipStatus.ACTIVE },
+          });
+          const freeLimit = PLAN_LIMITS['free'] ?? 5;
+          const exceeded = memberCount > freeLimit;
+
           await tx.subscription.update({
             where: { teamId: existing.teamId },
             data: {
@@ -451,9 +529,12 @@ export class BillingService {
               planId: 'free',
               stripeSubscriptionId: null,
               currentPeriodEnd: null,
+              limitExceeded: exceeded,
             },
           });
-          this.logger.log(`Subscription canceled for team ${existing.teamId}`);
+          this.logger.log(
+            `Subscription canceled for team ${existing.teamId}. Members: ${memberCount}/${freeLimit}, exceeded: ${exceeded}`,
+          );
         }
         break;
       }

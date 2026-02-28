@@ -942,10 +942,14 @@ export async function regenerateInviteCode(): Promise<{ inviteCode: string }> {
 export interface PlanStatusResponse {
   planId: string;
   planLevel: number;
+  status: string;
   hasStarter: boolean;
   hasBusiness: boolean;
   /** @deprecated use hasStarter */
   hasPro: boolean;
+  memberCount: number;
+  memberLimit: number | null;
+  limitExceeded: boolean;
 }
 
 export async function getPlanStatus(): Promise<PlanStatusResponse> {
@@ -1006,6 +1010,23 @@ export async function changePlan(
   if (!res.ok) {
     const error = await res.json();
     throw new Error(error.message || "Błąd zmiany planu");
+  }
+  return res.json();
+}
+
+export interface TeamLimitsResponse {
+  planId: string;
+  memberCount: number;
+  memberLimit: number | null;
+  limitExceeded: boolean;
+  canAddMembers: boolean;
+}
+
+export async function getTeamLimits(): Promise<TeamLimitsResponse> {
+  const res = await authenticatedFetch(`${API_URL}/billing/team-limits`);
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.message || "Błąd pobierania limitów");
   }
   return res.json();
 }

@@ -23,6 +23,8 @@ import {
   Building2,
   ArrowRight,
   Shield,
+  AlertTriangle,
+  Users,
 } from "lucide-react";
 
 /* ───── Plan definitions ───── */
@@ -226,7 +228,6 @@ export default function BillingPage() {
   const getCardCta = (plan: PlanDef) => {
     const isCurrentPlan = plan.id === currentPlan;
     const isHigher = plan.level > currentLevel;
-    const isLower = plan.level < currentLevel;
 
     if (isCurrentPlan) {
       return { label: "Aktualny plan", disabled: true, action: () => {} };
@@ -247,15 +248,14 @@ export default function BillingPage() {
         action: () => handleChangePlan(plan.id as "starter" | "business"),
       };
     }
-    if (isLower && hasStripeCustomer) {
-      return {
-        label: `Zmień na ${plan.name}`,
-        disabled: false,
-        action: () => handleChangePlan(plan.id as "starter" | "business"),
-      };
-    }
+    // Lower plan — downgrade zablokowany
     return { label: plan.name, disabled: true, action: () => {} };
   };
+
+  const memberCount = planStatus?.memberCount ?? 0;
+  const memberLimit = planStatus?.memberLimit;
+  const limitExceeded = planStatus?.limitExceeded ?? false;
+  const isPastDue = status === "past_due";
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -278,6 +278,76 @@ export default function BillingPage() {
         </div>
       ) : (
         <div className="space-y-8">
+          {/* ── Past due warning ── */}
+          {isPastDue && (
+            <div className="flex items-start gap-3 p-4 rounded-xl border-2 border-warning bg-warning-muted">
+              <AlertTriangle className="h-5 w-5 text-warning flex-shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <p className="text-sm font-semibold text-brand-dark">
+                  Płatność nie powiodła się
+                </p>
+                <p className="text-xs text-brand-dark-muted mt-0.5">
+                  Zaktualizuj kartę płatniczą, aby uniknąć utraty dostępu do funkcji premium.
+                  Masz 7 dni na aktualizację.
+                </p>
+                {hasStripeCustomer && (
+                  <button
+                    onClick={handlePortal}
+                    className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-warning hover:text-brand-dark transition-colors cursor-pointer"
+                  >
+                    <ExternalLink className="h-3 w-3" />
+                    Zaktualizuj kartę w Stripe
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* ── Limit exceeded warning ── */}
+          {limitExceeded && (
+            <div className="flex items-start gap-3 p-4 rounded-xl border-2 border-error bg-error-muted">
+              <AlertTriangle className="h-5 w-5 text-error flex-shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <p className="text-sm font-semibold text-brand-dark">
+                  Przekroczono limit pracowników
+                </p>
+                <p className="text-xs text-brand-dark-muted mt-0.5">
+                  Twój plan pozwala na {memberLimit} pracowników, a masz ich {memberCount}.
+                  Ulepsz plan lub usuń pracowników, aby odblokować pełną funkcjonalność.
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* ── Member usage bar ── */}
+          {memberLimit !== null && memberLimit !== undefined && (
+            <div className="p-4 rounded-xl border border-brand-warm bg-white shadow-sm">
+              <div className="flex items-center gap-2 mb-2">
+                <Users className="h-4 w-4 text-brand-dark-muted" />
+                <span className="text-xs font-semibold text-brand-dark">
+                  Pracownicy: {memberCount} / {memberLimit}
+                </span>
+              </div>
+              <div className="h-2 bg-brand-warm rounded-full overflow-hidden">
+                <div
+                  className={`h-full rounded-full transition-all duration-500 ${
+                    memberCount > memberLimit
+                      ? "bg-error"
+                      : memberCount >= memberLimit * 0.8
+                        ? "bg-warning"
+                        : "bg-success"
+                  }`}
+                  style={{ width: `${Math.min((memberCount / memberLimit) * 100, 100)}%` }}
+                />
+              </div>
+              {memberCount >= memberLimit && (
+                <p className="text-[10px] text-error mt-1">
+                  Osiągnięto limit — nie można dodawać nowych pracowników
+                </p>
+              )}
+            </div>
+          )}
+
           {/* ── Current plan summary bar ── */}
           <div className="flex items-center justify-between flex-wrap gap-3 p-4 rounded-xl border border-brand-warm bg-white shadow-sm">
             <div className="flex items-center gap-3">

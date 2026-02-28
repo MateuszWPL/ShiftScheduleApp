@@ -471,6 +471,192 @@ FAZA 4    Kolory, prawne, DevOps (landing + domeny — done)
 
 ---
 
+## FAZA 3.1b — Przebudowa systemu płatności (plan)
+
+> Priorytet: KRYTYCZNY | Cel: Bezpieczny, spójny cykl życia subskrypcji
+
+### Kontekst problemu
+
+Obecny system płatności ma następujące luki:
+1. **Brak blokady downgrade** — `changePlan` pozwala przejść z business→starter (a nie powinno)
+2. **Brak egzekwowania limitów** — użytkownik na free może mieć >5 pracowników, starter >15
+3. **Brak obsługi cancel→free** — po anulowaniu subskrypcji zespół wraca do "free" ale nie ma żadnej walidacji stanu
+4. **Brak grace period** — po `invoice.payment_failed` wysyłamy email ale nie degradujemy planu
+5. **Brak blokady aplikacji** — gdy zespół przekracza limity swojego planu, nie ma komunikatu blokującego
+
+---
+
+### Pełny cykl życia subskrypcji
+
+```
+REJESTRACJA
+    │
+    ▼
+FREE (domyślny)
+    │
+    ├──[Checkout Starter+ 29zł]──► TRIALING (Starter+, 14 dni)
+    │                                    │
+    │                                    ├──[14 dni mija, karta OK]──► ACTIVE (Starter+)
+    │                                    │                                │
+    │                                    ├──[14 dni mija, karta fail]──► PAST_DUE → grace 7 dni → FREE
+    │                                    │
+    │                                    └──[Cancel w trakcie trialu]──► FREE (natychmiast)
+    │
+    ├──[Checkout Business+ 79zł]──► TRIALING (Business+, 14 dni)
+    │                                    │
+    │                                    └── (analogicznie jak Starter+)
+    │
+    └── (zostaje na free)
+
+ACTIVE (Starter+)
+    │
+    ├──[Upgrade do Business+]──► ACTIVE (Business+) — 79zł natychmiast, stara sub anulowana
+    │
+    ├──[Cancel sub / odepnij kartę]──► FREE (natychmiast) + weryfikacja limitów
+    │
+    └──[invoice.payment_failed]──► PAST_DUE → email + grace 7 dni → FREE
+
+ACTIVE (Business+)
+    │
+    ├──[DOWNGRADE ZABLOKOWANY]──► ❌ Nie można wrócić do Starter+ ani Free ręcznie
+    │                              (jedyne opcje: cancel subskrypcji lub odpiąć kartę)
+    │
+    ├──[Cancel sub / odepnij kartę]──► FREE (natychmiast) + weryfikacja limitów
+    │
+    └──[invoice.payment_failed]──► PAST_DUE → email + grace 7 dni → FREE
+```
+
+---
+
+### Reguły biznesowe
+
+#### 1. Rejestracja i trial
+- Nowy właściciel dostaje plan **FREE** (bez trialu automatycznie)
+- Trial 14 dni **tylko przy pierwszym zakupie** jakiegokolwiek pakietu (flaga `trialUsed`)
+- Trial jest darmowy — karta wymagana przy Checkout, ale pierwsza opłata dopiero po 14 dniach
+- ✅ **Już zaimplementowane** — `trialUsed` flag, `trial_period_days: 14` w Checkout
+
+#### 2. Zakup subskrypcji
+- Użytkownik wybiera Starter+ (29 zł/mies.) lub Business+ (79 zł/mies.)
+- Przekierowanie na Stripe Checkout → karta zapisana → subskrypcja aktywna
+- Co miesiąc automatyczne pobieranie z karty (Stripe Recurring)
+- ✅ **Już zaimplementowane** — Checkout Session, webhook `checkout.session.completed`
+
+#### 3. Upgrade planu (Starter+ → Business+)
+- Użytkownik od razu płaci 79 zł (proration lub pełna kwota)
+- Stara subskrypcja Starter+ jest **automatycznie zaktualizowana** (nie anulowana — Stripe `subscription.update`)
+- Stripe oblicza proration: zwrot za niewykorzystane dni Starter+ + opłata za Business+
+- ✅ **Częściowo zaimplementowane** — `changePlan` istnieje, ale pozwala na downgrade
+
+#### 4. ⚠️ Blokada downgrade (NOWE)
+- Użytkownik **NIE MOŻE** przejść z Business+ na Starter+ ani z jakiegokolwiek planu na Free ręcznie
+- Jedyne opcje obniżenia planu:
+  - **Anuluj subskrypcję** (przez Stripe Portal lub przycisk w aplikacji)
+  - **Odepnij kartę** (przez Stripe Portal)
+- Po anulowaniu → natychmiastowe przejście na FREE
+
+**Zmiany w kodzie:**
+- `changePlan()` w `billing.service.ts` — dodać walidację: `targetPlanLevel > currentPlanLevel`, odrzucić downgrade z błędem
+- Frontend: ukryć/wyłączyć przyciski downgrade, zostawić tylko "Ulepsz"
+
+#### 5. ⚠️ Anulowanie subskrypcji (NOWE — przebudowa)
+- Gdy użytkownik anuluje subskrypcję (Cancel w Stripe Portal):
+  - Webhook `customer.subscription.deleted` → ustawia `planId: 'free'`, `status: 'canceled'`
+  - ✅ **Już zaimplementowane** w webhook
+- **NOWE:** Po przejściu na free trzeba sprawdzić limity zespołu
+
+#### 6. ⚠️ Egzekwowanie limitów pracowników (NOWE — krytyczne)
+
+| Plan | Limit pracowników |
+|------|-------------------|
+| Free | 5 |
+| Starter+ | 15 |
+| Business+ | Bez limitu |
+
+**Gdzie egzekwować:**
+
+a) **Backend — przy dodawaniu pracownika:**
+  - Endpoint akceptacji członka (`accept-member`) + endpoint dołączania do zespołu
+  - Przed zatwierdzeniem: policzyć aktywnych memberów, porównać z limitem planu
+  - Jeśli limit przekroczony → `403 Forbidden: "Osiągnięto limit pracowników dla planu [nazwa]. Ulepsz plan."`
+
+b) **Backend — przy degradacji planu (webhook cancel):**
+  - Po ustawieniu `planId: 'free'` → sprawdzić ile aktywnych memberów
+  - Jeśli >5: ustawić flagę `limitExceeded: true` w Subscription
+
+c) **Frontend — komunikat blokujący (NOWE):**
+  - Globalny middleware/provider sprawdzający `plan-status` + liczbę członków
+  - Jeśli `limitExceeded === true`:
+    - **Overlay/banner na całej aplikacji:** „Twój plan Free pozwala na max 5 pracowników, masz ich [N]. Ulepsz plan lub usuń pracowników, aby kontynuować."
+    - **Blokuje akcje** — nie można tworzyć zmian, publikować grafiku, itp.
+    - **NIE** blokuje: ustawień, strony billing, usuwania pracowników
+  - Analogicznie dla Starter+: jeśli >15 pracowników po downgrade
+
+#### 7. ⚠️ Grace period przy nieudanej płatności (NOWE)
+- Webhook `invoice.payment_failed`:
+  - ✅ Już wysyłamy email do ownera
+  - **NOWE:** Stripe automatycznie retry (1, 3, 5 dni — konfiguracja w Stripe Dashboard → Settings → Billing → Subscriptions → Manage failed payments)
+  - Po wyczerpaniu retry'ów Stripe oznacza subskrypcję jako `canceled` → webhook `customer.subscription.deleted` → degradacja do FREE
+  - **Opcjonalnie:** dodać status `past_due` w UI z komunikatem: „Płatność nie powiodła się. Zaktualizuj kartę w ciągu 7 dni, aby uniknąć utraty dostępu."
+  - Status `past_due` pochodzi ze Stripe → webhook `customer.subscription.updated` z `status: 'past_due'`
+
+#### 8. ⚠️ Upgrade podczas trialu (doprecyzowanie)
+- Jeśli użytkownik jest na trialu Starter+ i chce przejść na Business+:
+  - Trial kończy się **natychmiast**
+  - Od razu płaci 79 zł za Business+ (pełna cena, bez proracji trialu)
+  - ✅ **Już zaimplementowane** — `trial_end: 'now'` w `changePlan()`
+
+---
+
+### Co trzeba zmienić (checklist)
+
+#### Backend (`billing.service.ts`):
+- [ ] `changePlan()` — dodać walidację `targetLevel > currentLevel` (block downgrade)
+- [ ] Nowy endpoint/logika: `getTeamLimits()` — zwraca aktualne limity i zużycie (N pracowników / limit)
+- [ ] W `processWebhookEvent` → `customer.subscription.deleted`: po degradacji sprawdzić limity i ustawić flagę
+- [ ] W `processWebhookEvent` → `customer.subscription.updated`: obsłużyć `status: 'past_due'` (aktualizacja w DB)
+- [ ] Guard na endpoint akceptacji członka: sprawdzić limit pracowników przed przyjęciem
+- [ ] Rozszerzyć `getPlanStatus()` o dane limitów: `memberCount`, `memberLimit`, `limitExceeded`
+- [ ] Dodać pole `limitExceeded` do modelu `Subscription` (Prisma migration)
+
+#### Frontend (`billing/page.tsx`):
+- [ ] Usunąć przyciski downgrade — zostawić tylko upgrade + "Anuluj subskrypcję" (portal)
+- [ ] Dodać banner `past_due` z CTA do aktualizacji karty
+- [ ] Dodać sekcję z aktualnym zużyciem limitu (np. "4 / 5 pracowników")
+
+#### Frontend (globalny):
+- [ ] `LimitExceededBanner` — komponent wyświetlany gdy `limitExceeded === true`
+- [ ] Blokada akcji premium (tworzenie zmian, publikacja) gdy limit przekroczony
+- [ ] Toast/komunikat przy próbie zaproszenia pracownika ponad limit
+
+#### Prisma Schema:
+- [ ] Dodać `limitExceeded Boolean @default(false)` do modelu `Subscription`
+
+#### Stripe Dashboard (konfiguracja):
+- [ ] Settings → Billing → Failed payments: skonfigurować retry schedule (1, 3, 5 dni)
+- [ ] Po wyczerpaniu retry → cancel subscription (automatycznie)
+- [ ] Włączyć Radar (fraud detection) przed live mode
+
+---
+
+### Pytania otwarte / decyzje do podjęcia
+
+1. **Proration przy upgrade:** Czy przy upgrade Starter+ → Business+ rozliczać proporcjonalnie? (np. 15 dni niewykorzystanego Starter+ = zwrot ~15 zł, i dopłata 79 zł za Business+?) Stripe domyślnie robi proration — **rekomendacja: tak, zostawić proration.**
+
+2. **Co z danymi przy downgrade?** Np. zespół miał 20 pracowników na Business+, anulował → free (limit 5). Pracownicy nie są usuwani, ale:
+   - Opcja A: Blokada całej aplikacji dopóki nie zmniejszy do limitu
+   - Opcja B: Blokada tylko nowych akcji (tworzenie zmian), ale przeglądanie działa
+   - **Rekomendacja: Opcja B** — pozwolić na przeglądanie i usuwanie pracowników, ale zablokować tworzenie nowych zmian i publikację grafiku
+
+3. **Immediate cancel vs end-of-period:** Czy po anulowaniu subskrypcji użytkownik traci dostęp natychmiast czy do końca opłaconego okresu?
+   - Stripe domyślnie: `cancel_at_period_end` (do końca okresu)
+   - **Rekomendacja: Cancel na koniec okresu** (uczciwe — zapłacił za miesiąc, korzysta do końca). Stripe Webhook `customer.subscription.deleted` przyjdzie dopiero gdy okres się skończy.
+   - Ale jeśli chcesz natychmiast → zmienić w Stripe Portal config na immediate cancel
+
+4. **Ponowne subskrybowanie:** Użytkownik anulował (FREE), chce wrócić na Starter+. Czy dostaje trial? **Nie — flaga `trialUsed: true` jest permanentna.** Idzie od razu do Checkout z pełną ceną.
+
+---
+
 ## Notatki techniczne
 
 - **Stack**: Next.js 16 + NestJS 11 + PostgreSQL + Prisma

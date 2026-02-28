@@ -4,6 +4,7 @@ import { usePathname } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { getPlanStatus } from "@/lib/api";
 import { AppTour } from "@/components/onboarding/AppTour";
+import { LimitExceededBanner } from "@/components/billing/LimitExceededBanner";
 import { Button } from "@/components/ui/button";
 import {
   LayoutDashboard,
@@ -268,6 +269,8 @@ export function DashboardLayout({ children, userRole, userName, userAvatar, onLo
             </nav>
           </div>
         </header>
+
+        <LimitExceededBanner />
 
         <div className="flex-1 p-4 sm:p-5 md:p-8 min-h-0 overflow-auto">
           {children}

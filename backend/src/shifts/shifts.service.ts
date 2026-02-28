@@ -14,6 +14,13 @@ import { MembershipStatus, Role, ShiftStatus } from '@prisma/client';
 import { nanoid } from 'nanoid';
 import { DEFAULT_USER_NAME, DEFAULT_USER_NICKNAME } from '../constants/user-defaults';
 
+/** Limity pracowników na plan (null = bez limitu) — musi być spójne z billing.service.ts */
+const PLAN_MEMBER_LIMITS: Record<string, number | null> = {
+  free: 5,
+  starter: 15,
+  business: null,
+};
+
 function formatShiftDate(d: Date): string {
   return d.toLocaleDateString('pl-PL', { weekday: 'short', day: 'numeric', month: 'short' });
 }
@@ -1345,6 +1352,25 @@ export class ShiftsService {
     }
     if (membership.status !== MembershipStatus.PENDING) {
       throw new BadRequestException('To zgłoszenie nie jest w statusie PENDING.');
+    }
+
+    // Sprawdź limit pracowników dla aktualnego planu
+    const subscription = await this.prisma.subscription.findUnique({
+      where: { teamId: membership.teamId },
+    });
+    const planId = subscription?.planId ?? 'free';
+    const memberLimit = PLAN_MEMBER_LIMITS[planId] ?? null;
+    if (memberLimit !== null) {
+      const currentCount = await this.prisma.teamMembership.count({
+        where: { teamId: membership.teamId, status: MembershipStatus.ACTIVE },
+      });
+      if (currentCount >= memberLimit) {
+        const planNames: Record<string, string> = { free: 'Darmowy', starter: 'Starter+', business: 'Business+' };
+        throw new BadRequestException(
+          `Osiągnięto limit pracowników (${memberLimit}) dla planu ${planNames[planId] ?? planId}. ` +
+          `Ulepsz plan, aby dodać więcej pracowników.`,
+        );
+      }
     }
 
     const result = await this.prisma.$transaction(async (tx) => {

@@ -32,6 +32,12 @@ export class BillingController {
     return this.billingService.getSubscription(user.userId);
   }
 
+  @Get('team-limits')
+  @UseGuards(JwtAuthGuard)
+  getTeamLimits(@CurrentUser() user: { userId: string }) {
+    return this.billingService.getTeamLimits(user.userId);
+  }
+
   @Post('create-checkout-session')
   @UseGuards(JwtAuthGuard)
   createCheckoutSession(
