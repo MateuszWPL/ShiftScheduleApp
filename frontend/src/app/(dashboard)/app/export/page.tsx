@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { getPlanStatus } from "@/lib/api";
+import { getPlanStatus, getAuthToken } from "@/lib/api";
 import {
   FileDown,
   Calendar,
@@ -50,13 +50,8 @@ function getRange(v: string) {
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
 
-function getToken(): string | null {
-  if (typeof window === "undefined") return null;
-  return localStorage.getItem("token");
-}
-
 async function downloadCsv(endpoint: string, filename: string) {
-  const token = getToken();
+  const token = await getAuthToken();
   const res = await fetch(`${API_URL}${endpoint}`, {
     headers: token ? { Authorization: `Bearer ${token}` } : {},
   });

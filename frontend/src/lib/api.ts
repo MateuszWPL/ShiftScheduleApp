@@ -60,7 +60,7 @@ export function clearAuthTokenCache() {
   tokenCache = null;
 }
 
-async function getAuthToken(): Promise<string | null> {
+export async function getAuthToken(): Promise<string | null> {
   if (tokenCache && tokenCache.expiresAt > Date.now()) {
     return tokenCache.token;
   }
