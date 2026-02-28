@@ -17,6 +17,7 @@ const PLANS = [
       "Podstawowe podsumowanie",
     ],
     cta: "Zacznij za darmo",
+    href: undefined,
     highlighted: false,
   },
   {
@@ -33,6 +34,7 @@ const PLANS = [
       "Priorytetowe wsparcie",
     ],
     cta: "Wybierz Pro",
+    href: "settings?tab=billing",
     highlighted: true,
   },
 ];
@@ -93,7 +95,7 @@ export default function CennikPage() {
                     : "bg-brand-dark hover:bg-brand-dark-light"
                 }`}
               >
-                <a href={APP_URL}>{plan.cta}</a>
+                <a href={plan.href ? `${APP_URL}/${plan.href}` : APP_URL}>{plan.cta}</a>
               </Button>
             </div>
           ))}

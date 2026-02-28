@@ -14,6 +14,7 @@ import { NotificationsModule } from './notifications/notifications.module';
 import { AnnouncementsModule } from './announcements/announcements.module';
 import { TeamSettingsModule } from './team-settings/team-settings.module';
 import { PositionsModule } from './positions/positions.module';
+import { BillingModule } from './billing/billing.module';
 import { RequestLoggerMiddleware } from './common/middleware/request-logger.middleware';
 
 @Module({
@@ -34,6 +35,7 @@ import { RequestLoggerMiddleware } from './common/middleware/request-logger.midd
     AnnouncementsModule,
     TeamSettingsModule,
     PositionsModule,
+    BillingModule,
   ],
   controllers: [AppController],
   providers: [

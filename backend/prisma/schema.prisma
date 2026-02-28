@@ -51,7 +51,32 @@ model Team {
   notifications      Notification[]
   announcements      Announcement[]
   settings           TeamSettings?
+  subscription       Subscription?
   users              User[]
+}
+
+/// Subskrypcja zespołu (Stripe) — 1:1 z Team
+model Subscription {
+  id                   String    @id @default(uuid())
+  teamId               String    @unique
+  stripeCustomerId     String?   @unique
+  stripeSubscriptionId String?
+  planId               String    @default("free")
+  status               String    @default("free")
+  currentPeriodEnd     DateTime?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+  team                 Team      @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  @@index([stripeCustomerId])
+}
+
+/// Idempotencja webhooków Stripe
+model StripeWebhookEvent {
+  id           String   @id @default(uuid())
+  stripeEventId String  @unique
+  type         String
+  processedAt  DateTime @default(now())
 }
 
 /// Ustawienia zespołu/firmy — 1:1 z Team

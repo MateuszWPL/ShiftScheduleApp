@@ -938,6 +938,46 @@ export async function regenerateInviteCode(): Promise<{ inviteCode: string }> {
   return res.json();
 }
 
+// --- Billing (Rozliczenia) ---
+export interface SubscriptionResponse {
+  planId: string;
+  status: string;
+  currentPeriodEnd: string | null;
+  stripeCustomerId: string | null;
+}
+
+export async function getSubscription(): Promise<SubscriptionResponse> {
+  const res = await authenticatedFetch(`${API_URL}/billing/subscription`);
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.message || "Błąd pobierania subskrypcji");
+  }
+  return res.json();
+}
+
+export async function createCheckoutSession(priceId?: string): Promise<{ url: string }> {
+  const res = await authenticatedFetch(`${API_URL}/billing/create-checkout-session`, {
+    method: "POST",
+    body: JSON.stringify(priceId ? { priceId } : {}),
+  });
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.message || "Błąd tworzenia sesji płatności");
+  }
+  return res.json();
+}
+
+export async function createPortalSession(): Promise<{ url: string }> {
+  const res = await authenticatedFetch(`${API_URL}/billing/create-portal-session`, {
+    method: "POST",
+  });
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.message || "Błąd otwarcia portalu");
+  }
+  return res.json();
+}
+
 // --- Positions (Stanowiska) ---
 export async function getPositions(): Promise<Position[]> {
   const res = await authenticatedFetch(`${API_URL}/positions`);
