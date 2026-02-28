@@ -996,6 +996,20 @@ export async function createPortalSession(): Promise<{ url: string }> {
   return res.json();
 }
 
+export async function changePlan(
+  targetPlanId: "starter" | "business"
+): Promise<{ success: boolean }> {
+  const res = await authenticatedFetch(`${API_URL}/billing/change-plan`, {
+    method: "POST",
+    body: JSON.stringify({ targetPlanId }),
+  });
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.message || "Błąd zmiany planu");
+  }
+  return res.json();
+}
+
 // --- Positions (Stanowiska) ---
 
 // --- Reports (Raporty) [Starter+] ---

@@ -11,7 +11,7 @@ const FAQ_ITEMS = [
   {
     question: "Czy potrzebuję karty kredytowej, żeby zacząć?",
     answer:
-      "Nie. Możesz założyć konto i korzystać z planu Darmowego bez podawania danych karty. Plan Pro jest płatny dopiero gdy z niego skorzystasz.",
+      "Nie. Możesz założyć konto i korzystać z planu Darmowego bez podawania danych karty. Plan Starter+ jest płatny dopiero gdy z niego skorzystasz.",
   },
   {
     question: "Jak zaprosić pracowników?",
@@ -19,7 +19,7 @@ const FAQ_ITEMS = [
       "W ustawieniach zespołu generujesz unikalny kod zaproszenia. Pracownicy wpisują go w aplikacji i dołączają do zespołu. Bez skomplikowanych rejestracji.",
   },
   {
-    question: "Czy mogę anulować plan Pro?",
+    question: "Czy mogę anulować plan Starter+?",
     answer:
       "Tak. W każdej chwili możesz wrócić do planu Darmowego. Nie blokujemy Cię w długoterminowych umowach.",
   },

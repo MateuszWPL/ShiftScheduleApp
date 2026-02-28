@@ -167,7 +167,7 @@ export default function ReportsPage() {
         </h2>
         <p className="text-sm text-brand-dark-muted max-w-sm mb-5">
           Raporty godzin, kosztów i zgodności z Kodeksem Pracy dostępne od planu{" "}
-          <span className="font-semibold text-brand-blue">Starter</span>.
+          <span className="font-semibold text-brand-blue">Starter+</span>.
         </p>
         <Link
           href={paths.billing}

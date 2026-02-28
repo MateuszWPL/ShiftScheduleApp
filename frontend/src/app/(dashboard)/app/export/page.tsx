@@ -178,7 +178,7 @@ export default function ExportPage() {
         <h2 className="text-lg font-bold text-brand-dark mb-1">Eksport danych</h2>
         <p className="text-sm text-brand-dark-muted max-w-sm mb-5">
           Eksport grafiku, raportów godzin i listy pracowników dostępny od planu{" "}
-          <span className="font-semibold text-brand-blue">Starter</span>.
+          <span className="font-semibold text-brand-blue">Starter+</span>.
         </p>
         <Link
           href={paths.billing}

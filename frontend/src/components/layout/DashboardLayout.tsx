@@ -43,7 +43,16 @@ interface NavItem {
   tourId?: string;
 }
 
-function NavLink({ href, label, icon, active, premium, showBadge, tourId }: NavItem & { active: boolean; showBadge?: boolean; tourId?: string }) {
+function NavLink({
+  href,
+  label,
+  icon,
+  active,
+  premium,
+  showBadge,
+  tourId,
+  planLabel,
+}: NavItem & { active: boolean; showBadge?: boolean; tourId?: string; planLabel?: string | null }) {
   return (
     <Link
       href={href}
@@ -59,7 +68,7 @@ function NavLink({ href, label, icon, active, premium, showBadge, tourId }: NavI
       {premium && showBadge && (
         <span className="flex items-center gap-0.5 text-[10px] font-semibold text-brand bg-brand-muted px-1.5 py-0.5 rounded-full">
           <Crown className="h-2.5 w-2.5" />
-          PRO
+          {planLabel ?? "Starter+"}
         </span>
       )}
     </Link>
@@ -77,7 +86,12 @@ export function DashboardLayout({ children, userRole, userName, userAvatar, onLo
     queryFn: getPlanStatus,
   });
   const hasStarter = planStatus?.hasStarter ?? false;
-  const planLabel = planStatus?.planId === "business" ? "Business" : planStatus?.planId === "starter" ? "Starter" : "PRO";
+  const planLabel =
+    planStatus?.planId === "business"
+      ? "Business+"
+      : planStatus?.planId === "starter"
+        ? "Starter+"
+        : null;
 
   const mainNav: NavItem[] = [
     { href: paths.home, label: "Pulpit", icon: <LayoutDashboard className="h-4 w-4" />, tourId: "nav-pulpit" },
@@ -110,7 +124,13 @@ export function DashboardLayout({ children, userRole, userName, userAvatar, onLo
         <p className="text-[10px] font-semibold text-brand-dark-muted uppercase tracking-wider px-3 mb-1.5">{title}</p>
         <div className="space-y-0.5">
           {visible.map((item) => (
-            <NavLink key={item.href} {...item} active={isActive(item.href)} showBadge={!hasStarter} />
+            <NavLink
+              key={item.href}
+              {...item}
+              active={isActive(item.href)}
+              showBadge={!hasStarter}
+              planLabel={planLabel}
+            />
           ))}
         </div>
       </div>

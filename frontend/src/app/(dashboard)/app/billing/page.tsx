@@ -7,6 +7,7 @@ import {
   createCheckoutSession,
   createPortalSession,
   getPlanStatus,
+  changePlan,
 } from "@/lib/api";
 import { useDashboardUser } from "@/components/providers/DashboardUserContext";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -68,7 +69,7 @@ const PLANS: PlanDef[] = [
   },
   {
     id: "starter",
-    name: "Starter",
+    name: "Starter+",
     subtitle: "Dla rozwijających się firm",
     price: "29",
     period: "mies.",
@@ -90,7 +91,7 @@ const PLANS: PlanDef[] = [
   },
   {
     id: "business",
-    name: "Business",
+    name: "Business+",
     subtitle: "Pełna kontrola bez ograniczeń",
     price: "79",
     period: "mies.",
@@ -193,11 +194,22 @@ export default function BillingPage() {
       const priceId =
         targetPlanId === "business"
           ? process.env.NEXT_PUBLIC_STRIPE_PRICE_BUSINESS ?? undefined
-          : undefined; // starter uses default
+          : process.env.NEXT_PUBLIC_STRIPE_PRICE_STARTER ?? undefined;
       const { url } = await createCheckoutSession(priceId);
       if (url) window.location.href = url;
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Błąd tworzenia sesji płatności");
+    }
+  };
+
+  const handleChangePlan = async (targetPlanId: "starter" | "business") => {
+    try {
+      await changePlan(targetPlanId);
+      toast.success("Plan został zaktualizowany!");
+      queryClient.invalidateQueries({ queryKey: ["subscription"] });
+      queryClient.invalidateQueries({ queryKey: ["plan-status"] });
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Błąd zmiany planu");
     }
   };
 
@@ -223,16 +235,16 @@ export default function BillingPage() {
       if (!hasStripeCustomer) {
         // First time upgrade — go to checkout
         return {
-          label: plan.id === "business" ? "Ulepsz do Business" : "Wypróbuj 14 dni za darmo",
+          label: plan.id === "business" ? "Ulepsz do Business+" : "Wypróbuj 14 dni za darmo",
           disabled: false,
           action: () => handleUpgrade(plan.id),
         };
       }
-      // Already a customer — go to customer portal to change plan
+      // Already a customer — change plan via API (upgrade Starter→Business)
       return {
         label: `Ulepsz do ${plan.name}`,
         disabled: false,
-        action: handlePortal,
+        action: () => handleChangePlan(plan.id as "starter" | "business"),
       };
     }
     if (isLower && hasStripeCustomer) {

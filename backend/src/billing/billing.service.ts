@@ -9,6 +9,7 @@ import { MembershipStatus, Role } from '@prisma/client';
 import type { Prisma } from '@prisma/client';
 import Stripe from 'stripe';
 import { CreateCheckoutSessionDto } from './dto/create-checkout.dto';
+import { ChangePlanDto } from './dto/change-plan.dto';
 import { EmailService } from '../email/email.service';
 
 const PLAN_HIERARCHY: Record<string, number> = {
@@ -118,12 +119,14 @@ export class BillingService {
     const membership = await this.requireOwner(userId);
     const stripe = this.ensureStripe();
     const allowedPrices = [
-      process.env.STRIPE_PRICE_PRO,
-      process.env.STRIPE_PRICE_PRO_YEARLY,
+      process.env.STRIPE_PRICE_STARTER,
+      process.env.STRIPE_PRICE_STARTER_YEARLY,
+      process.env.STRIPE_PRICE_BUSINESS,
+      process.env.STRIPE_PRICE_BUSINESS_YEARLY,
     ].filter(Boolean) as string[];
-    const priceId = dto.priceId || process.env.STRIPE_PRICE_PRO;
+    const priceId = dto.priceId || process.env.STRIPE_PRICE_STARTER;
     if (!priceId) {
-      throw new BadRequestException('Price ID is required (set STRIPE_PRICE_PRO)');
+      throw new BadRequestException('Price ID is required (set STRIPE_PRICE_STARTER)');
     }
     if (allowedPrices.length > 0 && !allowedPrices.includes(priceId)) {
       throw new BadRequestException('Nieprawidłowy plan');
@@ -187,6 +190,55 @@ export class BillingService {
     });
 
     return { url: session.url };
+  }
+
+  /** Zmiana planu (upgrade/downgrade) — aktualizacja subskrypcji Stripe */
+  async changePlan(userId: string, dto: ChangePlanDto) {
+    const membership = await this.requireOwner(userId);
+    const sub = await this.prisma.subscription.findUnique({
+      where: { teamId: membership.teamId },
+    });
+    if (!sub?.stripeSubscriptionId) {
+      throw new BadRequestException('Brak aktywnej subskrypcji do zmiany');
+    }
+    const currentStatus = sub.status ?? 'free';
+    if (currentStatus !== 'active' && currentStatus !== 'trialing') {
+      throw new BadRequestException('Tylko aktywna subskrypcja może być zmieniona');
+    }
+    if (sub.planId === dto.targetPlanId) {
+      throw new BadRequestException('Już masz ten plan');
+    }
+
+    const stripe = this.ensureStripe();
+    const targetPriceId = this.getPriceIdForPlan(dto.targetPlanId);
+    if (!targetPriceId) {
+      throw new BadRequestException(`Brak skonfigurowanej ceny dla planu ${dto.targetPlanId}`);
+    }
+
+    const stripeSub = await stripe.subscriptions.retrieve(sub.stripeSubscriptionId);
+    const itemId = stripeSub.items.data[0]?.id;
+    if (!itemId) {
+      throw new BadRequestException('Nie można zidentyfikować pozycji subskrypcji');
+    }
+
+    await stripe.subscriptions.update(sub.stripeSubscriptionId, {
+      items: [{ id: itemId, price: targetPriceId }],
+      proration_behavior: 'create_prorations',
+      metadata: { teamId: membership.teamId },
+    });
+
+    this.logger.log(`Plan change requested for team ${membership.teamId}: ${sub.planId} -> ${dto.targetPlanId}`);
+    return { success: true };
+  }
+
+  private getPriceIdForPlan(planId: string): string | undefined {
+    if (planId === 'business') {
+      return process.env.STRIPE_PRICE_BUSINESS ?? process.env.STRIPE_PRICE_BUSINESS_YEARLY;
+    }
+    if (planId === 'starter') {
+      return process.env.STRIPE_PRICE_STARTER ?? process.env.STRIPE_PRICE_STARTER_YEARLY;
+    }
+    return undefined;
   }
 
   async createPortalSession(userId: string) {

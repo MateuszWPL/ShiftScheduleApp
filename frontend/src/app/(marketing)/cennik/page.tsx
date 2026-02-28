@@ -108,7 +108,7 @@ const PLANS = [
   },
   {
     id: "starter",
-    name: "Starter",
+    name: "Starter+",
     subtitle: "Dla rozwijających się firm",
     price: "29",
     period: "mies.",
@@ -134,7 +134,7 @@ const PLANS = [
   },
   {
     id: "business",
-    name: "Business",
+    name: "Business+",
     subtitle: "Pełna kontrola bez ograniczeń",
     price: "79",
     period: "mies.",
@@ -149,7 +149,7 @@ const PLANS = [
       "Audit log",
       "Dashboard zbiorczy",
     ],
-    cta: "Wybierz Business",
+    cta: "Wybierz Business+",
     ctaHref: `${APP_URL.replace(/\/$/, "")}${APP_URL.endsWith("/app") ? "/billing" : "/app/billing"}`,
     highlighted: true,
     badge: "Najpopularniejszy",

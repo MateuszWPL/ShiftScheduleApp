@@ -14,6 +14,7 @@ import { Public } from '../auth/decorators/public.decorator';
 import { CurrentUser } from '../auth/decorators/user.decorator';
 import { BillingService } from './billing.service';
 import { CreateCheckoutSessionDto } from './dto/create-checkout.dto';
+import { ChangePlanDto } from './dto/change-plan.dto';
 
 @Controller('billing')
 export class BillingController {
@@ -44,6 +45,15 @@ export class BillingController {
   @UseGuards(JwtAuthGuard)
   createPortalSession(@CurrentUser() user: { userId: string }) {
     return this.billingService.createPortalSession(user.userId);
+  }
+
+  @Post('change-plan')
+  @UseGuards(JwtAuthGuard)
+  changePlan(
+    @CurrentUser() user: { userId: string },
+    @Body() dto: ChangePlanDto,
+  ) {
+    return this.billingService.changePlan(user.userId, dto);
   }
 
   @Post('webhook')

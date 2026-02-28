@@ -12,14 +12,14 @@ export default function TemplatesPage() {
       </div>
       <h1 className="text-xl font-bold text-brand-dark mb-2">Szablony grafiku</h1>
       <p className="text-brand-dark-muted text-sm mb-6">
-        Ta funkcja jest dostępna w planie Pro. Zapisuj tygodnie jako szablony i stosuj je jednym kliknięciem.
+        Ta funkcja jest dostępna w planie Business+. Zapisuj tygodnie jako szablony i stosuj je jednym kliknięciem.
       </p>
       <Link
         href={paths.billing}
         className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-brand hover:bg-brand-light text-white text-sm font-medium transition-colors"
       >
         <Crown className="h-4 w-4" />
-        Ulepsz do Pro
+        Ulepsz do Business+
       </Link>
     </div>
   );

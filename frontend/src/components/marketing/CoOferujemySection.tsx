@@ -111,7 +111,7 @@ export function CoOferujemySection() {
         >
           <p className="text-white/90 text-sm font-medium uppercase tracking-wider">Plany już od</p>
           <p className="text-4xl font-bold mt-1">0 zł</p>
-          <p className="text-white/80 text-sm mt-1">na start · 29 zł/mies. Pro</p>
+          <p className="text-white/80 text-sm mt-1">na start · 29 zł/mies. Starter+</p>
           <Button asChild size="lg" className="mt-6 bg-white text-brand hover:bg-white/90 font-semibold cursor-pointer shadow-lg">
             <Link href="/cennik">Sprawdź cennik</Link>
           </Button>
