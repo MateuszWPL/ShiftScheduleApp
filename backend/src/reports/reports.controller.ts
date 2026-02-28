@@ -2,6 +2,7 @@ import { Controller, Get, Query, UseGuards } from '@nestjs/common';
 import { ReportsService } from './reports.service';
 import { CurrentUser } from '../auth/decorators/user.decorator';
 import { RequirePlan } from '../auth/decorators/premium.decorator';
+import { JwtAuthGuard } from '../auth/auth.guard';
 import { PremiumGuard } from '../auth/guards/premium.guard';
 import { IsDateString, IsOptional } from 'class-validator';
 
@@ -14,7 +15,7 @@ class ReportQueryDto {
 }
 
 @Controller('reports')
-@UseGuards(PremiumGuard)
+@UseGuards(JwtAuthGuard, PremiumGuard)
 @RequirePlan('starter')
 export class ReportsController {
   constructor(private readonly reportsService: ReportsService) {}

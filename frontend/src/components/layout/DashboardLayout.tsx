@@ -43,7 +43,7 @@ interface NavItem {
   tourId?: string;
 }
 
-function NavLink({ href, label, icon, active, premium, tourId }: NavItem & { active: boolean; tourId?: string }) {
+function NavLink({ href, label, icon, active, premium, showBadge, tourId }: NavItem & { active: boolean; showBadge?: boolean; tourId?: string }) {
   return (
     <Link
       href={href}
@@ -56,7 +56,7 @@ function NavLink({ href, label, icon, active, premium, tourId }: NavItem & { act
     >
       <span className={active ? "text-brand" : "text-brand-dark-soft"}>{icon}</span>
       <span className="flex-1">{label}</span>
-      {premium && (
+      {premium && showBadge && (
         <span className="flex items-center gap-0.5 text-[10px] font-semibold text-brand bg-brand-muted px-1.5 py-0.5 rounded-full">
           <Crown className="h-2.5 w-2.5" />
           PRO
@@ -110,7 +110,7 @@ export function DashboardLayout({ children, userRole, userName, userAvatar, onLo
         <p className="text-[10px] font-semibold text-brand-dark-muted uppercase tracking-wider px-3 mb-1.5">{title}</p>
         <div className="space-y-0.5">
           {visible.map((item) => (
-            <NavLink key={item.href} {...item} active={isActive(item.href)} />
+            <NavLink key={item.href} {...item} active={isActive(item.href)} showBadge={!hasStarter} />
           ))}
         </div>
       </div>
