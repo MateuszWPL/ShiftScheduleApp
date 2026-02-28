@@ -167,6 +167,12 @@ export class BillingService {
       }
     }
 
+    // Trial tylko raz na zespół
+    const freshSub = await this.prisma.subscription.findUnique({
+      where: { teamId: membership.teamId },
+    });
+    const trialDays = freshSub?.trialUsed ? undefined : 14;
+
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       mode: 'subscription',
@@ -176,7 +182,7 @@ export class BillingService {
       metadata: { teamId: membership.teamId },
       subscription_data: {
         metadata: { teamId: membership.teamId },
-        trial_period_days: 14,
+        ...(trialDays ? { trial_period_days: trialDays } : {}),
       },
     });
 
@@ -272,6 +278,7 @@ export class BillingService {
             planId,
             status: stripeSub.status,
             currentPeriodEnd: periodEnd,
+            trialUsed: true,
           },
           update: {
             stripeSubscriptionId: subscriptionId,
@@ -279,6 +286,7 @@ export class BillingService {
             planId,
             status: stripeSub.status,
             currentPeriodEnd: periodEnd,
+            trialUsed: true,
           },
         });
         this.logger.log(`Subscription created/updated for team ${teamId}`);

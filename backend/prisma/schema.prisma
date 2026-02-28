@@ -63,6 +63,7 @@ model Subscription {
   stripeSubscriptionId String?
   planId               String    @default("free")
   status               String    @default("free")
+  trialUsed            Boolean   @default(false)
   currentPeriodEnd     DateTime?
   createdAt            DateTime  @default(now())
   updatedAt            DateTime  @updatedAt

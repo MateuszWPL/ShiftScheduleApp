@@ -168,14 +168,16 @@ Audyt zakończony. Wszystkie punkty przeanalizowane; elementy do rozbudowy w 2.6
 - [x] PremiumGuard + @RequirePlan dekorator — backend guard sprawdzajacy plan (hierarchia: free < starter < business)
 - [x] Strona /cennik z 3 pakietami (FREE / STARTER 29zl / BUSINESS 79zl) + tabela porownawcza 26 funkcji
 - [x] Obsluga invoice.payment_failed — email do ownera z CTA do zarzadzania subskrypcja
+- [x] Zabezpieczenie trialu — `trialUsed` flag, trial 14 dni tylko raz na zespół
 - [ ] Przelaczenie Stripe na tryb produkcyjny (live keys, Radar, konfiguracja webhookow prod)
 
-### 3.2 Raporty i analizy [PREMIUM: Starter+]
-- [ ] Dashboard raportow: godziny pracy, koszty, frekwencja
-- [ ] Wykres: godziny na pracownika (tygodniowo / miesiecznie)
-- [ ] Wykres: koszty wynagrodzen (na podstawie hourlyRate)
-- [ ] Raport zgodnosci z Kodeksem Pracy (11h odpoczynku, normy tygodniowe)
-- [ ] Filtrowanie raportow po okresie, pracowniku, roli
+### 3.2 Raporty i analizy [PREMIUM: Starter+] ✅
+- [x] Dashboard raportow z 3 zakladkami: godziny, koszty, zgodnosc KP
+- [x] Raport godzin: per pracownik (total, shifts, overtime, avg/shift, bar chart)
+- [x] Raport kosztow: per pracownik na podstawie hourlyRate (total, avg stawka)
+- [x] Raport zgodnosci z KP: 11h odpoczynku, 48h/tydzien, maxHours + violation cards
+- [x] Filtrowanie raportow po okresie (5 predefiniowanych zakresow)
+- [x] Guard @RequirePlan('starter') na endpointach raportow
 
 ### 3.3 Eksport danych [PREMIUM: Starter+]
 - [ ] Eksport grafiku do PDF (czytelny format do wydruku / wywieszenia)

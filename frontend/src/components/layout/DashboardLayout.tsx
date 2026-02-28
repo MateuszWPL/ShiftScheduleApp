@@ -92,7 +92,7 @@ export function DashboardLayout({ children, userRole, userName, userAvatar, onLo
   ];
 
   const premiumNav: NavItem[] = [
-    { href: `${paths.home}/reports`, label: "Raporty", icon: <PieChart className="h-4 w-4" />, premium: true },
+    { href: paths.reports, label: "Raporty", icon: <PieChart className="h-4 w-4" />, premium: true },
     { href: `${paths.home}/export`, label: "Eksport", icon: <FileDown className="h-4 w-4" />, premium: true },
     { href: `${paths.home}/templates`, label: "Szablony", icon: <Copy className="h-4 w-4" />, premium: true, show: isAdmin },
   ];

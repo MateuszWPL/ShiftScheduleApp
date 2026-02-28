@@ -997,6 +997,40 @@ export async function createPortalSession(): Promise<{ url: string }> {
 }
 
 // --- Positions (Stanowiska) ---
+
+// --- Reports (Raporty) [Starter+] ---
+
+export async function getHoursReport(params: { from: string; to: string }) {
+  const search = new URLSearchParams({ from: params.from, to: params.to });
+  const res = await authenticatedFetch(`${API_URL}/reports/hours?${search}`);
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.message || "Błąd pobierania raportu godzin");
+  }
+  return res.json();
+}
+
+export async function getCostsReport(params: { from: string; to: string }) {
+  const search = new URLSearchParams({ from: params.from, to: params.to });
+  const res = await authenticatedFetch(`${API_URL}/reports/costs?${search}`);
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.message || "Błąd pobierania raportu kosztów");
+  }
+  return res.json();
+}
+
+export async function getComplianceReport(params: { from: string; to: string }) {
+  const search = new URLSearchParams({ from: params.from, to: params.to });
+  const res = await authenticatedFetch(`${API_URL}/reports/compliance?${search}`);
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.message || "Błąd pobierania raportu zgodności");
+  }
+  return res.json();
+}
+
+// --- Positions (Stanowiska) kontynuacja ---
 export async function getPositions(): Promise<Position[]> {
   const res = await authenticatedFetch(`${API_URL}/positions`);
   if (!res.ok) {
