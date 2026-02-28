@@ -193,11 +193,7 @@ export default function BillingPage() {
   /* ── Upgrade handler ── */
   const handleUpgrade = async (targetPlanId: string) => {
     try {
-      const priceId =
-        targetPlanId === "business"
-          ? process.env.NEXT_PUBLIC_STRIPE_PRICE_BUSINESS ?? undefined
-          : process.env.NEXT_PUBLIC_STRIPE_PRICE_STARTER ?? undefined;
-      const { url } = await createCheckoutSession(priceId);
+      const { url } = await createCheckoutSession({ planId: targetPlanId });
       if (url) window.location.href = url;
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Błąd tworzenia sesji płatności");

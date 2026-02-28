@@ -6,4 +6,10 @@ export class CreateCheckoutSessionDto {
   @IsString()
   @MaxLength(200)
   priceId?: string;
+
+  /** planId — 'starter' lub 'business'. Alternatywa dla priceId (backend sam dobierze cenę). */
+  @IsOptional()
+  @IsString()
+  @MaxLength(50)
+  planId?: string;
 }

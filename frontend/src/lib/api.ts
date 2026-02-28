@@ -977,10 +977,12 @@ export async function getSubscription(): Promise<SubscriptionResponse> {
   return res.json();
 }
 
-export async function createCheckoutSession(priceId?: string): Promise<{ url: string }> {
+export async function createCheckoutSession(
+  data?: { planId?: string; priceId?: string }
+): Promise<{ url: string }> {
   const res = await authenticatedFetch(`${API_URL}/billing/create-checkout-session`, {
     method: "POST",
-    body: JSON.stringify(priceId ? { priceId } : {}),
+    body: JSON.stringify(data ?? {}),
   });
   if (!res.ok) {
     const error = await res.json();

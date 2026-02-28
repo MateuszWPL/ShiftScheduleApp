@@ -186,7 +186,15 @@ export class BillingService {
       process.env.STRIPE_PRICE_BUSINESS,
       process.env.STRIPE_PRICE_BUSINESS_YEARLY,
     ].filter(Boolean) as string[];
-    const priceId = dto.priceId || process.env.STRIPE_PRICE_STARTER;
+
+    // Resolve priceId: bezpośrednio z DTO, lub z planId, lub fallback na starter
+    let priceId = dto.priceId;
+    if (!priceId && dto.planId) {
+      priceId = this.getPriceIdForPlan(dto.planId);
+    }
+    if (!priceId) {
+      priceId = process.env.STRIPE_PRICE_STARTER;
+    }
     if (!priceId) {
       throw new BadRequestException('Price ID is required (set STRIPE_PRICE_STARTER)');
     }
