@@ -137,9 +137,20 @@ export class BillingService {
     const successUrl = `${billingReturn}?success=1`;
     const cancelUrl = `${billingReturn}?canceled=1`;
 
-    let sub = await this.prisma.subscription.findUnique({
+    const sub = await this.prisma.subscription.findUnique({
       where: { teamId: membership.teamId },
     });
+
+    // Blokada: użytkownik z aktywną subskrypcją musi używać change-plan, nie Checkout
+    // (Checkout stworzyłby nową subskrypcję, potencjalnie z kolejnym triałem)
+    if (
+      sub?.stripeSubscriptionId &&
+      (sub.status === 'active' || sub.status === 'trialing')
+    ) {
+      throw new BadRequestException(
+        'Masz już aktywną subskrypcję. Użyj przycisku "Ulepsz do Business+" aby zmienić plan.',
+      );
+    }
 
     let customerId = sub?.stripeCustomerId;
     if (!customerId) {
@@ -170,7 +181,7 @@ export class BillingService {
       }
     }
 
-    // Trial tylko raz na zespół
+    // Trial tylko raz na zespół (trialUsed w DB). Przy trialUsed nie przekazujemy trial — ceny w Stripe nie powinny mieć domyślnego trialu.
     const freshSub = await this.prisma.subscription.findUnique({
       where: { teamId: membership.teamId },
     });
@@ -185,7 +196,7 @@ export class BillingService {
       metadata: { teamId: membership.teamId },
       subscription_data: {
         metadata: { teamId: membership.teamId },
-        ...(trialDays ? { trial_period_days: trialDays } : {}),
+        ...(trialDays != null ? { trial_period_days: trialDays } : {}),
       },
     });
 
@@ -221,11 +232,34 @@ export class BillingService {
       throw new BadRequestException('Nie można zidentyfikować pozycji subskrypcji');
     }
 
-    await stripe.subscriptions.update(sub.stripeSubscriptionId, {
+    // Upgrade podczas trialu: koniec trialu natychmiast + natychmiastowa płatność (brak darmowego upgrade)
+    const isTrialing = stripeSub.status === 'trialing';
+    const updateParams: Stripe.SubscriptionUpdateParams = {
       items: [{ id: itemId, price: targetPriceId }],
-      proration_behavior: 'create_prorations',
+      proration_behavior: isTrialing ? 'always_invoice' : 'create_prorations',
       metadata: { teamId: membership.teamId },
-    });
+    };
+    if (isTrialing) {
+      updateParams.trial_end = 'now';
+      updateParams.payment_behavior = 'error_if_incomplete'; // błąd jeśli płatność nie przejdzie
+    }
+
+    try {
+      await stripe.subscriptions.update(sub.stripeSubscriptionId, updateParams);
+    } catch (err: unknown) {
+      const stripeErr = err as { code?: string; message?: string };
+      if (stripeErr?.code === 'card_declined' || stripeErr?.message?.includes('card')) {
+        throw new BadRequestException(
+          'Płatność została odrzucona. Zaktualizuj metodę płatności w Portalu Stripe i spróbuj ponownie.',
+        );
+      }
+      if (stripeErr?.code === 'invoice_payment_intent_requires_action') {
+        throw new BadRequestException(
+          'Wymagana dodatkowa weryfikacja płatności (np. 3D Secure). Otwórz Portal Stripe, zaktualizuj kartę i spróbuj ponownie.',
+        );
+      }
+      throw err;
+    }
 
     this.logger.log(`Plan change requested for team ${membership.teamId}: ${sub.planId} -> ${dto.targetPlanId}`);
     return { success: true };

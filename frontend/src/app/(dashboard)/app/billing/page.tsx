@@ -251,7 +251,7 @@ export default function BillingPage() {
       return {
         label: `Zmień na ${plan.name}`,
         disabled: false,
-        action: handlePortal,
+        action: () => handleChangePlan(plan.id as "starter" | "business"),
       };
     }
     return { label: plan.name, disabled: true, action: () => {} };
