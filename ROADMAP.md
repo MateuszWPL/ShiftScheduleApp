@@ -179,10 +179,10 @@ Audyt zakończony. Wszystkie punkty przeanalizowane; elementy do rozbudowy w 2.6
 - [x] Filtrowanie raportow po okresie (5 predefiniowanych zakresow)
 - [x] Guard @RequirePlan('starter') na endpointach raportow
 
-### 3.3 Eksport danych [PREMIUM: Starter+]
-- [ ] Eksport grafiku do PDF (czytelny format do wydruku / wywieszenia)
-- [ ] Eksport grafiku do Excel/CSV
-- [ ] Eksport raportu godzin do CSV (do systemow kadrowych)
+### 3.3 Eksport danych [PREMIUM: Starter+] ✅
+- [x] Eksport grafiku do CSV (czytelny format do pobrania i druku)
+- [x] Eksport raportu godzin do CSV (do systemow kadrowych)
+- [x] Eksport listy pracowników do CSV
 - [ ] Eksport listy pracownikow
 
 ### 3.4 Szablony grafiku [PREMIUM: Business+]

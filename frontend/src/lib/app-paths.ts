@@ -17,4 +17,5 @@ export const paths = {
   podsumowanie: `${APP_BASE}/podsumowanie`,
   billing: `${APP_BASE}/billing`,
   reports: `${APP_BASE}/reports`,
+  export: `${APP_BASE}/export`,
 } as const;
