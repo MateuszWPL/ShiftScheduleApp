@@ -71,8 +71,9 @@ export class BillingService {
     return { planId, hasPro };
   }
 
+  /** Szczegóły subskrypcji — tylko OWNER (billing, portal) */
   async getSubscription(userId: string) {
-    const membership = await this.requireAdmin(userId);
+    const membership = await this.requireOwner(userId);
     const sub = await this.prisma.subscription.findUnique({
       where: { teamId: membership.teamId },
     });
@@ -87,15 +88,22 @@ export class BillingService {
   async createCheckoutSession(userId: string, dto: CreateCheckoutSessionDto) {
     const membership = await this.requireOwner(userId);
     const stripe = this.ensureStripe();
+    const allowedPrices = [
+      process.env.STRIPE_PRICE_PRO,
+      process.env.STRIPE_PRICE_PRO_YEARLY,
+    ].filter(Boolean) as string[];
     const priceId = dto.priceId || process.env.STRIPE_PRICE_PRO;
     if (!priceId) {
-      throw new BadRequestException('Price ID is required (set STRIPE_PRICE_PRO or pass priceId)');
+      throw new BadRequestException('Price ID is required (set STRIPE_PRICE_PRO)');
     }
-    // FRONTEND_URL może być lista oddzielona przecinkami (CORS) — bierzemy pierwszy URL
+    if (allowedPrices.length > 0 && !allowedPrices.includes(priceId)) {
+      throw new BadRequestException('Nieprawidłowy plan');
+    }
+    // Zawsze używamy własnych URL — nie przyjmujemy z klienta (ochrona przed open redirect)
     const baseUrl = (process.env.FRONTEND_URL || 'http://localhost:3000').split(',')[0].trim();
     const billingReturn = `${baseUrl}/app/billing`;
-    const successUrl = dto.successUrl || `${billingReturn}?success=1`;
-    const cancelUrl = dto.cancelUrl || `${billingReturn}?canceled=1`;
+    const successUrl = `${billingReturn}?success=1`;
+    const cancelUrl = `${billingReturn}?canceled=1`;
 
     let sub = await this.prisma.subscription.findUnique({
       where: { teamId: membership.teamId },

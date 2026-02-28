@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   getSubscription,
@@ -120,21 +120,23 @@ export default function BillingPage() {
               </Button>
             )}
             {subscription?.stripeCustomerId && (
-              <Button
-                variant="outline"
-                onClick={async () => {
-                  try {
-                    const { url } = await createPortalSession();
-                    if (url) window.location.href = url;
-                  } catch (e) {
-                    toast.error(e instanceof Error ? e.message : "Błąd");
-                  }
-                }}
-                className="gap-2 border-brand-warm text-brand-dark-muted hover:text-brand hover:border-brand/30"
-              >
-                <ExternalLink className="h-4 w-4" />
-                Zarządzaj subskrypcją
-              </Button>
+              <>
+                <Button
+                  variant="outline"
+                  onClick={async () => {
+                    try {
+                      const { url } = await createPortalSession();
+                      if (url) window.location.href = url;
+                    } catch (e) {
+                      toast.error(e instanceof Error ? e.message : "Błąd");
+                    }
+                  }}
+                  className="gap-2 border-brand-warm text-brand-dark-muted hover:text-brand hover:border-brand/30"
+                >
+                  <ExternalLink className="h-4 w-4" />
+                  Zarządzaj subskrypcją
+                </Button>
+              </>
             )}
           </div>
 

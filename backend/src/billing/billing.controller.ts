@@ -5,6 +5,7 @@ import {
   Body,
   UseGuards,
   Req,
+  BadRequestException,
 } from '@nestjs/common';
 import type { Request } from 'express';
 import { SkipThrottle } from '@nestjs/throttler';
@@ -51,7 +52,7 @@ export class BillingController {
   async webhook(@Req() req: Request & { rawBody?: Buffer }) {
     const rawBody = req.rawBody;
     if (!rawBody) {
-      throw new Error('Raw body is required for Stripe webhook verification');
+      throw new BadRequestException('Raw body is required for Stripe webhook verification');
     }
     const signature = req.headers['stripe-signature'] as string | undefined;
     return this.billingService.handleWebhook(rawBody, signature);
