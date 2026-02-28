@@ -255,7 +255,9 @@ export class BillingService {
     const freshSub = await this.prisma.subscription.findUnique({
       where: { teamId: membership.teamId },
     });
-    const trialDays = freshSub?.trialUsed ? undefined : 14;
+    // Trial 14 dni TYLKO dla Starter+ i tylko raz na zespół. Business+ — płatny od razu.
+    const isStarterPlan = priceId === process.env.STRIPE_PRICE_STARTER || priceId === process.env.STRIPE_PRICE_STARTER_YEARLY;
+    const trialDays = (isStarterPlan && !freshSub?.trialUsed) ? 14 : undefined;
 
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
