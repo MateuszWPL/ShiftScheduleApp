@@ -233,15 +233,15 @@ export default function BillingPage() {
       return { label: "Aktualny plan", disabled: true, action: () => {} };
     }
     if (isHigher) {
-      if (!hasStripeCustomer) {
-        // First time upgrade — go to checkout
+      if (!isActiveSub) {
+        // No active subscription — go through Stripe Checkout
         return {
           label: plan.id === "business" ? "Ulepsz do Business+" : "Wypróbuj 14 dni za darmo",
           disabled: false,
           action: () => handleUpgrade(plan.id),
         };
       }
-      // Already a customer — change plan via API (upgrade Starter→Business)
+      // Active subscription exists — change plan via API (e.g. Starter→Business)
       return {
         label: `Ulepsz do ${plan.name}`,
         disabled: false,
