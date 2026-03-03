@@ -8,7 +8,7 @@ import {
   Header,
   Res,
 } from '@nestjs/common';
-import { Response } from 'express';
+import type { Response } from 'express';
 import { CalendarService } from './calendar.service';
 import { JwtAuthGuard } from '../auth/auth.guard';
 import { PremiumGuard } from '../auth/guards/premium.guard';
