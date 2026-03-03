@@ -3,14 +3,22 @@ import { PrismaService } from '../prisma/prisma.service';
 import { MembershipStatus, ShiftStatus } from '@prisma/client';
 import * as crypto from 'crypto';
 
-function formatDateUtc(date: Date): string {
-  const y = date.getUTCFullYear().toString().padStart(4, '0');
-  const m = (date.getUTCMonth() + 1).toString().padStart(2, '0');
-  const d = date.getUTCDate().toString().padStart(2, '0');
-  const hh = date.getUTCHours().toString().padStart(2, '0');
-  const mm = date.getUTCMinutes().toString().padStart(2, '0');
-  const ss = date.getUTCSeconds().toString().padStart(2, '0');
-  return `${y}${m}${d}T${hh}${mm}${ss}Z`;
+/** Format date in Europe/Warsaw local time for iCal (fixes 1h shift in calendar apps) */
+const TZ = 'Europe/Warsaw';
+
+function formatDateInTz(date: Date): string {
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: TZ,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false,
+  }).formatToParts(date);
+  const get = (t: string) => parts.find((p) => p.type === t)?.value ?? '00';
+  return `${get('year')}${get('month')}${get('day')}T${get('hour')}${get('minute')}${get('second')}`;
 }
 
 @Injectable()
@@ -60,8 +68,8 @@ export class CalendarService {
     for (const e of events) {
       lines.push('BEGIN:VEVENT');
       lines.push(`UID:${e.uid}`);
-      lines.push(`DTSTART:${formatDateUtc(e.start)}`);
-      lines.push(`DTEND:${formatDateUtc(e.end)}`);
+      lines.push(`DTSTART;TZID=${TZ}:${formatDateInTz(e.start)}`);
+      lines.push(`DTEND;TZID=${TZ}:${formatDateInTz(e.end)}`);
       lines.push(`SUMMARY:${e.summary}`);
       if (e.description) {
         lines.push(`DESCRIPTION:${e.description.replace(/\r?\n/g, '\\n')}`);

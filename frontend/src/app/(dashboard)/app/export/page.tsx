@@ -15,6 +15,7 @@ import {
   Link2,
 } from "lucide-react";
 import Link from "next/link";
+import { toast } from "sonner";
 import { paths } from "@/lib/app-paths";
 
 /* ── helpers ── */
@@ -81,11 +82,12 @@ async function downloadFile(endpoint: string, filename: string, contentTypeHint:
 
 function ExportCard({
   icon, title, description, loading, onExport,
-  secondaryAction
+  secondaryAction, primaryLabel = "Pobierz CSV"
 }: {
   icon: React.ReactNode; title: string; description: string;
   loading: boolean; onExport: () => void;
   secondaryAction?: { label: string; icon: React.ReactNode; onClick: () => void; loading?: boolean };
+  primaryLabel?: string;
 }) {
   return (
     <div className="p-5 rounded-xl border border-brand-warm bg-white shadow-sm hover:shadow-md transition-shadow">
@@ -104,7 +106,7 @@ function ExportCard({
             className="flex items-center justify-center gap-1.5 px-3 py-2 w-full sm:w-auto rounded-lg bg-brand hover:bg-brand-light text-white text-xs font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Download className="h-3.5 w-3.5" />
-            {loading ? "Eksport..." : "Pobierz CSV"}
+            {loading ? "Eksport..." : primaryLabel}
           </button>
           {secondaryAction && (
             <button
@@ -202,13 +204,15 @@ export default function ExportPage() {
     setLoadingCalendarLink(true);
     try {
       const { token } = await getCalendarFeedToken();
-      const url = `${API_URL}/calendar/feed/${token}.ics`;
+      const apiBase = API_URL.replace(/\/$/, "");
+      const url = `${apiBase}/calendar/feed/${token}.ics`;
       await navigator.clipboard.writeText(url);
       setCopied(true);
       showSuccess("Link do kalendarza skopiowany.");
       setTimeout(() => setCopied(false), 2000);
-    } catch (e) {
-      console.error(e);
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : "Nie udało się skopiować linku.";
+      toast.error(msg);
     }
     setLoadingCalendarLink(false);
   };
@@ -315,6 +319,7 @@ export default function ExportPage() {
           description="Eksport Twoich zmian jako kalendarz iCal. Możesz pobrać jednorazowy plik lub podpiąć stały link, który będzie się sam aktualizował w Twoim kalendarzu."
           loading={loadingCalendarFile || loadingCalendarLink}
           onExport={handleCalendarFile}
+          primaryLabel="Pobierz .ics"
           secondaryAction={{
             label: copied ? "Skopiowano!" : "Kopiuj link subskrypcji",
             icon: <Link2 className="h-3.5 w-3.5" />,

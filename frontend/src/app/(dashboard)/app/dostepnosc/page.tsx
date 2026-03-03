@@ -47,17 +47,17 @@ function buildWeekRange(monday: Date): { from: string; to: string } {
 }
 
 function slotToMinutes(s: AvailabilitySlot): { startMin: number; endMin: number } {
-  const startMatch = s.startDateTime.match(/T(\d{2}):(\d{2})/);
-  const endMatch = s.endDateTime.match(/T(\d{2}):(\d{2})/);
-
-  const startMin = startMatch
-    ? parseInt(startMatch[1]) * 60 + parseInt(startMatch[2])
-    : 0;
-  const endMin = endMatch
-    ? parseInt(endMatch[1]) * 60 + parseInt(endMatch[2])
-    : 0;
-
-  return { startMin, endMin };
+  const startDate = new Date(s.startDateTime);
+  const endDate = new Date(s.endDateTime);
+  const startMin = startDate.getHours() * 60 + startDate.getMinutes();
+  const endMin = endDate.getHours() * 60 + endDate.getMinutes();
+  const endDay = endDate.getDate();
+  const startDay = startDate.getDate();
+  const dayDiff = endDay - startDay;
+  return {
+    startMin,
+    endMin: endMin + (dayDiff > 0 ? dayDiff * 24 * 60 : 0),
+  };
 }
 
 function slotToDateStr(s: AvailabilitySlot): string {
@@ -173,13 +173,20 @@ export default function DostepnoscPage() {
 
       const dayDate = new Date(weekStart);
       dayDate.setDate(dayDate.getDate() + dayIndex);
-      const dateStr = toLocalDateStr(dayDate);
+      const y = dayDate.getFullYear();
+      const m = dayDate.getMonth();
+      const d = dayDate.getDate();
 
-      for (const d of draftBlocks) {
-        const { start, end } = minutesToTime(d.startMin, d.endMin);
+      for (const block of draftBlocks) {
+        const startH = Math.floor(block.startMin / 60);
+        const startM = block.startMin % 60;
+        const endH = Math.floor(block.endMin / 60);
+        const endM = block.endMin % 60;
+        const startDate = new Date(y, m, d, startH, startM, 0);
+        const endDate = new Date(y, m, d, endH, endM, 0);
         allSlots.push({
-          startDateTime: `${dateStr}T${start}:00`,
-          endDateTime: `${dateStr}T${end}:00`,
+          startDateTime: startDate.toISOString(),
+          endDateTime: endDate.toISOString(),
         });
       }
     }
