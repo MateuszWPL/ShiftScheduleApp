@@ -1121,3 +1121,28 @@ export async function assignPositionsToEmployee(userId: string, positionIds: str
     throw new Error(error.message || "Błąd przypisywania stanowisk");
   }
 }
+
+// --- Calendar (Kalendarz) [Starter+] ---
+
+export interface CalendarFeedTokenResponse {
+  token: string;
+}
+
+export async function getCalendarFeedToken(): Promise<CalendarFeedTokenResponse> {
+  const res = await authenticatedFetch(`${API_URL}/calendar/feed-token`);
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.message || "Błąd pobierania linku kalendarza");
+  }
+  return res.json();
+}
+
+export async function revokeCalendarFeed(): Promise<void> {
+  const res = await authenticatedFetch(`${API_URL}/calendar/revoke-feed`, {
+    method: "POST",
+  });
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.message || "Błąd odwoływania linku kalendarza");
+  }
+}

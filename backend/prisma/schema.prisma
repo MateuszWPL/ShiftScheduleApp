@@ -37,6 +37,7 @@ model User {
   announcementReads      AnnouncementRead[]
   employeePositions      EmployeePosition[]
   team                   Team?               @relation(fields: [teamId], references: [id])
+  calendarFeed           CalendarFeed?
 }
 
 model Team {
@@ -53,6 +54,17 @@ model Team {
   settings           TeamSettings?
   subscription       Subscription?
   users              User[]
+}
+
+/// Publiczny feed kalendarza iCal dla użytkownika (link do subskrypcji)
+model CalendarFeed {
+  id        String   @id @default(uuid())
+  userId    String   @unique
+  token     String   @unique
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([token])
 }
 
 /// Subskrypcja zespołu (Stripe) — 1:1 z Team

@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { getPlanStatus, getAuthToken } from "@/lib/api";
+import { getPlanStatus, getAuthToken, getCalendarFeedToken, revokeCalendarFeed } from "@/lib/api";
 import {
   FileDown,
   Calendar,
@@ -50,14 +50,22 @@ function getRange(v: string) {
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
 
-async function downloadCsv(endpoint: string, filename: string) {
+async function downloadFile(endpoint: string, filename: string, contentTypeHint: "csv" | "ics") {
   const token = await getAuthToken();
   const res = await fetch(`${API_URL}${endpoint}`, {
     headers: token ? { Authorization: `Bearer ${token}` } : {},
   });
   if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error((err as { message?: string }).message || "Błąd eksportu");
+    let message = "Błąd eksportu";
+    try {
+      const err = await res.json();
+      if ((err as { message?: string }).message) {
+        message = (err as { message?: string }).message as string;
+      }
+    } catch {
+      // ignore
+    }
+    throw new Error(message);
   }
   const blob = await res.blob();
   const url = URL.createObjectURL(blob);
@@ -120,6 +128,9 @@ export default function ExportPage() {
   const [loadingSchedule, setLoadingSchedule] = useState(false);
   const [loadingHours, setLoadingHours] = useState(false);
   const [loadingEmployees, setLoadingEmployees] = useState(false);
+  const [loadingCalendarFile, setLoadingCalendarFile] = useState(false);
+  const [loadingCalendarLink, setLoadingCalendarLink] = useState(false);
+  const [copied, setCopied] = useState(false);
   const [success, setSuccess] = useState<string | null>(null);
 
   const { data: planStatus } = useQuery({
@@ -138,9 +149,10 @@ export default function ExportPage() {
   const handleSchedule = async () => {
     setLoadingSchedule(true);
     try {
-      await downloadCsv(
+      await downloadFile(
         `/export/schedule-csv?from=${dateRange.from}&to=${dateRange.to}`,
         `grafik_${dateRange.from}_${dateRange.to}.csv`,
+        "csv",
       );
       showSuccess("Grafik wyeksportowany!");
     } catch { /* ignore */ }
@@ -150,9 +162,10 @@ export default function ExportPage() {
   const handleHours = async () => {
     setLoadingHours(true);
     try {
-      await downloadCsv(
+      await downloadFile(
         `/export/hours-csv?from=${dateRange.from}&to=${dateRange.to}`,
         `raport_godzin_${dateRange.from}_${dateRange.to}.csv`,
+        "csv",
       );
       showSuccess("Raport godzin wyeksportowany!");
     } catch { /* ignore */ }
@@ -163,11 +176,42 @@ export default function ExportPage() {
     setLoadingEmployees(true);
     try {
       const today = new Date().toISOString().slice(0, 10);
-      await downloadCsv(`/export/employees-csv`, `pracownicy_${today}.csv`);
+      await downloadFile(`/export/employees-csv`, `pracownicy_${today}.csv`, "csv");
       showSuccess("Lista pracowników wyeksportowana!");
     } catch { /* ignore */ }
     setLoadingEmployees(false);
   };
+
+  const handleCalendarFile = async () => {
+    setLoadingCalendarFile(true);
+    try {
+      await downloadFile(
+        `/calendar/export-ics?from=${dateRange.from}&to=${dateRange.to}`,
+        `grafik_kalendarz_${dateRange.from}_${dateRange.to}.ics`,
+        "ics",
+      );
+      showSuccess("Plik kalendarza został pobrany.");
+    } catch (e) {
+      console.error(e);
+    }
+    setLoadingCalendarFile(false);
+  };
+
+  const handleCopyCalendarLink = async () => {
+    setLoadingCalendarLink(true);
+    try {
+      const { token } = await getCalendarFeedToken();
+      const url = `${API_URL}/calendar/feed/${token}.ics`;
+      await navigator.clipboard.writeText(url);
+      setCopied(true);
+      showSuccess("Link do kalendarza skopiowany.");
+      setTimeout(() => setCopied(false), 2000);
+    } catch (e) {
+      console.error(e);
+    }
+    setLoadingCalendarLink(false);
+  };
+
 
   if (!hasAccess) {
     return (
@@ -263,11 +307,30 @@ export default function ExportPage() {
           loading={loadingEmployees}
           onExport={handleEmployees}
         />
+
+        <ExportCard
+          icon={<Calendar className="h-5 w-5 text-brand-blue" />}
+          title="Kalendarz (Google / Apple / Outlook)"
+          description="Eksport Twoich zmian jako kalendarz iCal. Możesz pobrać jednorazowy plik lub podpiąć stały link, który będzie się sam aktualizował w Twoim kalendarzu."
+          loading={loadingCalendarFile || loadingCalendarLink}
+          onExport={handleCalendarFile}
+          secondaryAction={{
+            label: copied ? "Skopiowano!" : "Kopiuj link subskrypcji",
+            icon: <Link className="h-3.5 w-3.5" />,
+            onClick: handleCopyCalendarLink,
+            loading: loadingCalendarLink,
+          }}
+        />
       </div>
 
-      <p className="text-[10px] text-brand-dark-soft mt-4 text-center">
-        Pliki CSV są kodowane w UTF-8 z BOM i używają separatora &quot;;&quot; — otwierają się poprawnie w Excel.
-      </p>
+      <div className="mt-4 space-y-1 text-[10px] text-brand-dark-soft text-center">
+        <p>
+          Pliki CSV są kodowane w UTF-8 z BOM i używają separatora &quot;;&quot; — otwierają się poprawnie w Excel.
+        </p>
+        <p>
+          Aby dodać stały link do kalendarza: w Google Calendar wybierz &quot;Dodaj kalendarz&quot; → &quot;Z adresu URL&quot; i wklej skopiowany link.
+        </p>
+      </div>
     </div>
   );
 }
