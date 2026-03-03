@@ -12,6 +12,7 @@ import {
   ChevronDown,
   Crown,
   CheckCircle,
+  Link2,
 } from "lucide-react";
 import Link from "next/link";
 import { paths } from "@/lib/app-paths";
@@ -316,7 +317,7 @@ export default function ExportPage() {
           onExport={handleCalendarFile}
           secondaryAction={{
             label: copied ? "Skopiowano!" : "Kopiuj link subskrypcji",
-            icon: <Link className="h-3.5 w-3.5" />,
+            icon: <Link2 className="h-3.5 w-3.5" />,
             onClick: handleCopyCalendarLink,
             loading: loadingCalendarLink,
           }}
