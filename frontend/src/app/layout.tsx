@@ -7,12 +7,11 @@ import { Toaster } from "sonner";
 
 export const metadata: Metadata = {
   title: {
-    default: "Staffer.pl — Zarządzanie grafikami zmian",
+    default: "Staffer.pl — Panel zarządzania",
     template: "%s | Staffer.pl",
   },
-  description:
-    "Prosty system do tworzenia grafiku zmian, zarządzania zespołem i giełdy zmian. Dla restauracji, sklepów i usług.",
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://staffer.pl"),
+  description: "Panel zarządzania grafikami zmian i zespołem.",
+  metadataBase: new URL("https://app.staffer.pl"),
   openGraph: {
     type: "website",
   },
@@ -26,13 +25,13 @@ export default function RootLayout({
   return (
     <html lang="pl">
       <body>
-        <AuthProvider>        {/* <--- DODAJEMY */}
+        <AuthProvider>
           <QueryProvider>
             {children}
             <Toaster position="top-right" richColors />
           </QueryProvider>
-        </AuthProvider>       {/* <--- ZAMYKAMY */}
+        </AuthProvider>
       </body>
-    </html >
+    </html>
   );
 }
