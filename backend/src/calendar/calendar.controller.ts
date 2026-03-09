@@ -10,6 +10,7 @@ import {
 } from '@nestjs/common';
 import type { Response } from 'express';
 import { CalendarService } from './calendar.service';
+import { GoogleCalendarService } from './google-calendar.service';
 import { JwtAuthGuard } from '../auth/auth.guard';
 import { PremiumGuard } from '../auth/guards/premium.guard';
 import { RequirePlan } from '../auth/decorators/premium.decorator';
@@ -26,7 +27,12 @@ class CalendarRangeQueryDto {
 
 @Controller('calendar')
 export class CalendarController {
-  constructor(private readonly calendarService: CalendarService) {}
+  constructor(
+    private readonly calendarService: CalendarService,
+    private readonly googleCalendarService: GoogleCalendarService,
+  ) {}
+
+  // ── iCal (.ics) endpoints ─────────────────────────────
 
   @Get('export-ics')
   @UseGuards(JwtAuthGuard, PremiumGuard)
@@ -78,6 +84,58 @@ export class CalendarController {
 
     res.setHeader('Cache-Control', 'public, max-age=300');
     res.send(ics);
+  }
+
+  // ── Google Calendar API endpoints ─────────────────────
+
+  @Get('google/auth-url')
+  @UseGuards(JwtAuthGuard, PremiumGuard)
+  @RequirePlan('starter')
+  async getGoogleAuthUrl(
+    @CurrentUser() user: { userId: string },
+  ): Promise<{ url: string }> {
+    const url = this.googleCalendarService.getAuthUrl(user.userId);
+    return { url };
+  }
+
+  @Get('google/callback')
+  @UseGuards(JwtAuthGuard)
+  async googleCallback(
+    @CurrentUser() user: { userId: string },
+    @Query('code') code: string,
+  ) {
+    if (!code) {
+      throw new Error('Brak kodu autoryzacji Google.');
+    }
+    await this.googleCalendarService.handleCallback(code, user.userId);
+    return { success: true };
+  }
+
+  @Get('google/status')
+  @UseGuards(JwtAuthGuard)
+  async getGoogleStatus(@CurrentUser() user: { userId: string }) {
+    return this.googleCalendarService.getStatus(user.userId);
+  }
+
+  @Post('google/sync')
+  @UseGuards(JwtAuthGuard, PremiumGuard)
+  @RequirePlan('starter')
+  async syncToGoogle(
+    @CurrentUser() user: { userId: string },
+    @Query() query: CalendarRangeQueryDto,
+  ) {
+    return this.googleCalendarService.syncShifts(
+      user.userId,
+      query.from,
+      query.to,
+    );
+  }
+
+  @Post('google/disconnect')
+  @UseGuards(JwtAuthGuard)
+  async disconnectGoogle(@CurrentUser() user: { userId: string }) {
+    await this.googleCalendarService.disconnect(user.userId);
+    return { success: true };
   }
 }
 

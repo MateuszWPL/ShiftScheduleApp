@@ -17,6 +17,7 @@ import {
 import Link from "next/link";
 import { toast } from "sonner";
 import { paths } from "@/lib/app-paths";
+import { CalendarSyncButton } from "@/components/dashboard/CalendarSyncButton";
 
 /* ── helpers ── */
 
@@ -313,10 +314,34 @@ export default function ExportPage() {
           onExport={handleEmployees}
         />
 
+        {/* Google Calendar sync card */}
+        <div className="p-5 rounded-xl border border-brand-warm bg-white shadow-sm hover:shadow-md transition-shadow">
+          <div className="flex flex-col sm:flex-row sm:items-start gap-4">
+            <div className="w-10 h-10 rounded-xl bg-brand-muted flex items-center justify-center flex-shrink-0">
+              <Calendar className="h-5 w-5 text-brand-blue" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h3 className="text-sm font-bold text-brand-dark mb-1">
+                Google Calendar — synchronizacja
+              </h3>
+              <p className="text-xs text-brand-dark-muted leading-relaxed">
+                Automatycznie dodaj zmiany z grafiku do Google Calendar. Kliknij „Synchronizuj" — zmiany pojawią się w Twoim kalendarzu bez pobierania plików.
+              </p>
+            </div>
+            <div className="flex flex-col sm:items-end gap-2 flex-shrink-0 mt-3 sm:mt-0">
+              <CalendarSyncButton
+                from={dateRange.from}
+                to={dateRange.to}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* iCal file download (legacy) */}
         <ExportCard
-          icon={<Calendar className="h-5 w-5 text-brand-blue" />}
-          title="Kalendarz (Google / Apple / Outlook)"
-          description="Eksport Twoich zmian jako kalendarz iCal. Możesz pobrać jednorazowy plik lub podpiąć stały link, który będzie się sam aktualizował w Twoim kalendarzu."
+          icon={<Calendar className="h-5 w-5 text-brand-dark-muted" />}
+          title="Plik iCal (.ics) — jednorazowy"
+          description="Pobierz plik .ics z Twoimi zmianami i zaimportuj ręcznie do dowolnego kalendarza (Apple, Outlook, inne). Możesz też skopiować link do subskrypcji."
           loading={loadingCalendarFile || loadingCalendarLink}
           onExport={handleCalendarFile}
           primaryLabel="Pobierz .ics"
@@ -334,7 +359,7 @@ export default function ExportPage() {
           Pliki CSV są kodowane w UTF-8 z BOM i używają separatora &quot;;&quot; — otwierają się poprawnie w Excel.
         </p>
         <p>
-          Aby dodać stały link do kalendarza: w Google Calendar wybierz &quot;Dodaj kalendarz&quot; → &quot;Z adresu URL&quot; i wklej skopiowany link.
+          Najwygodniejsza opcja: &quot;Synchronizuj z Google Calendar&quot; — zmiany trafiają bezpośrednio do kalendarza bez pobierania plików.
         </p>
       </div>
     </div>

@@ -204,8 +204,9 @@ Audyt zakończony. Wszystkie punkty przeanalizowane; elementy do rozbudowy w 2.6
 - [ ] Hierarchia ról w zespole
 
 ### 3.7 Integracja z kalendarzem [PREMIUM: Starter+]
-- [ ] Eksport zmian do Google Calendar / iCal
-- [ ] Link do subskrypcji kalendarza (auto-aktualizacja)
+- [x] Eksport zmian do Google Calendar / iCal
+- [x] Link do subskrypcji kalendarza (auto-aktualizacja)
+- [x] Synchronizacja z Google Calendar (OAuth + przycisk „Synchronizuj" na stronie grafiku i eksportu)
 - [ ] Synchronizacja dwukierunkowa (jesli pracownik doda wydarzenie w Google Calendar -> konflikt)
 
 ### 3.8 API dla zewnetrznych systemow [PREMIUM: Enterprise]

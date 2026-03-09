@@ -22,6 +22,7 @@ import { ScheduleGrid, type AvailabilityDropData } from "@/components/dashboard/
 import { MyShiftsList } from "@/components/dashboard/MyShiftsList";
 import { CreateShiftDialog } from "@/components/dashboard/CreateShiftDialog";
 import { CopyWeekDialog } from "@/components/dashboard/CopyWeekDialog";
+import { CalendarSyncButton } from "@/components/dashboard/CalendarSyncButton";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import {
@@ -473,6 +474,11 @@ export default function GrafikPage() {
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-2 shrink-0">
+          <CalendarSyncButton
+            from={toLocalDateKey(monday)}
+            to={toLocalDateKey(toDate)}
+            label="Synchronizuj"
+          />
           {isAdmin && (
             <>
               {draftCount > 0 && (

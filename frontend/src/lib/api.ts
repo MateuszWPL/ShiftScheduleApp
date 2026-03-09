@@ -1146,3 +1146,71 @@ export async function revokeCalendarFeed(): Promise<void> {
     throw new Error(error.message || "Błąd odwoływania linku kalendarza");
   }
 }
+
+// --- Google Calendar (sync) [Starter+] ---
+
+export interface GoogleCalendarStatus {
+  connected: boolean;
+  lastSyncedAt: string | null;
+  email: string | null;
+}
+
+export async function getGoogleCalendarAuthUrl(): Promise<{ url: string }> {
+  const res = await authenticatedFetch(`${API_URL}/calendar/google/auth-url`);
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.message || "Błąd pobierania URL autoryzacji Google");
+  }
+  return res.json();
+}
+
+export async function googleCalendarCallback(code: string): Promise<{ success: boolean }> {
+  const res = await authenticatedFetch(
+    `${API_URL}/calendar/google/callback?code=${encodeURIComponent(code)}`,
+  );
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.message || "Błąd połączenia z Google Calendar");
+  }
+  return res.json();
+}
+
+export async function getGoogleCalendarStatus(): Promise<GoogleCalendarStatus> {
+  const res = await authenticatedFetch(`${API_URL}/calendar/google/status`);
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.message || "Błąd sprawdzania statusu Google Calendar");
+  }
+  return res.json();
+}
+
+export interface GoogleCalendarSyncResult {
+  created: number;
+  updated: number;
+  total: number;
+}
+
+export async function syncToGoogleCalendar(
+  from: string,
+  to: string,
+): Promise<GoogleCalendarSyncResult> {
+  const res = await authenticatedFetch(
+    `${API_URL}/calendar/google/sync?from=${from}&to=${to}`,
+    { method: "POST" },
+  );
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.message || "Błąd synchronizacji z Google Calendar");
+  }
+  return res.json();
+}
+
+export async function disconnectGoogleCalendar(): Promise<void> {
+  const res = await authenticatedFetch(`${API_URL}/calendar/google/disconnect`, {
+    method: "POST",
+  });
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.message || "Błąd rozłączania Google Calendar");
+  }
+}
