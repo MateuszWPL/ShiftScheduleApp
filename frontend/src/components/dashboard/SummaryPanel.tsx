@@ -2,6 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { getScheduleSummary, type ScheduleSummary, type SummaryEmployee } from "@/lib/api";
+import { useDashboardUser } from "@/components/providers/DashboardUserContext";
 import { Clock, AlertTriangle, CheckCircle2 } from "lucide-react";
 import Link from "next/link";
 import { paths } from "@/lib/app-paths";
@@ -13,6 +14,9 @@ interface SummaryPanelProps {
 }
 
 export function SummaryPanel({ from, to, periodLabel }: SummaryPanelProps) {
+  const { dbUser } = useDashboardUser();
+  const isAdmin = dbUser?.role === "OWNER" || dbUser?.role === "MANAGER";
+
   const { data, isLoading } = useQuery({
     queryKey: ["schedule-summary", from, to],
     queryFn: () => getScheduleSummary({ from, to }),
@@ -41,7 +45,9 @@ export function SummaryPanel({ from, to, periodLabel }: SummaryPanelProps) {
             <p className="text-[11px] text-brand-dark-muted">{periodLabel}</p>
           </div>
         </div>
-        <p className="text-sm text-brand-dark-muted">Brak pracowników lub zmian w tym okresie.</p>
+        <p className="text-sm text-brand-dark-muted">
+          {isAdmin ? "Brak pracowników lub zmian w tym okresie." : "Brak Twoich zmian w tym okresie."}
+        </p>
         <Link
           href={paths.grafik}
           className="inline-flex items-center gap-1.5 text-xs font-medium text-brand hover:underline mt-3"
@@ -68,7 +74,7 @@ export function SummaryPanel({ from, to, periodLabel }: SummaryPanelProps) {
           </div>
         </div>
         <span className="text-xs font-medium text-brand-dark-muted bg-brand-warm-light px-2.5 py-1 rounded-full">
-          Łącznie {Math.round(totalHours * 10) / 10}h
+          {isAdmin ? "Łącznie" : "Razem"} {Math.round(totalHours * 10) / 10}h
         </span>
       </div>
 
@@ -82,7 +88,9 @@ export function SummaryPanel({ from, to, periodLabel }: SummaryPanelProps) {
         <div className="mt-4 pt-4 border-t border-brand-warm">
           <p className="text-[11px] font-medium text-amber-600 flex items-center gap-1.5 mb-2">
             <AlertTriangle className="h-3.5 w-3.5" />
-            {withWarnings.length} {withWarnings.length === 1 ? "pracownik ma" : "pracowników ma"} ostrzeżenia
+            {isAdmin
+              ? `${withWarnings.length} ${withWarnings.length === 1 ? "pracownik ma" : "pracowników ma"} ostrzeżenia`
+              : "Masz ostrzeżenia dotyczące grafiku"}
           </p>
         </div>
       )}

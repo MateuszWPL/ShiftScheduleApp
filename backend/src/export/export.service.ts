@@ -44,21 +44,28 @@ export class ExportService {
     return values.map((v) => this.escapeCsv(v)).join(';');
   }
 
+  private isAdmin(role: string): boolean {
+    return role === 'OWNER' || role === 'MANAGER';
+  }
+
   // ── Eksport grafiku do CSV ───────────────────────────────────
 
-  async exportScheduleCsv(userId: string, from: string, to: string): Promise<string> {
+  async exportScheduleCsv(userId: string, from: string, to: string, callerRole: string = 'OWNER'): Promise<string> {
     const teamId = await this.getTeamId(userId);
     const fromDate = new Date(from);
     const toDate = new Date(to);
+    const onlyMine = !this.isAdmin(callerRole);
 
     const shifts = await this.prisma.shift.findMany({
       where: {
         teamId,
         startTime: { gte: fromDate, lt: toDate },
         status: { in: [ShiftStatus.PUBLISHED, ShiftStatus.COMPLETED] },
+        ...(onlyMine ? { assignments: { some: { userId } } } : {}),
       },
       include: {
         assignments: {
+          ...(onlyMine ? { where: { userId } } : {}),
           include: {
             user: { select: { name: true, nickname: true, email: true } },
           },
@@ -68,11 +75,11 @@ export class ExportService {
       orderBy: { startTime: 'asc' },
     });
 
-    const header = this.toCsvRow([
-      'Data', 'Dzień', 'Godzina rozpoczęcia', 'Godzina zakończenia',
-      'Czas trwania (h)', 'Stanowisko', 'Pracownik', 'Email', 'Status',
-    ]);
+    const headerCols = onlyMine
+      ? ['Data', 'Dzień', 'Godzina rozpoczęcia', 'Godzina zakończenia', 'Czas trwania (h)', 'Stanowisko', 'Status']
+      : ['Data', 'Dzień', 'Godzina rozpoczęcia', 'Godzina zakończenia', 'Czas trwania (h)', 'Stanowisko', 'Pracownik', 'Email', 'Status'];
 
+    const header = this.toCsvRow(headerCols);
     const dayNames = ['Niedziela', 'Poniedziałek', 'Wtorek', 'Środa', 'Czwartek', 'Piątek', 'Sobota'];
 
     const rows = shifts.flatMap((shift) => {
@@ -84,6 +91,10 @@ export class ExportService {
       const startTime = start.toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' });
       const endTime = end.toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' });
       const position = shift.position?.name || shift.roleName;
+
+      if (onlyMine) {
+        return [this.toCsvRow([date, dayName, startTime, endTime, hrs, position, shift.status])];
+      }
 
       if (shift.assignments.length === 0) {
         return [this.toCsvRow([date, dayName, startTime, endTime, hrs, position, 'Brak przypisania', '', shift.status])];
@@ -101,12 +112,13 @@ export class ExportService {
 
   // ── Eksport raportu godzin do CSV ────────────────────────────
 
-  async exportHoursCsv(userId: string, from: string, to: string): Promise<string> {
+  async exportHoursCsv(userId: string, from: string, to: string, callerRole: string = 'OWNER'): Promise<string> {
     const teamId = await this.getTeamId(userId);
     const fromDate = new Date(from);
     const toDate = new Date(to);
+    const onlyMine = !this.isAdmin(callerRole);
 
-    const [shifts, members] = await Promise.all([
+    const [shifts, allMembers] = await Promise.all([
       this.prisma.shift.findMany({
         where: {
           teamId,
@@ -130,7 +142,10 @@ export class ExportService {
       }),
     ]);
 
-    // Oblicz godziny
+    const members = onlyMine
+      ? allMembers.filter((m) => m.user.id === userId)
+      : allMembers;
+
     const hoursMap = new Map<string, { hours: number; shifts: number; cost: number }>();
     for (const m of members) {
       hoursMap.set(m.user.id, { hours: 0, shifts: 0, cost: 0 });
@@ -138,14 +153,35 @@ export class ExportService {
     for (const shift of shifts) {
       const hrs = (new Date(shift.endTime).getTime() - new Date(shift.startTime).getTime()) / 3600000;
       for (const a of shift.assignments) {
-        if (!a.userId || !a.user) continue;
-        const rec = hoursMap.get(a.userId) ?? { hours: 0, shifts: 0, cost: 0 };
+        if (!a.userId || !a.user || !hoursMap.has(a.userId)) continue;
+        const rec = hoursMap.get(a.userId)!;
         const rate = Number(a.user.hourlyRate ?? 0);
         rec.hours += hrs;
         rec.shifts += 1;
         rec.cost += hrs * rate;
-        hoursMap.set(a.userId, rec);
       }
+    }
+
+    if (onlyMine) {
+      const header = this.toCsvRow(['Pracownik', 'Godziny', 'Zmiany', 'Max godzin', 'Nadgodziny']);
+
+      const rows = members.map((m) => {
+        const rec = hoursMap.get(m.user.id) ?? { hours: 0, shifts: 0, cost: 0 };
+        const totalHours = Math.round(rec.hours * 10) / 10;
+        const maxH = m.user.maxHours;
+        const overtime = maxH != null && totalHours > maxH
+          ? Math.round((totalHours - maxH) * 10) / 10
+          : 0;
+        return this.toCsvRow([
+          m.user.nickname || m.user.name,
+          this.excelSafeNumber(totalHours),
+          rec.shifts,
+          maxH ?? '',
+          this.excelSafeNumber(overtime),
+        ]);
+      });
+
+      return this.csvHeader() + header + '\n' + rows.join('\n');
     }
 
     const header = this.toCsvRow([

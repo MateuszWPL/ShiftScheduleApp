@@ -57,15 +57,22 @@ export class ReportsService {
     return { shifts, members };
   }
 
+  private isAdmin(role: string): boolean {
+    return role === 'OWNER' || role === 'MANAGER';
+  }
+
   // ── Raport godzin pracy ─────────────────────────────────────
 
-  async getHoursReport(userId: string, from: string, to: string) {
+  async getHoursReport(userId: string, from: string, to: string, callerRole: string = 'OWNER') {
     const teamId = await this.getTeamId(userId);
     const fromDate = new Date(from);
     const toDate = new Date(to);
-    const { shifts, members } = await this.getShiftData(teamId, fromDate, toDate);
+    let { shifts, members } = await this.getShiftData(teamId, fromDate, toDate);
 
-    // Oblicz godziny per pracownik
+    if (!this.isAdmin(callerRole)) {
+      members = members.filter((m) => m.user.id === userId);
+    }
+
     const hoursMap = new Map<string, { total: number; shifts: number; days: Set<string> }>();
     for (const m of members) {
       hoursMap.set(m.user.id, { total: 0, shifts: 0, days: new Set() });
@@ -75,12 +82,11 @@ export class ReportsService {
       const hrs = (new Date(shift.endTime).getTime() - new Date(shift.startTime).getTime()) / 3600000;
       const day = new Date(shift.startTime).toISOString().slice(0, 10);
       for (const a of shift.assignments) {
-        if (!a.userId) continue;
-        const rec = hoursMap.get(a.userId) ?? { total: 0, shifts: 0, days: new Set<string>() };
+        if (!a.userId || !hoursMap.has(a.userId)) continue;
+        const rec = hoursMap.get(a.userId)!;
         rec.total += hrs;
         rec.shifts += 1;
         rec.days.add(day);
-        hoursMap.set(a.userId, rec);
       }
     }
 
@@ -168,11 +174,15 @@ export class ReportsService {
 
   // ── Raport zgodności z Kodeksem Pracy ───────────────────────
 
-  async getComplianceReport(userId: string, from: string, to: string) {
+  async getComplianceReport(userId: string, from: string, to: string, callerRole: string = 'OWNER') {
     const teamId = await this.getTeamId(userId);
     const fromDate = new Date(from);
     const toDate = new Date(to);
-    const { shifts, members } = await this.getShiftData(teamId, fromDate, toDate);
+    let { shifts, members } = await this.getShiftData(teamId, fromDate, toDate);
+
+    if (!this.isAdmin(callerRole)) {
+      members = members.filter((m) => m.user.id === userId);
+    }
 
     // Buduj listę zmian per pracownik
     const shiftsMap = new Map<string, { start: Date; end: Date; roleName: string }[]>();

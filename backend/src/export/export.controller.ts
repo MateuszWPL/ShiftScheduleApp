@@ -1,4 +1,4 @@
-import { Controller, Get, Query, UseGuards, Header, StreamableFile } from '@nestjs/common';
+import { Controller, Get, Query, UseGuards, Header, StreamableFile, ForbiddenException } from '@nestjs/common';
 import { ExportService } from './export.service';
 import { CurrentUser } from '../auth/decorators/user.decorator';
 import { RequirePlan } from '../auth/decorators/premium.decorator';
@@ -24,10 +24,10 @@ export class ExportController {
   @Get('schedule-csv')
   @Header('Content-Type', 'text/csv; charset=utf-8')
   async exportScheduleCsv(
-    @CurrentUser() user: { userId: string },
+    @CurrentUser() user: { userId: string; role: string },
     @Query() query: ExportDateQueryDto,
   ): Promise<StreamableFile> {
-    const csv = await this.exportService.exportScheduleCsv(user.userId, query.from, query.to);
+    const csv = await this.exportService.exportScheduleCsv(user.userId, query.from, query.to, user.role);
     return new StreamableFile(Readable.from(csv), {
       disposition: `attachment; filename="grafik_${query.from}_${query.to}.csv"`,
     });
@@ -36,10 +36,10 @@ export class ExportController {
   @Get('hours-csv')
   @Header('Content-Type', 'text/csv; charset=utf-8')
   async exportHoursCsv(
-    @CurrentUser() user: { userId: string },
+    @CurrentUser() user: { userId: string; role: string },
     @Query() query: ExportDateQueryDto,
   ): Promise<StreamableFile> {
-    const csv = await this.exportService.exportHoursCsv(user.userId, query.from, query.to);
+    const csv = await this.exportService.exportHoursCsv(user.userId, query.from, query.to, user.role);
     return new StreamableFile(Readable.from(csv), {
       disposition: `attachment; filename="raport_godzin_${query.from}_${query.to}.csv"`,
     });
@@ -48,8 +48,11 @@ export class ExportController {
   @Get('employees-csv')
   @Header('Content-Type', 'text/csv; charset=utf-8')
   async exportEmployeesCsv(
-    @CurrentUser() user: { userId: string },
+    @CurrentUser() user: { userId: string; role: string },
   ): Promise<StreamableFile> {
+    if (user.role === 'EMPLOYEE') {
+      throw new ForbiddenException('Eksport listy pracowników jest dostępny tylko dla właściciela i menedżera.');
+    }
     const csv = await this.exportService.exportEmployeesCsv(user.userId);
     const today = new Date().toISOString().slice(0, 10);
     return new StreamableFile(Readable.from(csv), {

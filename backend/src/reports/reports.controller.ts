@@ -1,10 +1,10 @@
-import { Controller, Get, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Query, UseGuards, ForbiddenException } from '@nestjs/common';
 import { ReportsService } from './reports.service';
 import { CurrentUser } from '../auth/decorators/user.decorator';
 import { RequirePlan } from '../auth/decorators/premium.decorator';
 import { JwtAuthGuard } from '../auth/auth.guard';
 import { PremiumGuard } from '../auth/guards/premium.guard';
-import { IsDateString, IsOptional } from 'class-validator';
+import { IsDateString } from 'class-validator';
 
 class ReportQueryDto {
   @IsDateString()
@@ -20,30 +20,30 @@ class ReportQueryDto {
 export class ReportsController {
   constructor(private readonly reportsService: ReportsService) {}
 
-  /** Raport godzin pracy per pracownik */
   @Get('hours')
   getHoursReport(
-    @CurrentUser() user: { userId: string },
+    @CurrentUser() user: { userId: string; role: string },
     @Query() query: ReportQueryDto,
   ) {
-    return this.reportsService.getHoursReport(user.userId, query.from, query.to);
+    return this.reportsService.getHoursReport(user.userId, query.from, query.to, user.role);
   }
 
-  /** Raport kosztów wynagrodzeń */
   @Get('costs')
   getCostsReport(
-    @CurrentUser() user: { userId: string },
+    @CurrentUser() user: { userId: string; role: string },
     @Query() query: ReportQueryDto,
   ) {
+    if (user.role === 'EMPLOYEE') {
+      throw new ForbiddenException('Raport kosztów jest dostępny tylko dla właściciela i menedżera.');
+    }
     return this.reportsService.getCostsReport(user.userId, query.from, query.to);
   }
 
-  /** Raport zgodności z Kodeksem Pracy */
   @Get('compliance')
   getComplianceReport(
-    @CurrentUser() user: { userId: string },
+    @CurrentUser() user: { userId: string; role: string },
     @Query() query: ReportQueryDto,
   ) {
-    return this.reportsService.getComplianceReport(user.userId, query.from, query.to);
+    return this.reportsService.getComplianceReport(user.userId, query.from, query.to, user.role);
   }
 }

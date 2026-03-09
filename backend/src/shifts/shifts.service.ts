@@ -88,7 +88,7 @@ export class ShiftsService {
   }
 
   /** Podsumowanie okresu: godziny per pracownik, ostrzeżenia (maxHours, brak dostępności) */
-  async getSummary(userId: string, from: string, to: string) {
+  async getSummary(userId: string, from: string, to: string, callerRole: string = 'OWNER') {
     const membership = await this.prisma.teamMembership.findFirst({
       where: { userId, status: MembershipStatus.ACTIVE },
     });
@@ -96,10 +96,11 @@ export class ShiftsService {
       throw new BadRequestException('Brak aktywnego zespołu.');
     }
 
+    const isAdmin = callerRole === 'OWNER' || callerRole === 'MANAGER';
     const fromDate = new Date(from);
     const toDate = new Date(to);
 
-    const [shifts, members, availabilitySlots] = await Promise.all([
+    const [shifts, allMembers, availabilitySlots] = await Promise.all([
       this.prisma.shift.findMany({
         where: {
           teamId: membership.teamId,
@@ -125,6 +126,8 @@ export class ShiftsService {
         },
       }),
     ]);
+
+    const members = isAdmin ? allMembers : allMembers.filter((m) => m.user.id === userId);
 
     const employeeHours = new Map<string, number>();
     const employeeShifts = new Map<string, { shiftId: string; start: Date; end: Date; roleName: string }[]>();

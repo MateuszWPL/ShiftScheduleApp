@@ -48,7 +48,7 @@ export class ShiftsController {
   @SkipThrottle()
   @Get('summary')
   getSummary(@CurrentUser() user: User, @Query() query: SummaryQueryDto) {
-    return this.shiftsService.getSummary(user.userId, query.from, query.to);
+    return this.shiftsService.getSummary(user.userId, query.from, query.to, user.role);
   }
 
   @SkipThrottle()

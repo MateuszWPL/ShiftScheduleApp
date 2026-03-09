@@ -8,6 +8,7 @@ import {
   getComplianceReport,
   getPlanStatus,
 } from "@/lib/api";
+import { useDashboardUser } from "@/components/providers/DashboardUserContext";
 import {
   BarChart3,
   Clock,
@@ -86,9 +87,9 @@ function getRange(value: string): { from: string; to: string } {
 
 type Tab = "hours" | "costs" | "compliance";
 
-const TABS: { id: Tab; label: string; icon: React.ReactNode }[] = [
+const ALL_TABS: { id: Tab; label: string; icon: React.ReactNode; adminOnly?: boolean }[] = [
   { id: "hours", label: "Godziny", icon: <Clock className="h-4 w-4" /> },
-  { id: "costs", label: "Koszty", icon: <DollarSign className="h-4 w-4" /> },
+  { id: "costs", label: "Koszty", icon: <DollarSign className="h-4 w-4" />, adminOnly: true },
   { id: "compliance", label: "Zgodność KP", icon: <Shield className="h-4 w-4" /> },
 ];
 
@@ -126,6 +127,8 @@ function HoursBar({ value, max, color }: { value: number; max: number; color: st
 /* ── Main page ── */
 
 export default function ReportsPage() {
+  const { dbUser } = useDashboardUser();
+  const isAdmin = dbUser?.role === "OWNER" || dbUser?.role === "MANAGER";
   const [tab, setTab] = useState<Tab>("hours");
   const [range, setRange] = useState("this-month");
 
@@ -135,8 +138,11 @@ export default function ReportsPage() {
   });
 
   const hasAccess = planStatus?.hasStarter ?? false;
-
   const dateRange = useMemo(() => getRange(range), [range]);
+  const visibleTabs = useMemo(
+    () => ALL_TABS.filter((t) => !t.adminOnly || isAdmin),
+    [isAdmin],
+  );
 
   const { data: hoursData, isLoading: hoursLoading } = useQuery({
     queryKey: ["report-hours", dateRange],
@@ -147,7 +153,7 @@ export default function ReportsPage() {
   const { data: costsData, isLoading: costsLoading } = useQuery({
     queryKey: ["report-costs", dateRange],
     queryFn: () => getCostsReport(dateRange),
-    enabled: hasAccess && tab === "costs",
+    enabled: hasAccess && tab === "costs" && isAdmin,
   });
 
   const { data: compData, isLoading: compLoading } = useQuery({
@@ -163,10 +169,10 @@ export default function ReportsPage() {
           <BarChart3 className="h-8 w-8 text-brand" />
         </div>
         <h2 className="text-lg font-bold text-brand-dark mb-1">
-          Raporty i analizy
+          {isAdmin ? "Raporty i analizy" : "Moje raporty"}
         </h2>
         <p className="text-sm text-brand-dark-muted max-w-sm mb-5">
-          Raporty godzin, kosztów i zgodności z Kodeksem Pracy dostępne od planu{" "}
+          Raporty godzin{isAdmin ? ", kosztów" : ""} i zgodności z Kodeksem Pracy dostępne od planu{" "}
           <span className="font-semibold text-brand-blue">Starter+</span>.
         </p>
         <Link
@@ -189,9 +195,13 @@ export default function ReportsPage() {
             <BarChart3 className="h-5 w-5 text-brand" />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-brand-dark">Raporty</h1>
+            <h1 className="text-xl font-bold text-brand-dark">
+              {isAdmin ? "Raporty" : "Moje raporty"}
+            </h1>
             <p className="text-xs text-brand-dark-muted">
-              Analizy godzin, kosztów i zgodności z KP
+              {isAdmin
+                ? "Analizy godzin, kosztów i zgodności z KP"
+                : "Twoje godziny i zgodność z Kodeksem Pracy"}
             </p>
           </div>
         </div>
@@ -215,7 +225,7 @@ export default function ReportsPage() {
 
       {/* Tabs */}
       <div className="flex gap-1 p-1 bg-brand-warm/40 rounded-xl mb-6">
-        {TABS.map((t) => (
+        {visibleTabs.map((t) => (
           <button
             key={t.id}
             onClick={() => setTab(t.id)}
@@ -233,13 +243,13 @@ export default function ReportsPage() {
 
       {/* Tab content */}
       {tab === "hours" && (
-        <HoursTab data={hoursData} loading={hoursLoading} />
+        <HoursTab data={hoursData} loading={hoursLoading} isAdmin={isAdmin} />
       )}
-      {tab === "costs" && (
+      {tab === "costs" && isAdmin && (
         <CostsTab data={costsData} loading={costsLoading} />
       )}
       {tab === "compliance" && (
-        <ComplianceTab data={compData} loading={compLoading} />
+        <ComplianceTab data={compData} loading={compLoading} isAdmin={isAdmin} />
       )}
     </div>
   );
@@ -248,44 +258,49 @@ export default function ReportsPage() {
 /* ──────────────────── TAB: GODZINY ──────────────────── */
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function HoursTab({ data, loading }: { data: any; loading: boolean }) {
+function HoursTab({ data, loading, isAdmin }: { data: any; loading: boolean; isAdmin: boolean }) {
   if (loading) return <Loading />;
   if (!data) return null;
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const maxHours = Math.max(...(data.employees?.map((e: any) => e.totalHours) ?? [1]));
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const overtimeCount = data.employees?.filter((e: any) => e.overtime > 0).length ?? 0;
 
   return (
     <div className="space-y-5">
       {/* Stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <div className={`grid gap-3 ${isAdmin ? "grid-cols-2 sm:grid-cols-4" : "grid-cols-2 sm:grid-cols-3"}`}>
         <Stat
-          label="Łączne godziny"
+          label={isAdmin ? "Łączne godziny" : "Twoje godziny"}
           value={data.totalTeamHours}
           icon={<Clock className="h-4 w-4" />}
           sub={`${data.totalTeamShifts} zmian`}
         />
-        <Stat
-          label="Pracownicy"
-          value={data.employeeCount}
-          icon={<Users className="h-4 w-4" />}
-          color="text-brand-blue"
-        />
-        <Stat
-          label="Średnio / os."
-          value={data.employeeCount > 0
-            ? Math.round((data.totalTeamHours / data.employeeCount) * 10) / 10
-            : 0
-          }
-          sub="godzin"
-          icon={<TrendingUp className="h-4 w-4" />}
-          color="text-success"
-        />
+        {isAdmin && (
+          <Stat
+            label="Pracownicy"
+            value={data.employeeCount}
+            icon={<Users className="h-4 w-4" />}
+            color="text-brand-blue"
+          />
+        )}
+        {isAdmin && (
+          <Stat
+            label="Średnio / os."
+            value={data.employeeCount > 0
+              ? Math.round((data.totalTeamHours / data.employeeCount) * 10) / 10
+              : 0
+            }
+            sub="godzin"
+            icon={<TrendingUp className="h-4 w-4" />}
+            color="text-success"
+          />
+        )}
         <Stat
           label="Nadgodziny"
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          value={data.employees?.filter((e: any) => e.overtime > 0).length ?? 0}
-          sub="pracowników"
+          value={isAdmin ? overtimeCount : (data.employees?.[0]?.overtime ?? 0)}
+          sub={isAdmin ? "pracowników" : "godzin"}
           icon={<AlertTriangle className="h-4 w-4" />}
           color="text-warning"
         />
@@ -297,7 +312,7 @@ function HoursTab({ data, loading }: { data: any; loading: boolean }) {
           <thead>
             <tr className="bg-brand-warm/30">
               <th className="text-left p-3 text-xs font-semibold text-brand-dark-muted uppercase tracking-wide">
-                Pracownik
+                {isAdmin ? "Pracownik" : "Imię"}
               </th>
               <th className="text-right p-3 text-xs font-semibold text-brand-dark-muted uppercase tracking-wide">
                 Godziny
@@ -308,7 +323,7 @@ function HoursTab({ data, loading }: { data: any; loading: boolean }) {
               <th className="text-right p-3 text-xs font-semibold text-brand-dark-muted uppercase tracking-wide hidden sm:table-cell">
                 Śr. / zmianę
               </th>
-              <th className="p-3 min-w-[120px] hidden md:table-cell" />
+              {isAdmin && <th className="p-3 min-w-[120px] hidden md:table-cell" />}
             </tr>
           </thead>
           <tbody className="divide-y divide-brand-warm/50">
@@ -337,13 +352,15 @@ function HoursTab({ data, loading }: { data: any; loading: boolean }) {
                 <td className="p-3 text-right text-brand-dark-muted tabular-nums hidden sm:table-cell">
                   {e.avgHoursPerShift}h
                 </td>
-                <td className="p-3 hidden md:table-cell">
-                  <HoursBar
-                    value={e.totalHours}
-                    max={maxHours}
-                    color={e.overtime > 0 ? "bg-warning" : "bg-brand"}
-                  />
-                </td>
+                {isAdmin && (
+                  <td className="p-3 hidden md:table-cell">
+                    <HoursBar
+                      value={e.totalHours}
+                      max={maxHours}
+                      color={e.overtime > 0 ? "bg-warning" : "bg-brand"}
+                    />
+                  </td>
+                )}
               </tr>
             ))}
           </tbody>
@@ -442,19 +459,21 @@ function CostsTab({ data, loading }: { data: any; loading: boolean }) {
 /* ──────────────────── TAB: ZGODNOŚĆ KP ─────────────── */
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function ComplianceTab({ data, loading }: { data: any; loading: boolean }) {
+function ComplianceTab({ data, loading, isAdmin }: { data: any; loading: boolean; isAdmin: boolean }) {
   if (loading) return <Loading />;
   if (!data) return null;
 
   return (
     <div className="space-y-5">
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-        <Stat
-          label="Zgodni"
-          value={`${data.compliantCount} / ${data.employeeCount}`}
-          icon={<Check className="h-4 w-4" />}
-          color="text-success"
-        />
+      <div className={`grid gap-3 ${isAdmin ? "grid-cols-2 sm:grid-cols-3" : "grid-cols-2"}`}>
+        {isAdmin && (
+          <Stat
+            label="Zgodni"
+            value={`${data.compliantCount} / ${data.employeeCount}`}
+            icon={<Check className="h-4 w-4" />}
+            color="text-success"
+          />
+        )}
         <Stat
           label="Naruszenia"
           value={data.totalViolations}
@@ -462,10 +481,13 @@ function ComplianceTab({ data, loading }: { data: any; loading: boolean }) {
           color={data.totalViolations > 0 ? "text-error" : "text-success"}
         />
         <Stat
-          label="Zgodność"
-          value={data.employeeCount > 0
-            ? `${Math.round((data.compliantCount / data.employeeCount) * 100)}%`
-            : "–"
+          label={isAdmin ? "Zgodność" : "Status"}
+          value={
+            !isAdmin
+              ? (data.totalViolations === 0 ? "Zgodny" : "Naruszenia")
+              : data.employeeCount > 0
+                ? `${Math.round((data.compliantCount / data.employeeCount) * 100)}%`
+                : "–"
           }
           icon={<Shield className="h-4 w-4" />}
           color="text-brand"

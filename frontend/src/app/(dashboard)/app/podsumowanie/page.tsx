@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { SummaryPanel } from "@/components/dashboard/SummaryPanel";
 import { MonthlyCalendarView } from "@/components/dashboard/MonthlyCalendarView";
+import { useDashboardUser } from "@/components/providers/DashboardUserContext";
 import { Button } from "@/components/ui/button";
 import { BarChart3, LayoutGrid, CalendarRange, ChevronLeft, ChevronRight } from "lucide-react";
 
@@ -16,6 +17,8 @@ function getWeekMonday(d: Date): Date {
 }
 
 export default function PodsumowaniePage() {
+  const { dbUser } = useDashboardUser();
+  const isAdmin = dbUser?.role === "OWNER" || dbUser?.role === "MANAGER";
   const [viewMode, setViewMode] = useState<"week" | "month">("week");
   const [weekStart, setWeekStart] = useState(() => getWeekMonday(new Date()));
   const [monthDate, setMonthDate] = useState(() => new Date());
@@ -41,8 +44,12 @@ export default function PodsumowaniePage() {
           <BarChart3 className="h-5 w-5 text-brand" />
         </div>
         <div className="min-w-0">
-          <h1 className="text-lg sm:text-xl font-bold text-brand-dark truncate">Podsumowanie</h1>
-          <p className="text-xs text-brand-dark-muted truncate">Godziny pracowników i przegląd grafiku</p>
+          <h1 className="text-lg sm:text-xl font-bold text-brand-dark truncate">
+            {isAdmin ? "Podsumowanie" : "Moje podsumowanie"}
+          </h1>
+          <p className="text-xs text-brand-dark-muted truncate">
+            {isAdmin ? "Godziny pracowników i przegląd grafiku" : "Twoje godziny i przegląd grafiku"}
+          </p>
         </div>
       </div>
 

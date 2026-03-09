@@ -3,6 +3,7 @@
 import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { getPlanStatus, getAuthToken, getCalendarFeedToken, revokeCalendarFeed } from "@/lib/api";
+import { useDashboardUser } from "@/components/providers/DashboardUserContext";
 import {
   FileDown,
   Calendar,
@@ -128,6 +129,8 @@ function ExportCard({
 /* ── Main ── */
 
 export default function ExportPage() {
+  const { dbUser } = useDashboardUser();
+  const isAdmin = dbUser?.role === "OWNER" || dbUser?.role === "MANAGER";
   const [range, setRange] = useState("this-month");
   const [loadingSchedule, setLoadingSchedule] = useState(false);
   const [loadingHours, setLoadingHours] = useState(false);
@@ -225,9 +228,11 @@ export default function ExportPage() {
         <div className="w-16 h-16 rounded-2xl bg-brand-muted flex items-center justify-center mb-4">
           <FileDown className="h-8 w-8 text-brand" />
         </div>
-        <h2 className="text-lg font-bold text-brand-dark mb-1">Eksport danych</h2>
+        <h2 className="text-lg font-bold text-brand-dark mb-1">
+          {isAdmin ? "Eksport danych" : "Eksport moich danych"}
+        </h2>
         <p className="text-sm text-brand-dark-muted max-w-sm mb-5">
-          Eksport grafiku, raportów godzin i listy pracowników dostępny od planu{" "}
+          Eksport grafiku{isAdmin ? ", raportów godzin i listy pracowników" : " i godzin pracy"} dostępny od planu{" "}
           <span className="font-semibold text-brand-blue">Starter+</span>.
         </p>
         <Link
@@ -250,9 +255,11 @@ export default function ExportPage() {
             <FileDown className="h-5 w-5 text-brand" />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-brand-dark">Eksport danych</h1>
+            <h1 className="text-xl font-bold text-brand-dark">
+              {isAdmin ? "Eksport danych" : "Eksport moich danych"}
+            </h1>
             <p className="text-xs text-brand-dark-muted">
-              Pobierz dane w formacie CSV
+              {isAdmin ? "Pobierz dane w formacie CSV" : "Pobierz swoje dane w formacie CSV"}
             </p>
           </div>
         </div>
@@ -285,8 +292,11 @@ export default function ExportPage() {
       <div className="space-y-3">
         <ExportCard
           icon={<Calendar className="h-5 w-5 text-brand" />}
-          title="Grafik zmian"
-          description="Eksport opublikowanych zmian z przypisaniami pracowników, stanowiskami i godzinami. Format gotowy do wydruku lub wgrania do systemu kadrowego."
+          title={isAdmin ? "Grafik zmian" : "Twój grafik zmian"}
+          description={isAdmin
+            ? "Eksport opublikowanych zmian z przypisaniami pracowników, stanowiskami i godzinami. Format gotowy do wydruku lub wgrania do systemu kadrowego."
+            : "Eksport Twoich opublikowanych zmian ze stanowiskami i godzinami."
+          }
           loading={loadingSchedule}
           onExport={handleSchedule}
           secondaryAction={{
@@ -300,19 +310,24 @@ export default function ExportPage() {
 
         <ExportCard
           icon={<Clock className="h-5 w-5 text-brand-blue" />}
-          title="Raport godzin pracy"
-          description="Podsumowanie godzin per pracownik: stawka, koszt, nadgodziny. Idealny do rozliczeń i ewidencji czasu pracy."
+          title={isAdmin ? "Raport godzin pracy" : "Twoje godziny pracy"}
+          description={isAdmin
+            ? "Podsumowanie godzin per pracownik: stawka, koszt, nadgodziny. Idealny do rozliczeń i ewidencji czasu pracy."
+            : "Podsumowanie Twoich godzin pracy, zmian i nadgodzin."
+          }
           loading={loadingHours}
           onExport={handleHours}
         />
 
-        <ExportCard
-          icon={<Users className="h-5 w-5 text-success" />}
-          title="Lista pracowników"
-          description="Aktualna lista członków zespołu: imię, email, rola, stawka godzinowa. Eksport niezależny od wybranego okresu."
-          loading={loadingEmployees}
-          onExport={handleEmployees}
-        />
+        {isAdmin && (
+          <ExportCard
+            icon={<Users className="h-5 w-5 text-success" />}
+            title="Lista pracowników"
+            description="Aktualna lista członków zespołu: imię, email, rola, stawka godzinowa. Eksport niezależny od wybranego okresu."
+            loading={loadingEmployees}
+            onExport={handleEmployees}
+          />
+        )}
 
         {/* Google Calendar sync card */}
         <div className="p-5 rounded-xl border border-brand-warm bg-white shadow-sm hover:shadow-md transition-shadow">
@@ -360,6 +375,9 @@ export default function ExportPage() {
         </p>
         <p>
           Najwygodniejsza opcja: &quot;Synchronizuj z Google Calendar&quot; — zmiany trafiają bezpośrednio do kalendarza bez pobierania plików.
+        </p>
+        <p>
+          Dla Apple / iPhone / Mac: skopiuj link subskrypcji i w ustawieniach systemu dodaj &quot;kalendarz subskrybowany&quot;, wklejając ten adres (Apple będzie go automatycznie odświeżać).
         </p>
       </div>
     </div>
