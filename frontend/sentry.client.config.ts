@@ -5,6 +5,9 @@ Sentry.init({
 
   environment: process.env.NEXT_PUBLIC_SENTRY_ENV ?? "production",
 
+  // Tymczasowo włącz debug — wyłącz po potwierdzeniu integracji
+  debug: true,
+
   // Wysyłaj tylko 10% transakcji — nie przepalaj limitu darmowego planu
   tracesSampleRate: 0.1,
 
