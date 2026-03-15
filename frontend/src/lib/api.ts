@@ -1212,3 +1212,127 @@ export async function disconnectGoogleCalendar(): Promise<void> {
     throw new Error(error.message || "Błąd rozłączania Google Calendar");
   }
 }
+
+// --- Schedule Templates (Szablony grafiku) [Business+] ---
+
+export interface TemplateShiftInput {
+  dayOfWeek: number;
+  startHour: number;
+  startMinute: number;
+  endHour: number;
+  endMinute: number;
+  roleName: string;
+  positionId?: string;
+}
+
+export interface TemplateShift extends TemplateShiftInput {
+  id: string;
+  templateId: string;
+  position?: { id: string; name: string; color: string } | null;
+}
+
+export interface ScheduleTemplate {
+  id: string;
+  teamId: string;
+  createdById: string;
+  name: string;
+  description: string | null;
+  createdAt: string;
+  updatedAt: string;
+  createdBy: { id: string; name: string; nickname?: string | null };
+  _count?: { shifts: number };
+  shifts?: TemplateShift[];
+}
+
+export interface CreateTemplateInput {
+  name: string;
+  description?: string;
+  shifts: TemplateShiftInput[];
+}
+
+export interface CreateTemplateFromWeekInput {
+  name: string;
+  description?: string;
+  weekStart: string;
+}
+
+export interface ApplyTemplateResult {
+  created: number;
+  templateName: string;
+}
+
+export async function getTemplates(): Promise<ScheduleTemplate[]> {
+  const res = await authenticatedFetch(`${API_URL}/templates`);
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.message || "Błąd pobierania szablonów");
+  }
+  return res.json();
+}
+
+export async function getTemplate(id: string): Promise<ScheduleTemplate> {
+  const res = await authenticatedFetch(`${API_URL}/templates/${id}`);
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.message || "Błąd pobierania szablonu");
+  }
+  return res.json();
+}
+
+export async function createTemplate(data: CreateTemplateInput): Promise<ScheduleTemplate> {
+  const res = await authenticatedFetch(`${API_URL}/templates`, {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.message || "Błąd tworzenia szablonu");
+  }
+  return res.json();
+}
+
+export async function createTemplateFromWeek(data: CreateTemplateFromWeekInput): Promise<ScheduleTemplate> {
+  const res = await authenticatedFetch(`${API_URL}/templates/from-week`, {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.message || "Błąd tworzenia szablonu z tygodnia");
+  }
+  return res.json();
+}
+
+export async function updateTemplate(id: string, data: { name?: string; description?: string }): Promise<ScheduleTemplate> {
+  const res = await authenticatedFetch(`${API_URL}/templates/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.message || "Błąd edycji szablonu");
+  }
+  return res.json();
+}
+
+export async function deleteTemplate(id: string): Promise<void> {
+  const res = await authenticatedFetch(`${API_URL}/templates/${id}`, {
+    method: "DELETE",
+  });
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.message || "Błąd usuwania szablonu");
+  }
+}
+
+export async function applyTemplate(id: string, targetWeekStart: string): Promise<ApplyTemplateResult> {
+  const res = await authenticatedFetch(`${API_URL}/templates/${id}/apply`, {
+    method: "POST",
+    body: JSON.stringify({ targetWeekStart }),
+  });
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.message || "Błąd zastosowania szablonu");
+  }
+  return res.json();
+}

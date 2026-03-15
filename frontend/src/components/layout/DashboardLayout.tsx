@@ -41,6 +41,7 @@ interface NavItem {
   icon: React.ReactNode;
   show?: boolean;
   premium?: boolean;
+  premiumLabel?: string;
   tourId?: string;
 }
 
@@ -50,10 +51,10 @@ function NavLink({
   icon,
   active,
   premium,
+  premiumLabel,
   showBadge,
   tourId,
-  planLabel,
-}: NavItem & { active: boolean; showBadge?: boolean; tourId?: string; planLabel?: string | null }) {
+}: NavItem & { active: boolean; showBadge?: boolean; tourId?: string }) {
   return (
     <Link
       href={href}
@@ -69,7 +70,7 @@ function NavLink({
       {premium && showBadge && (
         <span className="flex items-center gap-0.5 text-[10px] font-semibold text-brand bg-brand-muted px-1.5 py-0.5 rounded-full">
           <Crown className="h-2.5 w-2.5" />
-          {planLabel ?? "Starter+"}
+          {premiumLabel ?? "Starter+"}
         </span>
       )}
     </Link>
@@ -106,10 +107,12 @@ export function DashboardLayout({ children, userRole, userName, userAvatar, onLo
     { href: paths.announcements, label: "Ogłoszenia", icon: <Megaphone className="h-4 w-4" /> },
   ];
 
+  const hasBusiness = planStatus?.hasBusiness ?? false;
+
   const premiumNav: NavItem[] = [
-    { href: paths.reports, label: "Raporty", icon: <PieChart className="h-4 w-4" />, premium: true },
-    { href: paths.export, label: "Eksport", icon: <FileDown className="h-4 w-4" />, premium: true },
-    { href: `${paths.home}/templates`, label: "Szablony", icon: <Copy className="h-4 w-4" />, premium: true, show: isAdmin },
+    { href: paths.reports, label: "Raporty", icon: <PieChart className="h-4 w-4" />, premium: true, premiumLabel: "Starter+" },
+    { href: paths.export, label: "Eksport", icon: <FileDown className="h-4 w-4" />, premium: true, premiumLabel: "Starter+" },
+    { href: paths.templates, label: "Szablony", icon: <Copy className="h-4 w-4" />, premium: true, premiumLabel: "Business+", show: isAdmin },
   ];
 
   const isActive = (href: string) => {
@@ -124,15 +127,19 @@ export function DashboardLayout({ children, userRole, userName, userAvatar, onLo
       <div>
         <p className="text-[10px] font-semibold text-brand-dark-muted uppercase tracking-wider px-3 mb-1.5">{title}</p>
         <div className="space-y-0.5">
-          {visible.map((item) => (
-            <NavLink
-              key={item.href}
-              {...item}
-              active={isActive(item.href)}
-              showBadge={!hasStarter}
-              planLabel={planLabel}
-            />
-          ))}
+          {visible.map((item) => {
+            const needsBadge = item.premium && (
+              item.premiumLabel === "Business+" ? !hasBusiness : !hasStarter
+            );
+            return (
+              <NavLink
+                key={item.href}
+                {...item}
+                active={isActive(item.href)}
+                showBadge={needsBadge}
+              />
+            );
+          })}
         </div>
       </div>
     );

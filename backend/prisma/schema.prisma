@@ -39,6 +39,7 @@ model User {
   team                   Team?               @relation(fields: [teamId], references: [id])
   calendarFeed           CalendarFeed?
   googleCalendarToken    GoogleCalendarToken?
+  scheduleTemplates      ScheduleTemplate[]  @relation("TemplateAuthor")
 }
 
 model Team {
@@ -55,6 +56,7 @@ model Team {
   settings           TeamSettings?
   subscription       Subscription?
   users              User[]
+  scheduleTemplates  ScheduleTemplate[]
 }
 
 /// Publiczny feed kalendarza iCal dla użytkownika (link do subskrypcji)
@@ -133,9 +135,10 @@ model Position {
   name      String
   color     String             @default("#8FACDB")
   createdAt DateTime           @default(now())
-  team      Team               @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  employees EmployeePosition[]
-  shifts    Shift[]
+  team           Team                    @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  employees      EmployeePosition[]
+  shifts         Shift[]
+  templateShifts ScheduleTemplateShift[]
 
   @@unique([teamId, name])
   @@index([teamId])
@@ -279,6 +282,39 @@ enum NotificationType {
   SHIFT_ON_MARKETPLACE
   MEMBERSHIP_APPROVED
   ANNOUNCEMENT
+}
+
+/// Szablon grafiku tygodniowego — wielokrotnego użytku, dzielony w zespole (Business+)
+model ScheduleTemplate {
+  id          String                  @id @default(uuid())
+  teamId      String
+  createdById String
+  name        String
+  description String?
+  createdAt   DateTime                @default(now())
+  updatedAt   DateTime                @updatedAt
+  team        Team                    @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  createdBy   User                    @relation("TemplateAuthor", fields: [createdById], references: [id], onDelete: Cascade)
+  shifts      ScheduleTemplateShift[]
+
+  @@index([teamId, createdAt])
+}
+
+/// Pojedyncza zmiana w szablonie — relatywna (dzień tygodnia + godziny), nie absolutna data
+model ScheduleTemplateShift {
+  id          String           @id @default(uuid())
+  templateId  String
+  dayOfWeek   Int
+  startHour   Int
+  startMinute Int
+  endHour     Int
+  endMinute   Int
+  roleName    String
+  positionId  String?
+  template    ScheduleTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  position    Position?        @relation(fields: [positionId], references: [id], onDelete: SetNull)
+
+  @@index([templateId])
 }
 
 enum Role {

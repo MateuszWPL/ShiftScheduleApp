@@ -54,6 +54,7 @@ ShiftScheduleApp/
 │       ├── positions/          # Stanowiska (CRUD + przypisanie do pracownikow)
 │       ├── reports/            # Raporty: godziny, koszty, zgodnosc KP
 │       ├── shifts/             # Zmiany, przypisania, giełda, kopiowanie, walidacja
+│       ├── templates/          # Szablony grafiku (CRUD, from-week, apply)
 │       ├── team-settings/      # Ustawienia zespolu
 │       └── users/              # Uzytkownicy, profil, shadow profile
 ├── frontend/                   # Next.js 16 (App Router)
@@ -120,6 +121,17 @@ ShiftScheduleApp/
 - Eksport zmian do Google Calendar / iCal
 - Link do subskrypcji kalendarza (auto-aktualizacja)
 - Synchronizacja z Google Calendar (OAuth + przycisk "Synchronizuj")
+
+### Szablony grafiku (PREMIUM: Business+)
+- Zapisywanie tygodnia jako szablon (nazwa, opis, automatyczna konwersja na relatywne godziny)
+- Tworzenie szablonow od zera (wybor dnia, godzin, stanowiska per zmiana)
+- Biblioteka szablonow z kartami (grid responsywny 1/2/3 kolumny)
+- Zastosowanie szablonu na wybrany tydzien (zmiany jako DRAFT)
+- Edycja metadanych szablonu (nazwa, opis)
+- Usuwanie szablonow z potwierdzeniem
+- Limit 20 szablonow na zespol
+- Przycisk "Zapisz jako szablon" na stronie grafiku
+- Premium gate: Business+ (frontend + backend @RequirePlan('business'))
 
 ### Ogloszenia zespolowe
 - CRUD z priorytetami (NORMAL / IMPORTANT / URGENT) i wygasaniem
@@ -194,7 +206,7 @@ ShiftScheduleApp/
 - **Brak dokumentow prawnych** — szablony przygotowane (docs/legal/), wymagaja weryfikacji prawnika i wdrozenia w UI
 - **Email logo** — skonfigurowane przez zmienna EMAIL_LOGO_URL (wymaga ustawienia produkcyjnego URL)
 - **Landing page** — w przejsciu na WordPress, tymczasowo niedostepna
-- **Szablony grafiku** — strona /templates to stub (tylko bramka premium, brak backendu)
+- ~~**Szablony grafiku** — strona /templates to stub (tylko bramka premium, brak backendu)~~ ✅ Zaimplementowane
 
 ---
 
@@ -282,13 +294,17 @@ Rejestracja -> FREE
 
 ## Plany rozwoju (przyszlosc)
 
-### Faza 3.4 — Szablony grafiku (PREMIUM: Business+)
-- Zapisywanie calego tygodnia jako szablon (nazwa, opis)
-- Biblioteka szablonow: "Tydzien normalny", "Tydzien swiateczny" itp.
-- Zastosowanie szablonu na wybrany tydzien (1 klik)
-- Szablony dzielone w zespole
+### ~~Faza 3.4 — Szablony grafiku (PREMIUM: Business+)~~ ✅ DONE
+- ~~Zapisywanie calego tygodnia jako szablon (nazwa, opis)~~
+- ~~Biblioteka szablonow: "Tydzien normalny", "Tydzien swiateczny" itp.~~
+- ~~Zastosowanie szablonu na wybrany tydzien (1 klik)~~
+- ~~Szablony dzielone w zespole~~
+- ~~Tworzenie szablonow od zera (mini-grid z dniami tygodnia)~~
+- ~~Pelny CRUD (tworzenie, edycja nazwy/opisu, usuwanie)~~
+- ~~Limit 20 szablonow na zespol~~
+- ~~Przycisk "Zapisz jako szablon" na stronie grafiku (Business+)~~
 
-### Faza 3.5 — Wiele lokalizacji (PREMIUM: Enterprise)
+### Faza 3.5 — Wiele lokalizacji (PREMIUM: Business+)
 - Zarzadzanie wieloma lokalizacjami / oddzialami
 - Osobne grafiki per lokalizacja
 - Przenoszenie pracownikow miedzy lokalizacjami
@@ -298,12 +314,6 @@ Rejestracja -> FREE
 - Role niestandardowe (np. "Starszy kelner", "Kierownik zmiany")
 - Granularne uprawnienia: kto moze publikowac, kto edytowac
 - Hierarchia rol
-
-### Faza 3.8 — API dla zewnetrznych systemow (PREMIUM: Enterprise)
-- Publiczne API REST z kluczami API
-- Dokumentacja Swagger/OpenAPI
-- Webhook do zewnetrznych systemow
-- Integracja z systemami kadrowo-placowymi
 
 ### Faza 3.9 — Zaawansowane powiadomienia (PREMIUM: Business+)
 - Push notifications (PWA / Web Push)
@@ -316,22 +326,10 @@ Rejestracja -> FREE
 
 ### Daleka przyszlosc
 - **Aplikacja mobilna** (React Native / Expo)
-- **Integracja z systemami kadrowymi** (Comarch, Sage, enova)
 - **AI sugestie grafiku** — automatyczne generowanie na podstawie dostepnosci i historii
-- **Multi-language (i18n)** — wersja angielska
-- **Marketplace integracji** — Zapier/Make triggers
 - **Powiadomienia SMS** — dla krytycznych sytuacji
 - **Metryki biznesowe** — retencja pracownikow, fill rate zmian
-- **Synchronizacja dwukierunkowa Google Calendar**
 - **Drag & resize zmian na kalendarzu**
-
----
-
-## Usuniete funkcje
-
-- **Swap Requests (zamiana zmian)** — usuniety (model, backend, frontend, powiadomienia SWAP_*)
-- **Panel Menadzera** — przekierowany na Grafik (nie potrzebny osobny widok)
-- **Landing page w Next.js** — przeniesione na WordPress (staffer.pl)
 
 ---
 

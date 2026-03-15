@@ -18,4 +18,5 @@ export const paths = {
   billing: `${APP_BASE}/billing`,
   reports: `${APP_BASE}/reports`,
   export: `${APP_BASE}/export`,
+  templates: `${APP_BASE}/templates`,
 } as const;

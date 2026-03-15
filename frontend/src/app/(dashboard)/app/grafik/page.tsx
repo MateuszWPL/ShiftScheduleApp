@@ -13,6 +13,7 @@ import {
   getPositions,
   createShift,
   addAssignment,
+  getPlanStatus,
   type Shift,
   type ShiftAssignment,
   type AvailabilitySlot,
@@ -22,6 +23,7 @@ import { ScheduleGrid, type AvailabilityDropData } from "@/components/dashboard/
 import { MyShiftsList } from "@/components/dashboard/MyShiftsList";
 import { CreateShiftDialog } from "@/components/dashboard/CreateShiftDialog";
 import { CopyWeekDialog } from "@/components/dashboard/CopyWeekDialog";
+import { SaveAsTemplateDialog } from "@/components/dashboard/SaveAsTemplateDialog";
 import { CalendarSyncButton } from "@/components/dashboard/CalendarSyncButton";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -35,6 +37,7 @@ import {
   Plus,
   CalendarDays,
   Copy,
+  BookmarkPlus,
   Filter,
   LayoutGrid,
   List,
@@ -336,6 +339,7 @@ export default function GrafikPage() {
   const [weekStart, setWeekStart] = useState(() => new Date());
   const [isShiftDialogOpen, setIsShiftDialogOpen] = useState(false);
   const [isCopyDialogOpen, setIsCopyDialogOpen] = useState(false);
+  const [isSaveTemplateOpen, setIsSaveTemplateOpen] = useState(false);
   const [prefilledDate, setPrefilledDate] = useState<string | undefined>();
   const [prefilledEmployeeId, setPrefilledEmployeeId] = useState<string | undefined>();
   const [editShift, setEditShift] = useState<Shift | null>(null);
@@ -383,6 +387,11 @@ export default function GrafikPage() {
     queryKey: ["positions"],
     queryFn: getPositions,
   });
+  const { data: planStatus } = useQuery({
+    queryKey: ["plan-status"],
+    queryFn: getPlanStatus,
+  });
+  const hasBusiness = planStatus?.hasBusiness ?? false;
   const employees = teamMembers.filter((m: { role?: string }) => m.role === "EMPLOYEE");
   const draftCount = weekShifts.filter((s) => s.status === "DRAFT").length;
 
@@ -500,6 +509,16 @@ export default function GrafikPage() {
                 <Copy className="h-4 w-4" />
                 <span className="hidden sm:inline">Kopiuj tydzień</span>
               </Button>
+              {hasBusiness && (
+                <Button
+                  variant="outline"
+                  onClick={() => setIsSaveTemplateOpen(true)}
+                  className="gap-1.5 border-brand-warm text-brand-dark-muted hover:bg-brand-warm-light text-sm"
+                >
+                  <BookmarkPlus className="h-4 w-4" />
+                  <span className="hidden sm:inline">Zapisz szablon</span>
+                </Button>
+              )}
               <Button onClick={handleAddShiftButton} className="gap-1.5 bg-brand hover:bg-brand-light text-white text-sm">
                 <Plus className="h-4 w-4" />
                 Dodaj zmianę
@@ -639,6 +658,14 @@ export default function GrafikPage() {
         currentWeekStart={weekStart}
         onNavigateToWeek={setWeekStart}
       />
+
+      {hasBusiness && (
+        <SaveAsTemplateDialog
+          isOpen={isSaveTemplateOpen}
+          onClose={() => setIsSaveTemplateOpen(false)}
+          weekStart={monday}
+        />
+      )}
     </div>
   );
 }
