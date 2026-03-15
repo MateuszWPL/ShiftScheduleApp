@@ -141,7 +141,7 @@ Audyt zakończony. Wszystkie punkty przeanalizowane; elementy do rozbudowy w 2.6
 #### 2.6.2 Pozostale zadania (po audycie 2.6.1)
 - [x] Rate limiting per-user — PerUserThrottlerGuard: klucz user-{userId} lub ip-{ip}; Redis storage opcjonalnie przy skalowaniu
 - [x] Sesje: wylogowanie ze wszystkich urzadzen — User.tokenVersion, JWT payload v, endpoint revoke-all, przycisk w Profilu
-- [ ] Logowanie bledow (Sentry) + exception filter (brak stack w prod)
+- [x] Logowanie bledow (Sentry) + exception filter (brak stack w prod)
 - [x] Backup bazy — skrypty pg_dump (scripts/), strategia w docs/BACKUP_DATABASE.md; Neon: PITR w console
 
 ---

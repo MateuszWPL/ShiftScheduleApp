@@ -1,8 +1,24 @@
+import * as Sentry from '@sentry/node';
+
+// Sentry musi być zainicjalizowany jako PIERWSZE — przed importem AppModule
+// żeby instrumentacja działała poprawnie (trace NestJS, Prisma, HTTP)
+if (process.env.SENTRY_DSN) {
+  Sentry.init({
+    dsn: process.env.SENTRY_DSN,
+    environment: process.env.SENTRY_ENVIRONMENT ?? 'production',
+    // Logujemy 10% transakcji — nie przepalamy limitu darmowego planu
+    tracesSampleRate: 0.1,
+    // Nigdy nie wysyłaj PII (emaili, tokenów) — tylko ID-ki
+    sendDefaultPii: false,
+  });
+}
+
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe, BadRequestException, Logger } from '@nestjs/common';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import helmet from 'helmet';
+import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 
 function validateRequiredEnvVars() {
   const logger = new Logger('Bootstrap');
@@ -46,6 +62,9 @@ async function bootstrap() {
 
   // Disable X-Powered-By
   app.getHttpAdapter().getInstance().disable('x-powered-by');
+
+  // Globalny filtr wyjątków: loguje błędy 5xx do Sentry, ukrywa stack trace w prod
+  app.useGlobalFilters(new AllExceptionsFilter());
 
   app.useGlobalPipes(
     new ValidationPipe({
