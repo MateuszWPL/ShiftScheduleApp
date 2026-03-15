@@ -8,6 +8,7 @@ import {
   claimAssignment,
   releaseAssignment,
   deleteShift,
+  addAssignment,
   type Shift,
   type ShiftAssignment,
   type User,
@@ -211,6 +212,16 @@ export function ScheduleGrid({
       queryClient.invalidateQueries({ queryKey: ["shifts"] });
       queryClient.invalidateQueries({ queryKey: ["marketplace"] });
       toast.success("Zmiana usunięta");
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const assignToShiftMutation = useMutation({
+    mutationFn: ({ shiftId, userId }: { shiftId: string; userId: string }) =>
+      addAssignment(shiftId, { userId, isUpForGrabs: false }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["shifts"] });
+      toast.success("Pracownik przypisany do zmiany");
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -671,15 +682,37 @@ export function ScheduleGrid({
                               return (
                                 <div
                                   key={shift.id}
-                                  className={`rounded-lg p-2 text-xs relative group/shift border border-dashed border-amber-300/70 bg-amber-50/60 ${
+                                  className={`rounded-lg p-2 text-xs relative group/shift border border-dashed border-amber-300/70 bg-amber-50/60 transition-colors ${
                                     onShiftClick ? "cursor-pointer hover:shadow-md hover:-translate-y-px" : ""
                                   }`}
-                                  title="Kliknij, aby edytować i przypisać pracownika"
+                                  title="Kliknij, aby edytować i przypisać pracownika. Lub przeciągnij dostępność tutaj."
                                   onClick={(e) => {
                                     if (onShiftClick) {
                                       e.stopPropagation();
                                       onShiftClick(shift);
                                     }
+                                  }}
+                                  onDragOver={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    e.dataTransfer.dropEffect = "copy";
+                                    (e.currentTarget as HTMLElement).classList.add("!bg-emerald-50", "!border-emerald-400");
+                                  }}
+                                  onDragLeave={(e) => {
+                                    (e.currentTarget as HTMLElement).classList.remove("!bg-emerald-50", "!border-emerald-400");
+                                  }}
+                                  onDrop={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    (e.currentTarget as HTMLElement).classList.remove("!bg-emerald-50", "!border-emerald-400");
+                                    try {
+                                      const raw = e.dataTransfer.getData("application/availability");
+                                      if (!raw) return;
+                                      const data = JSON.parse(raw);
+                                      if (data.userId) {
+                                        assignToShiftMutation.mutate({ shiftId: shift.id, userId: data.userId });
+                                      }
+                                    } catch { /* ignore */ }
                                   }}
                                 >
                                   <div

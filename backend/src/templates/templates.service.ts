@@ -192,6 +192,37 @@ export class TemplatesService {
       throw new NotFoundException('Szablon nie istnieje.');
     }
 
+    if (dto.shifts !== undefined) {
+      return this.prisma.$transaction(async (tx) => {
+        await tx.scheduleTemplateShift.deleteMany({
+          where: { templateId },
+        });
+
+        return tx.scheduleTemplate.update({
+          where: { id: templateId },
+          data: {
+            name: dto.name,
+            description: dto.description,
+            shifts: {
+              create: dto.shifts!.map((s) => ({
+                dayOfWeek: s.dayOfWeek,
+                startHour: s.startHour,
+                startMinute: s.startMinute,
+                endHour: s.endHour,
+                endMinute: s.endMinute,
+                roleName: s.roleName,
+                positionId: s.positionId,
+              })),
+            },
+          },
+          include: {
+            createdBy: { select: { id: true, name: true, nickname: true } },
+            _count: { select: { shifts: true } },
+          },
+        });
+      });
+    }
+
     return this.prisma.scheduleTemplate.update({
       where: { id: templateId },
       data: {

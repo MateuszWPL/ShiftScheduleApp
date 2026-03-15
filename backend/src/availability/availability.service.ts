@@ -167,6 +167,30 @@ export class AvailabilityService {
     });
   }
 
+  async updateSlot(
+    userId: string,
+    slotId: string,
+    body: { startDateTime: string; endDateTime: string },
+  ) {
+    const slot = await this.prisma.availabilitySlot.findUnique({
+      where: { id: slotId },
+    });
+    if (!slot) throw new NotFoundException('Slot nie istnieje.');
+    if (slot.userId !== userId) {
+      throw new ForbiddenException('Możesz edytować tylko własne sloty.');
+    }
+
+    const start = new Date(body.startDateTime);
+    const end = new Date(body.endDateTime);
+    this.validateSlot(start, end);
+    await this.checkOverlap(userId, slot.teamId, start, end, slotId);
+
+    return this.prisma.availabilitySlot.update({
+      where: { id: slotId },
+      data: { startDateTime: start, endDateTime: end },
+    });
+  }
+
   async deleteSlot(userId: string, slotId: string) {
     const slot = await this.prisma.availabilitySlot.findUnique({
       where: { id: slotId },

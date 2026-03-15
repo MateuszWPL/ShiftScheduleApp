@@ -315,6 +315,21 @@ export async function createAvailabilitySlots(slots: AvailabilitySlotInput[]): P
   return res.json();
 }
 
+export async function updateAvailabilitySlot(
+  slotId: string,
+  data: { startDateTime: string; endDateTime: string }
+): Promise<AvailabilitySlot> {
+  const res = await authenticatedFetch(`${API_URL}/availability/slots/${slotId}`, {
+    method: "PATCH",
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.message || "Błąd aktualizacji slotu");
+  }
+  return res.json();
+}
+
 export async function deleteAvailabilitySlot(slotId: string): Promise<void> {
   const res = await authenticatedFetch(`${API_URL}/availability/slots/${slotId}`, {
     method: "DELETE",
@@ -1303,7 +1318,7 @@ export async function createTemplateFromWeek(data: CreateTemplateFromWeekInput):
   return res.json();
 }
 
-export async function updateTemplate(id: string, data: { name?: string; description?: string }): Promise<ScheduleTemplate> {
+export async function updateTemplate(id: string, data: { name?: string; description?: string; shifts?: TemplateShiftInput[] }): Promise<ScheduleTemplate> {
   const res = await authenticatedFetch(`${API_URL}/templates/${id}`, {
     method: "PATCH",
     body: JSON.stringify(data),

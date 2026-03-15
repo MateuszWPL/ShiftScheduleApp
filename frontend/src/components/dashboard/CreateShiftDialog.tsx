@@ -141,6 +141,16 @@ export function CreateShiftDialog({
           positionId: realPositionId,
           roleName: realPositionId ? undefined : customRoleName,
         });
+
+        const currentAssignment = editShift.assignments?.[0];
+        const currentUserId = currentAssignment?.userId ?? "";
+        if (assignToId && assignToId !== currentUserId) {
+          await addAssignment(editShift.id, {
+            userId: assignToId,
+            isUpForGrabs,
+          });
+        }
+
         return updated;
       }
 
@@ -376,66 +386,63 @@ export function CreateShiftDialog({
             </div>
           </div>
 
-          {/* Assign to employee (only for create mode) */}
-          {!isEdit && (
-            <div>
-              <label className="block text-sm font-medium text-brand-dark mb-1.5">
-                Przypisz do
-                {positionId && positionId !== "__custom__" && (
-                  <span className="ml-1 text-xs font-normal text-brand">
-                    (filtrowane wg stanowiska)
-                  </span>
-                )}
-              </label>
-              <select
-                className="w-full p-2.5 border border-brand-warm rounded-lg bg-white text-sm focus:ring-2 focus:ring-brand focus:border-brand outline-none transition-colors"
-                value={assignToId}
-                onChange={(e) => setAssignToId(e.target.value)}
-              >
-                <option value="">— Wolna pozycja —</option>
-                {positionId && positionId !== "__custom__" ? (
-                  <>
-                    {filteredEmployees.length > 0 ? (
-                      filteredEmployees.map((m) => (
-                        <option key={m.id} value={m.id}>
-                          {m.nickname || m.name}
-                        </option>
-                      ))
-                    ) : (
-                      <option disabled>Brak pracowników na tym stanowisku</option>
-                    )}
-                    {/* Show other employees below with a separator */}
-                    {employees.filter((e) => !filteredEmployees.includes(e)).length > 0 && (
-                      <>
-                        <option disabled>────── Pozostali ──────</option>
-                        {employees
-                          .filter((e) => !filteredEmployees.includes(e))
-                          .map((m) => (
-                            <option key={m.id} value={m.id}>
-                              {m.nickname || m.name}
-                            </option>
-                          ))}
-                      </>
-                    )}
-                  </>
-                ) : (
-                  employees.map((m) => (
-                    <option key={m.id} value={m.id}>
-                      {m.nickname || m.name}
-                    </option>
-                  ))
-                )}
-              </select>
-              {employeePositionMismatch && assignToId && (
-                <div className="flex items-center gap-1.5 mt-1.5 text-amber-600">
-                  <AlertCircle className="h-3 w-3 flex-shrink-0" />
-                  <span className="text-[11px]">
-                    Ten pracownik nie ma przypisanego wybranego stanowiska
-                  </span>
-                </div>
+          {/* Assign to employee */}
+          <div>
+            <label className="block text-sm font-medium text-brand-dark mb-1.5">
+              Przypisz do
+              {positionId && positionId !== "__custom__" && (
+                <span className="ml-1 text-xs font-normal text-brand">
+                  (filtrowane wg stanowiska)
+                </span>
               )}
-            </div>
-          )}
+            </label>
+            <select
+              className="w-full p-2.5 border border-brand-warm rounded-lg bg-white text-sm focus:ring-2 focus:ring-brand focus:border-brand outline-none transition-colors"
+              value={assignToId}
+              onChange={(e) => setAssignToId(e.target.value)}
+            >
+              <option value="">— Wolna pozycja —</option>
+              {positionId && positionId !== "__custom__" ? (
+                <>
+                  {filteredEmployees.length > 0 ? (
+                    filteredEmployees.map((m) => (
+                      <option key={m.id} value={m.id}>
+                        {m.nickname || m.name}
+                      </option>
+                    ))
+                  ) : (
+                    <option disabled>Brak pracowników na tym stanowisku</option>
+                  )}
+                  {employees.filter((e) => !filteredEmployees.includes(e)).length > 0 && (
+                    <>
+                      <option disabled>────── Pozostali ──────</option>
+                      {employees
+                        .filter((e) => !filteredEmployees.includes(e))
+                        .map((m) => (
+                          <option key={m.id} value={m.id}>
+                            {m.nickname || m.name}
+                          </option>
+                        ))}
+                    </>
+                  )}
+                </>
+              ) : (
+                employees.map((m) => (
+                  <option key={m.id} value={m.id}>
+                    {m.nickname || m.name}
+                  </option>
+                ))
+              )}
+            </select>
+            {employeePositionMismatch && assignToId && (
+              <div className="flex items-center gap-1.5 mt-1.5 text-amber-600">
+                <AlertCircle className="h-3 w-3 flex-shrink-0" />
+                <span className="text-[11px]">
+                  Ten pracownik nie ma przypisanego wybranego stanowiska
+                </span>
+              </div>
+            )}
+          </div>
 
           {/* Marketplace checkbox (only for create mode) */}
           {!isEdit && (

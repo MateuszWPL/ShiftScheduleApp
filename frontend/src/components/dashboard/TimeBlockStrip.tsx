@@ -51,6 +51,8 @@ interface TimeBlockStripProps {
   onDraftCreate?: (block: { startMin: number; endMin: number }) => void;
   /** Usunięcie zapisanego bloku */
   onDeleteBlock?: (id: string) => void;
+  /** Aktualizacja zapisanego bloku (resize) */
+  onUpdateBlock?: (id: string, startMin: number, endMin: number) => void;
   /** Strip height */
   height?: number;
   /** Czy wyłączone */
@@ -72,6 +74,7 @@ export function TimeBlockStrip({
   drafts = [],
   onDraftCreate,
   onDeleteBlock,
+  onUpdateBlock,
   height = 44,
   disabled = false,
   showHourLabels = true,
@@ -93,6 +96,8 @@ export function TimeBlockStrip({
     endMin: 0,
   });
   const justFinishedDragRef = useRef(false);
+  const [resizingBlockId, setResizingBlockId] = useState<string | null>(null);
+  const [resizePreview, setResizePreview] = useState<{ startMin: number; endMin: number } | null>(null);
 
   const getClientX = useCallback((e: MouseEvent | TouchEvent) => {
     if ("touches" in e && e.touches.length > 0) return e.touches[0].clientX;
@@ -185,9 +190,23 @@ export function TimeBlockStrip({
         return;
       }
 
-      // Move/resize existing block
       const delta = currentMin - dragStartMin;
       const init = dragInitialRef.current;
+
+      if (resizingBlockId) {
+        if (dragMode === "resize-left") {
+          const newStart = clamp(snap(init.startMin + delta));
+          const startMin = Math.min(newStart, init.endMin - minBlockMinutes);
+          setResizePreview({ startMin, endMin: init.endMin });
+        } else if (dragMode === "resize-right") {
+          const newEnd = clamp(snap(init.endMin + delta));
+          setResizePreview({
+            startMin: init.startMin,
+            endMin: Math.max(init.startMin + minBlockMinutes, Math.min(newEnd, MINUTES_PER_DAY)),
+          });
+        }
+        return;
+      }
 
       if (singleBlock && value) {
         if (dragMode === "move") {
@@ -210,6 +229,10 @@ export function TimeBlockStrip({
     };
 
     const onUp = (e: MouseEvent | TouchEvent) => {
+      if (resizingBlockId && resizePreview && onUpdateBlock) {
+        onUpdateBlock(resizingBlockId, resizePreview.startMin, resizePreview.endMin);
+      }
+
       if (dragMode === "create" && !singleBlock) {
         const currentMin = getMinutesFromEvent(e);
         const lo = Math.min(dragStartMin, currentMin);
@@ -218,12 +241,7 @@ export function TimeBlockStrip({
 
         if (duration >= minBlockMinutes) {
           onDraftCreate?.({ startMin: lo, endMin: hi });
-        } else if (duration < SNAP * 2) {
-          // Tiny drag = click: create minimum block
-          const endMin = clamp(lo + minBlockMinutes);
-          onDraftCreate?.({ startMin: lo, endMin });
         } else {
-          // Too small, snap up to minimum
           const endMin = clamp(lo + minBlockMinutes);
           onDraftCreate?.({ startMin: lo, endMin });
         }
@@ -232,6 +250,8 @@ export function TimeBlockStrip({
       justFinishedDragRef.current = dragMode !== null;
       setDragMode(null);
       setCreatePreview(null);
+      setResizingBlockId(null);
+      setResizePreview(null);
     };
 
     const moveHandler = (e: MouseEvent | TouchEvent) => {
@@ -260,8 +280,11 @@ export function TimeBlockStrip({
     value,
     onChange,
     onDraftCreate,
+    onUpdateBlock,
     minBlockMinutes,
     getMinutesFromEvent,
+    resizingBlockId,
+    resizePreview,
   ]);
 
   const editableBlock = singleBlock ? value : null;
@@ -317,36 +340,93 @@ export function TimeBlockStrip({
           ))}
 
         {/* Saved blocks */}
-        {blocks.map((b) => (
-          <div
-            key={b.id ?? `saved-${b.startMin}-${b.endMin}`}
-            className="absolute rounded-md bg-brand-blue/80 border border-brand-blue flex items-center justify-between px-1 group"
-            style={{
-              left: `${minToPercent(b.startMin)}%`,
-              width: `${minToPercent(b.endMin - b.startMin)}%`,
-              top: showHourLabels ? "14px" : "2px",
-              bottom: "2px",
-            }}
-            onMouseDown={(e) => e.stopPropagation()}
-          >
-            <span className="text-[10px] text-white font-medium truncate pointer-events-none">
-              {formatTime(b.startMin)}–{formatTime(b.endMin)}
-            </span>
-            {onDeleteBlock && b.id && (
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onDeleteBlock(b.id!);
-                }}
-                className="ml-0.5 text-white/70 hover:text-white text-xs font-bold opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 cursor-pointer"
-                aria-label="Usuń"
-              >
-                ×
-              </button>
-            )}
-          </div>
-        ))}
+        {blocks.map((b) => {
+          const isResizing = resizingBlockId === b.id;
+          const displayStart = isResizing && resizePreview ? resizePreview.startMin : b.startMin;
+          const displayEnd = isResizing && resizePreview ? resizePreview.endMin : b.endMin;
+          const canResize = !!onUpdateBlock && !!b.id;
+
+          return (
+            <div
+              key={b.id ?? `saved-${b.startMin}-${b.endMin}`}
+              className={`absolute rounded-md bg-brand-blue/80 border border-brand-blue flex items-center group ${
+                canResize ? "justify-between" : "justify-between px-1"
+              }`}
+              style={{
+                left: `${minToPercent(displayStart)}%`,
+                width: `${minToPercent(displayEnd - displayStart)}%`,
+                top: showHourLabels ? "14px" : "2px",
+                bottom: "2px",
+              }}
+              onMouseDown={(e) => e.stopPropagation()}
+            >
+              {canResize && (
+                <span
+                  className="w-2.5 h-full cursor-ew-resize shrink-0 flex items-center justify-center hover:bg-white/20 rounded-l-md touch-none"
+                  onMouseDown={(e) => {
+                    e.stopPropagation();
+                    if (disabled) return;
+                    setResizingBlockId(b.id!);
+                    setDragMode("resize-left");
+                    setDragStartMin(getMinutesFromEvent(e));
+                    dragInitialRef.current = { startMin: b.startMin, endMin: b.endMin };
+                  }}
+                  onTouchStart={(e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    if (disabled) return;
+                    setResizingBlockId(b.id!);
+                    setDragMode("resize-left");
+                    setDragStartMin(getMinutesFromEvent(e));
+                    dragInitialRef.current = { startMin: b.startMin, endMin: b.endMin };
+                  }}
+                >
+                  <span className="w-0.5 h-3 bg-white/60 rounded" />
+                </span>
+              )}
+              <span className="text-[10px] text-white font-medium truncate pointer-events-none flex-1 text-center">
+                {formatTime(displayStart)}–{formatTime(displayEnd)}
+              </span>
+              {onDeleteBlock && b.id && (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDeleteBlock(b.id!);
+                  }}
+                  className="ml-0.5 text-white/70 hover:text-white text-xs font-bold opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 cursor-pointer"
+                  aria-label="Usuń"
+                >
+                  ×
+                </button>
+              )}
+              {canResize && (
+                <span
+                  className="w-2.5 h-full cursor-ew-resize shrink-0 flex items-center justify-center hover:bg-white/20 rounded-r-md touch-none"
+                  onMouseDown={(e) => {
+                    e.stopPropagation();
+                    if (disabled) return;
+                    setResizingBlockId(b.id!);
+                    setDragMode("resize-right");
+                    setDragStartMin(getMinutesFromEvent(e));
+                    dragInitialRef.current = { startMin: b.startMin, endMin: b.endMin };
+                  }}
+                  onTouchStart={(e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    if (disabled) return;
+                    setResizingBlockId(b.id!);
+                    setDragMode("resize-right");
+                    setDragStartMin(getMinutesFromEvent(e));
+                    dragInitialRef.current = { startMin: b.startMin, endMin: b.endMin };
+                  }}
+                >
+                  <span className="w-0.5 h-3 bg-white/60 rounded" />
+                </span>
+              )}
+            </div>
+          );
+        })}
 
         {/* Draft blocks (multi-block mode) */}
         {drafts.map((d, idx) => (

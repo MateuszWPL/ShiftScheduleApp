@@ -6,6 +6,7 @@ import { useEffect, useState, useMemo, useCallback } from "react";
 import {
   getMyAvailability,
   createAvailabilitySlots,
+  updateAvailabilitySlot,
   deleteAvailabilitySlot,
   type AvailabilitySlot,
 } from "@/lib/api";
@@ -49,10 +50,10 @@ function buildWeekRange(monday: Date): { from: string; to: string } {
 function slotToMinutes(s: AvailabilitySlot): { startMin: number; endMin: number } {
   const startDate = new Date(s.startDateTime);
   const endDate = new Date(s.endDateTime);
-  const startMin = startDate.getHours() * 60 + startDate.getMinutes();
-  const endMin = endDate.getHours() * 60 + endDate.getMinutes();
-  const endDay = endDate.getDate();
-  const startDay = startDate.getDate();
+  const startMin = startDate.getUTCHours() * 60 + startDate.getUTCMinutes();
+  const endMin = endDate.getUTCHours() * 60 + endDate.getUTCMinutes();
+  const endDay = endDate.getUTCDate();
+  const startDay = startDate.getUTCDate();
   const dayDiff = endDay - startDay;
   return {
     startMin,
@@ -61,7 +62,11 @@ function slotToMinutes(s: AvailabilitySlot): { startMin: number; endMin: number 
 }
 
 function slotToDateStr(s: AvailabilitySlot): string {
-  return s.startDateTime.slice(0, 10);
+  const d = new Date(s.startDateTime);
+  const y = d.getUTCFullYear();
+  const m = String(d.getUTCMonth() + 1).padStart(2, "0");
+  const day = String(d.getUTCDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
 }
 
 export default function DostepnoscPage() {
@@ -102,6 +107,31 @@ export default function DostepnoscPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["availability-me"] });
       toast.success("Slot usunięty");
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: ({ slotId, startMin, endMin, dayIndex }: { slotId: string; startMin: number; endMin: number; dayIndex: number }) => {
+      const dayDate = new Date(weekStart);
+      dayDate.setDate(dayDate.getDate() + dayIndex);
+      const y = dayDate.getFullYear();
+      const m = dayDate.getMonth();
+      const d = dayDate.getDate();
+      const pad = (n: number) => String(n).padStart(2, "0");
+      const dateStr = `${y}-${pad(m + 1)}-${pad(d)}`;
+      const startH = Math.floor(startMin / 60);
+      const startM = startMin % 60;
+      const endH = Math.floor(endMin / 60);
+      const endM = endMin % 60;
+      return updateAvailabilitySlot(slotId, {
+        startDateTime: `${dateStr}T${pad(startH)}:${pad(startM)}:00.000Z`,
+        endDateTime: `${dateStr}T${pad(endH)}:${pad(endM)}:00.000Z`,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["availability-me"] });
+      toast.success("Slot zaktualizowany");
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -182,11 +212,11 @@ export default function DostepnoscPage() {
         const startM = block.startMin % 60;
         const endH = Math.floor(block.endMin / 60);
         const endM = block.endMin % 60;
-        const startDate = new Date(y, m, d, startH, startM, 0);
-        const endDate = new Date(y, m, d, endH, endM, 0);
+        const pad = (n: number) => String(n).padStart(2, "0");
+        const dateStr = `${y}-${pad(m + 1)}-${pad(d)}`;
         allSlots.push({
-          startDateTime: startDate.toISOString(),
-          endDateTime: endDate.toISOString(),
+          startDateTime: `${dateStr}T${pad(startH)}:${pad(startM)}:00.000Z`,
+          endDateTime: `${dateStr}T${pad(endH)}:${pad(endM)}:00.000Z`,
         });
       }
     }
@@ -292,6 +322,7 @@ export default function DostepnoscPage() {
           <strong className="text-brand-dark">Jak dodać dostępność?</strong>{" "}
           Kliknij lub dotknij i przeciągnij na pasku danego dnia, aby zaznaczyć przedział czasowy (min. 4 godziny).
           Możesz dodać wiele bloków na cały tydzień. Gdy skończysz, kliknij <strong className="text-brand">&quot;Zatwierdź wszystko&quot;</strong>.
+          Zapisane bloki możesz powiększać/zmniejszać ciągnąc za krawędź.
         </div>
       </div>
 
@@ -420,7 +451,10 @@ export default function DostepnoscPage() {
                           handleDraftCreate(day.index, block)
                         }
                         onDeleteBlock={deleteMutation.mutate}
-                        disabled={createMutation.isPending}
+                        onUpdateBlock={(id, startMin, endMin) =>
+                          updateMutation.mutate({ slotId: id, startMin, endMin, dayIndex: day.index })
+                        }
+                        disabled={createMutation.isPending || updateMutation.isPending}
                         height={48}
                         showHourLabels={false}
                         compact

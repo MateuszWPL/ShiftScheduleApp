@@ -1,8 +1,9 @@
-import { Controller, Get, Post, Delete, Body, Param, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Body, Param, Query, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/auth.guard';
 import { CurrentUser } from '../auth/decorators/user.decorator';
 import { AvailabilityService } from './availability.service';
 import { CreateAvailabilityDto } from './dto/create-availability.dto';
+import { UpdateAvailabilityDto } from './dto/update-availability.dto';
 import { QueryAvailabilityDto } from './dto/query-availability.dto';
 import { SlotIdParamDto } from './dto/params.dto';
 
@@ -33,6 +34,15 @@ export class AvailabilityController {
     @CurrentUser() user: { userId: string },
   ) {
     return this.availabilityService.findTeamSlots(user.userId, query.from, query.to);
+  }
+
+  @Patch('slots/:slotId')
+  updateSlot(
+    @Param() params: SlotIdParamDto,
+    @Body() body: UpdateAvailabilityDto,
+    @CurrentUser() user: { userId: string },
+  ) {
+    return this.availabilityService.updateSlot(user.userId, params.slotId, body);
   }
 
   @Delete('slots/:slotId')
