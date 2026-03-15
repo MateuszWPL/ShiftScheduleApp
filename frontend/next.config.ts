@@ -37,9 +37,11 @@ export default withSentryConfig(nextConfig, {
     deleteSourcemapsAfterUpload: true,
   },
 
-  // Wyłącz automatyczny routing do Sentry — obsłużymy to sami przez sentry.client.config.ts
-  autoInstrumentServerFunctions: false,
-
   // Nie baw się w automatyczny tunnel — upraszcza CSP
   tunnelRoute: undefined,
+
+  // Wyłącz automatyczne instrumentowanie server functions (nowy sposób, bez deprecation warning)
+  webpack: {
+    autoInstrumentServerFunctions: false,
+  },
 });
