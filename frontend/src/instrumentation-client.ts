@@ -5,9 +5,6 @@ Sentry.init({
 
   environment: process.env.NEXT_PUBLIC_SENTRY_ENV ?? "production",
 
-  // Tymczasowo włącz debug — wyłącz po potwierdzeniu integracji
-  debug: true,
-
   tracesSampleRate: 0.1,
 
   replaysSessionSampleRate: 0.01,
