@@ -135,8 +135,6 @@ export class BillingService {
       status,
       hasStarter: planLevel >= 1,
       hasBusiness: planLevel >= 2,
-      /** @deprecated użyj hasStarter */
-      hasPro: planLevel >= 1,
       memberCount,
       memberLimit,
       limitExceeded,
@@ -201,8 +199,11 @@ export class BillingService {
     if (allowedPrices.length > 0 && !allowedPrices.includes(priceId)) {
       throw new BadRequestException('Nieprawidłowy plan');
     }
-    // Zawsze używamy własnych URL — nie przyjmujemy z klienta (ochrona przed open redirect)
-    const baseUrl = (process.env.FRONTEND_URL || 'http://localhost:3000').split(',')[0].trim();
+    const frontendUrl = process.env.FRONTEND_URL;
+    if (!frontendUrl && process.env.NODE_ENV === 'production') {
+      throw new Error('FRONTEND_URL must be set in production');
+    }
+    const baseUrl = (frontendUrl || 'http://localhost:3000').split(',')[0].trim();
     const billingReturn = `${baseUrl}/app/billing`;
     const successUrl = `${billingReturn}?success=1`;
     const cancelUrl = `${billingReturn}?canceled=1`;
@@ -365,8 +366,12 @@ export class BillingService {
       throw new BadRequestException('Brak aktywnej subskrypcji do zarządzania');
     }
     const stripe = this.ensureStripe();
-    const baseUrl = (process.env.FRONTEND_URL || 'http://localhost:3000').split(',')[0].trim();
-    const returnUrl = `${baseUrl}/app/billing`;
+    const portalFrontendUrl = process.env.FRONTEND_URL;
+    if (!portalFrontendUrl && process.env.NODE_ENV === 'production') {
+      throw new Error('FRONTEND_URL must be set in production');
+    }
+    const portalBaseUrl = (portalFrontendUrl || 'http://localhost:3000').split(',')[0].trim();
+    const returnUrl = `${portalBaseUrl}/app/billing`;
 
     const session = await stripe.billingPortal.sessions.create({
       customer: sub.stripeCustomerId,

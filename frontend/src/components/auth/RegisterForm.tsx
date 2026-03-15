@@ -28,7 +28,7 @@ const GoogleIcon = () => (
   </svg>
 );
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+import { API_URL } from "@/lib/api";
 
 interface RegisterFormProps {
   onSwitchToLogin: () => void;

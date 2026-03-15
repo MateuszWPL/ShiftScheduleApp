@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import Link from "next/link";
 import { paths } from "@/lib/app-paths";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+import { API_URL } from "@/lib/api";
 
 function VerifyEmailContent() {
   const searchParams = useSearchParams();

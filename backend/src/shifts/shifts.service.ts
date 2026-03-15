@@ -41,6 +41,15 @@ export class ShiftsService {
     private readonly notifications: NotificationsService,
   ) {}
 
+  private async ensureTeamNotLimitExceeded(teamId: string): Promise<void> {
+    const sub = await this.prisma.subscription.findUnique({ where: { teamId } });
+    if (sub?.limitExceeded) {
+      throw new ForbiddenException(
+        'Twój zespół przekracza limit pracowników dla obecnego planu. Ulepsz plan lub zmniejsz liczbę pracowników, aby kontynuować.',
+      );
+    }
+  }
+
   /** Lista zmian zespołu (grafik). Opcjonalny filtr dat from/to. 
    *  Pracownicy widzą tylko PUBLISHED/COMPLETED. Manager/Owner widzi też DRAFT.
    */
@@ -323,6 +332,8 @@ export class ShiftsService {
     if (membership.role !== Role.OWNER && membership.role !== Role.MANAGER) {
       throw new ForbiddenException('Tylko Owner lub Manager może tworzyć zmiany.');
     }
+
+    await this.ensureTeamNotLimitExceeded(membership.teamId);
 
     let resolvedRoleName = data.roleName || '';
     let resolvedPositionId = data.positionId || null;
@@ -699,6 +710,8 @@ export class ShiftsService {
     if (membership.role !== Role.OWNER && membership.role !== Role.MANAGER) {
       throw new ForbiddenException('Tylko Owner/Manager może publikować grafik.');
     }
+
+    await this.ensureTeamNotLimitExceeded(membership.teamId);
 
     let shiftIds: string[];
 

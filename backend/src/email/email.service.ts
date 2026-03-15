@@ -11,15 +11,22 @@ export class EmailService {
   }
 
   private get frontendUrl(): string {
-    return (
-      process.env.FRONTEND_URL ||
-      process.env.NEXT_PUBLIC_FRONTEND_URL ||
-      'http://localhost:3000'
-    ).replace(/\/$/, '');
+    const url = process.env.FRONTEND_URL || process.env.NEXT_PUBLIC_FRONTEND_URL;
+    if (!url) {
+      if (process.env.NODE_ENV === 'production') {
+        throw new Error('FRONTEND_URL must be set in production');
+      }
+      return 'http://localhost:3000';
+    }
+    return url.replace(/\/$/, '');
   }
 
   private get fromAddress(): string {
     return process.env.RESEND_FROM || 'Staffer.pl <no-reply@staffer.pl>';
+  }
+
+  private get emailLogoUrl(): string {
+    return process.env.EMAIL_LOGO_URL || 'https://dummyimage.com/160x48/8FACDB/ffffff&text=Staffer.pl';
   }
 
   /** Reusable email footer with unsubscribe hint */
@@ -44,7 +51,7 @@ export class EmailService {
     return `
       <div style="font-family: Arial, sans-serif; max-width: 640px; margin: 0 auto; background: #f9fafb; padding: 32px; color: #111;">
         <div style="text-align: center; margin-bottom: 24px;">
-          <img src="https://dummyimage.com/160x48/8FACDB/ffffff&text=Staffer.pl" alt="Staffer.pl" style="max-width: 160px; height: auto;" />
+          <img src="${this.emailLogoUrl}" alt="Staffer.pl" style="max-width: 160px; height: auto;" />
         </div>
         <div style="background: #ffffff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 28px;">
           ${content}
@@ -226,7 +233,7 @@ export class EmailService {
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 640px; margin: 0 auto; background: #f9fafb; padding: 32px; color: #111;">
           <div style="text-align: center; margin-bottom: 24px;">
-            <img src="https://dummyimage.com/160x48/8FACDB/ffffff&text=Staffer.pl" alt="Staffer.pl" style="max-width: 160px; height: auto;" />
+            <img src="${this.emailLogoUrl}" alt="Staffer.pl" style="max-width: 160px; height: auto;" />
           </div>
           <div style="background: #ffffff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 28px;">
             <h1 style="color: #FF8400; font-size: 22px; margin: 0 0 12px;">Witaj ${name}!</h1>
@@ -320,7 +327,7 @@ export class EmailService {
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 640px; margin: 0 auto; background: #f9fafb; padding: 32px; color: #111;">
           <div style="text-align: center; margin-bottom: 24px;">
-            <img src="https://dummyimage.com/160x48/8FACDB/ffffff&text=Staffer.pl" alt="Staffer.pl" style="max-width: 160px; height: auto;" />
+            <img src="${this.emailLogoUrl}" alt="Staffer.pl" style="max-width: 160px; height: auto;" />
           </div>
           <div style="background: #ffffff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 28px;">
             <h1 style="color: #FF8400; font-size: 22px; margin: 0 0 12px;">Witaj ${managerName}!</h1>
@@ -403,7 +410,7 @@ export class EmailService {
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 640px; margin: 0 auto; background: #f9fafb; padding: 32px; color: #111;">
           <div style="text-align: center; margin-bottom: 24px;">
-            <img src="https://dummyimage.com/160x48/8FACDB/ffffff&text=Staffer.pl" alt="Staffer.pl" style="max-width: 160px; height: auto;" />
+            <img src="${this.emailLogoUrl}" alt="Staffer.pl" style="max-width: 160px; height: auto;" />
           </div>
           <div style="background: #ffffff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 28px;">
             <h1 style="color: #FF8400; font-size: 22px; margin: 0 0 12px;">Witaj ${name}!</h1>
@@ -497,7 +504,7 @@ export class EmailService {
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 640px; margin: 0 auto; background: #f9fafb; padding: 32px; color: #111;">
           <div style="text-align: center; margin-bottom: 24px;">
-            <img src="https://dummyimage.com/160x48/8FACDB/ffffff&text=Staffer.pl" alt="Staffer.pl" style="max-width: 160px; height: auto;" />
+            <img src="${this.emailLogoUrl}" alt="Staffer.pl" style="max-width: 160px; height: auto;" />
           </div>
           <div style="background: #ffffff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 28px;">
             <h1 style="color: #10b981; font-size: 22px; margin: 0 0 12px;">Gratulacje, ${userName}!</h1>
@@ -580,7 +587,7 @@ export class EmailService {
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 640px; margin: 0 auto; background: #f9fafb; padding: 32px; color: #111;">
           <div style="text-align: center; margin-bottom: 24px;">
-            <img src="https://dummyimage.com/160x48/8FACDB/ffffff&text=Staffer.pl" alt="Staffer.pl" style="max-width: 160px; height: auto;" />
+            <img src="${this.emailLogoUrl}" alt="Staffer.pl" style="max-width: 160px; height: auto;" />
           </div>
           <div style="background: #ffffff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 28px;">
             <h1 style="color: #FF8400; font-size: 22px; margin: 0 0 12px;">Witaj ${userName}!</h1>
@@ -659,7 +666,7 @@ export class EmailService {
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 640px; margin: 0 auto; background: #f9fafb; padding: 32px; color: #111;">
           <div style="text-align: center; margin-bottom: 24px;">
-            <img src="https://dummyimage.com/160x48/8FACDB/ffffff&text=Staffer.pl" alt="Staffer.pl" style="max-width: 160px; height: auto;" />
+            <img src="${this.emailLogoUrl}" alt="Staffer.pl" style="max-width: 160px; height: auto;" />
           </div>
           <div style="background: #ffffff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 28px;">
             <h1 style="color: #10b981; font-size: 22px; margin: 0 0 12px;">Witaj ${name}!</h1>
@@ -749,7 +756,7 @@ export class EmailService {
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 640px; margin: 0 auto; background: #f9fafb; padding: 32px; color: #111;">
           <div style="text-align: center; margin-bottom: 24px;">
-            <img src="https://dummyimage.com/160x48/8FACDB/ffffff&text=Staffer.pl" alt="Staffer.pl" style="max-width: 160px; height: auto;" />
+            <img src="${this.emailLogoUrl}" alt="Staffer.pl" style="max-width: 160px; height: auto;" />
           </div>
           <div style="background: #ffffff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 28px;">
             <h1 style="color: #10b981; font-size: 22px; margin: 0 0 12px;">Witaj ${name}!</h1>
@@ -839,7 +846,7 @@ export class EmailService {
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 640px; margin: 0 auto; background: #f9fafb; padding: 32px; color: #111;">
           <div style="text-align: center; margin-bottom: 24px;">
-            <img src="https://dummyimage.com/160x48/8FACDB/ffffff&text=Staffer.pl" alt="Staffer.pl" style="max-width: 160px; height: auto;" />
+            <img src="${this.emailLogoUrl}" alt="Staffer.pl" style="max-width: 160px; height: auto;" />
           </div>
           <div style="background: #ffffff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 28px;">
             <h1 style="color: #10b981; font-size: 22px; margin: 0 0 12px;">Witaj ${name}!</h1>

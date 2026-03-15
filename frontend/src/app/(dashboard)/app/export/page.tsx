@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { getPlanStatus, getAuthToken, getCalendarFeedToken, revokeCalendarFeed } from "@/lib/api";
+import { API_URL, getPlanStatus, getAuthToken, getCalendarFeedToken, revokeCalendarFeed } from "@/lib/api";
 import { useDashboardUser } from "@/components/providers/DashboardUserContext";
 import {
   FileDown,
@@ -51,8 +51,6 @@ function getRange(v: string) {
     default: return getRange("this-month");
   }
 }
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
 
 async function downloadFile(endpoint: string, filename: string, contentTypeHint: "csv" | "ics") {
   const token = await getAuthToken();

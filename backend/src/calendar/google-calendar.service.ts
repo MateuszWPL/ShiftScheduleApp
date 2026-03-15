@@ -20,8 +20,12 @@ export class GoogleCalendarService {
   private getOAuth2Client() {
     const clientId = process.env.GOOGLE_CALENDAR_CLIENT_ID || process.env.GOOGLE_CLIENT_ID;
     const clientSecret = process.env.GOOGLE_CALENDAR_CLIENT_SECRET || process.env.GOOGLE_CLIENT_SECRET;
+    const frontendUrl = process.env.FRONTEND_URL;
+    if (!frontendUrl && process.env.NODE_ENV === 'production') {
+      throw new Error('FRONTEND_URL must be set in production');
+    }
     const redirectUri = process.env.GOOGLE_CALENDAR_REDIRECT_URI ||
-      `${process.env.FRONTEND_URL || 'http://localhost:3000'}/app/calendar-callback`;
+      `${frontendUrl || 'http://localhost:3000'}/app/calendar-callback`;
 
     if (!clientId || !clientSecret) {
       throw new BadRequestException(

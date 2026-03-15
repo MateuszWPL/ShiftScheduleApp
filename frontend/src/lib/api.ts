@@ -945,8 +945,6 @@ export interface PlanStatusResponse {
   status: string;
   hasStarter: boolean;
   hasBusiness: boolean;
-  /** @deprecated use hasStarter */
-  hasPro: boolean;
   memberCount: number;
   memberLimit: number | null;
   limitExceeded: boolean;
