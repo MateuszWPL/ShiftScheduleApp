@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tytuł wpisu — Blog | Staffer.pl</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'system-ui', '-apple-system', 'sans-serif'],
+          },
+          colors: {
+            primary: '#0F172A',
+            secondary: '#334155',
+            cta: '#0369A1',
+            'cta-hover': '#025a8a',
+            muted: '#475569',
+            surface: '#F8FAFC',
+            border: '#E2E8F0',
+          },
+        },
+      },
+    };
+  </script>
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/utilities.css">
+  <link rel="stylesheet" href="css/navbar.css">
+  <link rel="stylesheet" href="css/footer.css">
+</head>
+<body>
+
+  <!-- NAVBAR placeholder — same as index.html -->
+
+  <main>
+
+    <!-- ==================== ARTICLE ==================== -->
+    <article class="section-lg pt-32">
+      <div class="container-base">
+        <div class="grid lg:grid-cols-[1fr_300px] gap-12 max-w-6xl mx-auto">
+
+          <!-- Main Content -->
+          <div>
+            <!-- Breadcrumbs -->
+            <nav class="flex items-center gap-2 text-sm text-muted mb-8 reveal" aria-label="Breadcrumb">
+              <a href="/" class="hover:text-primary transition-colors cursor-pointer">Strona główna</a>
+              <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
+              <a href="/blog" class="hover:text-primary transition-colors cursor-pointer">Blog</a>
+              <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
+              <span class="text-primary font-medium">Tytuł wpisu</span>
+            </nav>
+
+            <!-- Header -->
+            <header class="mb-8 reveal">
+              <span class="badge badge-subtle mb-4 inline-flex">Kategoria</span>
+              <h1 class="text-3xl md:text-4xl lg:text-[2.75rem] font-bold text-primary leading-tight mb-4 text-balance">
+                Tytuł wpisu blogowego — pełna wersja
+              </h1>
+              <div class="flex flex-wrap items-center gap-4 text-sm text-muted">
+                <div class="flex items-center gap-2">
+                  <div class="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center text-xs font-bold text-secondary">MK</div>
+                  <span>Mateusz K.</span>
+                </div>
+                <span>&middot;</span>
+                <time datetime="2026-03-12">12 marca 2026</time>
+                <span>&middot;</span>
+                <span>5 min czytania</span>
+              </div>
+            </header>
+
+            <!-- Featured Image -->
+            <div class="bg-gradient-to-br from-blue-50 to-slate-100 rounded-xl h-64 md:h-80 flex items-center justify-center mb-10 reveal">
+              <span class="text-muted text-sm">Obrazek wyróżniony</span>
+            </div>
+
+            <!-- Article Body (prose-like styling via Tailwind) -->
+            <div class="prose-content reveal">
+              <p class="text-secondary leading-relaxed mb-6">
+                Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris.
+              </p>
+
+              <h2 class="text-2xl font-bold text-primary mt-10 mb-4">Nagłówek sekcji</h2>
+              <p class="text-secondary leading-relaxed mb-6">
+                Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+              </p>
+
+              <h3 class="text-xl font-semibold text-primary mt-8 mb-3">Podtytuł</h3>
+              <ul class="list-disc list-inside space-y-2 text-secondary mb-6">
+                <li>Punkt pierwszy listy</li>
+                <li>Punkt drugi listy</li>
+                <li>Punkt trzeci listy</li>
+              </ul>
+
+              <blockquote class="border-l-4 border-cta pl-4 py-2 my-8 text-secondary italic">
+                Cytat lub wyróżniony fragment tekstu. Cillum dolore eu fugiat nulla pariatur.
+              </blockquote>
+
+              <p class="text-secondary leading-relaxed mb-6">
+                Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam.
+              </p>
+            </div>
+
+            <!-- Author Box -->
+            <div class="card mt-12 p-6 reveal">
+              <div class="flex items-start gap-4">
+                <div class="w-14 h-14 rounded-full bg-slate-200 flex-shrink-0 flex items-center justify-center text-lg font-bold text-secondary">MK</div>
+                <div>
+                  <div class="font-semibold text-primary mb-1">Mateusz K.</div>
+                  <p class="text-muted text-sm leading-relaxed">Autor artykułów o zarządzaniu zespołem i planowaniu grafików pracy. Założyciel Staffer.pl.</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Related Posts -->
+            <div class="mt-16 reveal">
+              <h2 class="text-2xl font-bold text-primary mb-6">Przeczytaj również</h2>
+              <div class="grid sm:grid-cols-2 gap-6">
+                <div class="card card-interactive overflow-hidden flex flex-col">
+                  <div class="bg-gradient-to-br from-blue-50 to-slate-100 h-36 flex items-center justify-center">
+                    <span class="text-muted text-sm">Miniatura</span>
+                  </div>
+                  <div class="p-4">
+                    <h3 class="text-sm font-semibold text-primary mb-1">
+                      <a href="/blog/post-slug" class="hover:text-cta transition-colors cursor-pointer">Powiązany wpis numer jeden</a>
+                    </h3>
+                    <div class="text-xs text-muted">10 marca 2026</div>
+                  </div>
+                </div>
+                <div class="card card-interactive overflow-hidden flex flex-col">
+                  <div class="bg-gradient-to-br from-blue-50 to-slate-100 h-36 flex items-center justify-center">
+                    <span class="text-muted text-sm">Miniatura</span>
+                  </div>
+                  <div class="p-4">
+                    <h3 class="text-sm font-semibold text-primary mb-1">
+                      <a href="/blog/post-slug" class="hover:text-cta transition-colors cursor-pointer">Powiązany wpis numer dwa</a>
+                    </h3>
+                    <div class="text-xs text-muted">8 marca 2026</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Sidebar -->
+          <aside class="hidden lg:block">
+            <div class="sticky top-28 space-y-8">
+
+              <!-- Table of Contents -->
+              <div class="card p-5 reveal">
+                <h3 class="text-sm font-semibold text-primary mb-3 uppercase tracking-wide">Spis treści</h3>
+                <nav class="space-y-2" aria-label="Spis treści">
+                  <a href="#" class="block text-sm text-muted hover:text-cta transition-colors cursor-pointer">Nagłówek sekcji</a>
+                  <a href="#" class="block text-sm text-muted hover:text-cta transition-colors cursor-pointer pl-3">Podtytuł</a>
+                </nav>
+              </div>
+
+              <!-- CTA Box -->
+              <div class="card p-5 bg-primary text-white reveal">
+                <h3 class="font-semibold mb-2">Wypróbuj Staffer.pl</h3>
+                <p class="text-white/70 text-sm mb-4">Zaplanuj grafik w 5 minut — za darmo.</p>
+                <a href="https://app.staffer.pl" class="btn btn-sm w-full cursor-pointer" style="background:#0369A1;color:white">Zacznij za darmo</a>
+              </div>
+
+              <!-- Tags -->
+              <div class="reveal">
+                <h3 class="text-sm font-semibold text-primary mb-3 uppercase tracking-wide">Tagi</h3>
+                <div class="flex flex-wrap gap-2">
+                  <a href="#" class="badge badge-subtle cursor-pointer hover:opacity-80 transition-opacity">grafik pracy</a>
+                  <a href="#" class="badge badge-subtle cursor-pointer hover:opacity-80 transition-opacity">zarządzanie</a>
+                  <a href="#" class="badge badge-subtle cursor-pointer hover:opacity-80 transition-opacity">SaaS</a>
+                </div>
+              </div>
+
+            </div>
+          </aside>
+
+        </div>
+      </div>
+    </article>
+
+  </main>
+
+  <!-- FOOTER placeholder — same as index.html -->
+
+  <script src="js/app.js"></script>
+
+</body>
+</html>

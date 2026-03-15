@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Blog — Staffer.pl</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'system-ui', '-apple-system', 'sans-serif'],
+          },
+          colors: {
+            primary: '#0F172A',
+            secondary: '#334155',
+            cta: '#0369A1',
+            'cta-hover': '#025a8a',
+            muted: '#475569',
+            surface: '#F8FAFC',
+            border: '#E2E8F0',
+          },
+        },
+      },
+    };
+  </script>
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/utilities.css">
+  <link rel="stylesheet" href="css/navbar.css">
+  <link rel="stylesheet" href="css/footer.css">
+</head>
+<body>
+
+  <!-- NAVBAR placeholder — same as index.html -->
+
+  <main>
+
+    <!-- ==================== ARCHIVE HEADER ==================== -->
+    <section class="section-lg pt-32">
+      <div class="container-base">
+        <div class="max-w-2xl reveal">
+          <h1 class="text-4xl md:text-5xl font-bold text-primary mb-4">Blog</h1>
+          <p class="text-muted text-lg">Porady, aktualności i najlepsze praktyki planowania grafiku pracy.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== FEATURED POST ==================== -->
+    <section class="section">
+      <div class="container-base">
+        <div class="card card-interactive reveal overflow-hidden">
+          <div class="grid md:grid-cols-2 gap-0">
+            <!-- Thumbnail -->
+            <div class="bg-gradient-to-br from-blue-50 to-slate-100 min-h-[240px] md:min-h-[320px] flex items-center justify-center">
+              <span class="text-muted text-sm">Obrazek wyróżniony</span>
+            </div>
+            <!-- Content -->
+            <div class="p-6 md:p-8 flex flex-col justify-center">
+              <span class="badge badge-subtle mb-3 self-start">Wyróżniony</span>
+              <h2 class="text-xl md:text-2xl font-bold text-primary mb-3">
+                <a href="/blog/post-slug" class="hover:text-cta transition-colors cursor-pointer">Tytuł wyróżnionego wpisu blogowego</a>
+              </h2>
+              <p class="text-muted text-sm leading-relaxed mb-4">Krótki opis wpisu. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt.</p>
+              <div class="flex items-center gap-3 text-xs text-muted">
+                <span>12 marca 2026</span>
+                <span>&middot;</span>
+                <span>5 min czytania</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== POST GRID ==================== -->
+    <section class="section">
+      <div class="container-base">
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <!-- Post Card Template (repeated) -->
+          <article class="card card-interactive reveal overflow-hidden flex flex-col">
+            <div class="bg-gradient-to-br from-blue-50 to-slate-100 h-48 flex items-center justify-center">
+              <span class="text-muted text-sm">Miniatura</span>
+            </div>
+            <div class="p-5 flex flex-col flex-1">
+              <div class="flex items-center gap-2 mb-2">
+                <span class="text-xs font-medium text-cta">Kategoria</span>
+                <span class="text-xs text-muted">&middot; 5 min czytania</span>
+              </div>
+              <h3 class="text-base font-semibold text-primary mb-2 flex-1">
+                <a href="/blog/post-slug" class="hover:text-cta transition-colors cursor-pointer">Tytuł wpisu blogowego</a>
+              </h3>
+              <p class="text-muted text-sm leading-relaxed mb-3 line-clamp-2">Krótki opis wpisu. Lorem ipsum dolor sit amet consectetur.</p>
+              <div class="text-xs text-muted mt-auto">12 marca 2026</div>
+            </div>
+          </article>
+
+          <article class="card card-interactive reveal overflow-hidden flex flex-col">
+            <div class="bg-gradient-to-br from-blue-50 to-slate-100 h-48 flex items-center justify-center">
+              <span class="text-muted text-sm">Miniatura</span>
+            </div>
+            <div class="p-5 flex flex-col flex-1">
+              <div class="flex items-center gap-2 mb-2">
+                <span class="text-xs font-medium text-cta">Kategoria</span>
+                <span class="text-xs text-muted">&middot; 3 min czytania</span>
+              </div>
+              <h3 class="text-base font-semibold text-primary mb-2 flex-1">
+                <a href="/blog/post-slug" class="hover:text-cta transition-colors cursor-pointer">Kolejny wpis blogowy</a>
+              </h3>
+              <p class="text-muted text-sm leading-relaxed mb-3 line-clamp-2">Krótki opis wpisu. Lorem ipsum dolor sit amet consectetur.</p>
+              <div class="text-xs text-muted mt-auto">10 marca 2026</div>
+            </div>
+          </article>
+
+          <article class="card card-interactive reveal overflow-hidden flex flex-col">
+            <div class="bg-gradient-to-br from-blue-50 to-slate-100 h-48 flex items-center justify-center">
+              <span class="text-muted text-sm">Miniatura</span>
+            </div>
+            <div class="p-5 flex flex-col flex-1">
+              <div class="flex items-center gap-2 mb-2">
+                <span class="text-xs font-medium text-cta">Kategoria</span>
+                <span class="text-xs text-muted">&middot; 7 min czytania</span>
+              </div>
+              <h3 class="text-base font-semibold text-primary mb-2 flex-1">
+                <a href="/blog/post-slug" class="hover:text-cta transition-colors cursor-pointer">Trzeci wpis blogowy</a>
+              </h3>
+              <p class="text-muted text-sm leading-relaxed mb-3 line-clamp-2">Krótki opis wpisu. Lorem ipsum dolor sit amet consectetur.</p>
+              <div class="text-xs text-muted mt-auto">8 marca 2026</div>
+            </div>
+          </article>
+        </div>
+
+        <!-- Pagination -->
+        <div class="flex items-center justify-center gap-2 mt-12 reveal">
+          <span class="w-10 h-10 flex items-center justify-center rounded-md bg-cta text-white text-sm font-semibold cursor-pointer">1</span>
+          <a class="w-10 h-10 flex items-center justify-center rounded-md text-muted hover:bg-slate-100 text-sm font-medium cursor-pointer transition-colors">2</a>
+          <a class="w-10 h-10 flex items-center justify-center rounded-md text-muted hover:bg-slate-100 text-sm font-medium cursor-pointer transition-colors">3</a>
+          <a class="w-10 h-10 flex items-center justify-center rounded-md text-muted hover:bg-slate-100 text-sm font-medium cursor-pointer transition-colors" aria-label="Następna strona">
+            <i data-lucide="chevron-right" class="w-4 h-4"></i>
+          </a>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- FOOTER placeholder — same as index.html -->
+
+  <script src="js/app.js"></script>
+
+</body>
+</html>

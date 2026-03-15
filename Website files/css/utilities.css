@@ -1,0 +1,82 @@
+/* ============================================
+   UTILITIES — Custom Classes Beyond Tailwind
+   ============================================ */
+
+/* --- Glass Effect --- */
+.glass {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(var(--blur-glass));
+  -webkit-backdrop-filter: blur(var(--blur-glass));
+  border: 1px solid var(--glass-border);
+}
+
+.glass-subtle {
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(226, 232, 240, 0.4);
+}
+
+/* --- Container Widths --- */
+.container-narrow {
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+.container-base {
+  max-width: 80rem;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+@media (min-width: 768px) {
+  .container-base {
+    padding: 0 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .container-base {
+    padding: 0 2rem;
+  }
+}
+
+/* --- Section Spacing --- */
+.section {
+  padding: var(--space-3xl) 0;
+}
+
+.section-lg {
+  padding: 5rem 0;
+}
+
+@media (min-width: 768px) {
+  .section-lg {
+    padding: 6rem 0;
+  }
+}
+
+/* --- Text Utilities --- */
+.text-gradient {
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-cta) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.text-balance {
+  text-wrap: balance;
+}
+
+/* --- Visibility --- */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
