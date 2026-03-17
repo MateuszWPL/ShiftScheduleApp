@@ -19,6 +19,7 @@ import {
   type AvailabilitySlot,
 } from "@/lib/api";
 import { useDashboardUser } from "@/components/providers/DashboardUserContext";
+import { useLocation } from "@/components/providers/LocationContext";
 import { ScheduleGrid, type AvailabilityDropData } from "@/components/dashboard/ScheduleGrid";
 import { MyShiftsList } from "@/components/dashboard/MyShiftsList";
 import { CreateShiftDialog } from "@/components/dashboard/CreateShiftDialog";
@@ -334,6 +335,7 @@ function AvailabilityPanel({
 // ── Main Page ──────────────────────────────────────────────
 export default function GrafikPage() {
   const { dbUser } = useDashboardUser();
+  const { activeLocationId } = useLocation();
   const queryClient = useQueryClient();
   const searchParams = useSearchParams();
   const [weekStart, setWeekStart] = useState(() => new Date());
@@ -376,8 +378,8 @@ export default function GrafikPage() {
   });
 
   const { data: weekShifts = [] } = useQuery({
-    queryKey: ["shifts", from, toStr],
-    queryFn: () => getShifts({ from, to: toStr }),
+    queryKey: ["shifts", from, toStr, activeLocationId],
+    queryFn: () => getShifts({ from, to: toStr, locationId: activeLocationId ?? undefined }),
   });
   const { data: teamMembers = [] } = useQuery({
     queryKey: ["team-members"],

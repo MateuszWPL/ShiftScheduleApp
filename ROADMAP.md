@@ -206,7 +206,6 @@ ShiftScheduleApp/
 - **Brak dokumentow prawnych** — szablony przygotowane (docs/legal/), wymagaja weryfikacji prawnika i wdrozenia w UI
 - **Email logo** — skonfigurowane przez zmienna EMAIL_LOGO_URL (wymaga ustawienia produkcyjnego URL)
 - **Landing page** — w przejsciu na WordPress, tymczasowo niedostepna
-- ~~**Szablony grafiku** — strona /templates to stub (tylko bramka premium, brak backendu)~~ ✅ Zaimplementowane
 
 ---
 
@@ -293,16 +292,6 @@ Rejestracja -> FREE
 ---
 
 ## Plany rozwoju (przyszlosc)
-
-### ~~Faza 3.4 — Szablony grafiku (PREMIUM: Business+)~~ ✅ DONE
-- ~~Zapisywanie calego tygodnia jako szablon (nazwa, opis)~~
-- ~~Biblioteka szablonow: "Tydzien normalny", "Tydzien swiateczny" itp.~~
-- ~~Zastosowanie szablonu na wybrany tydzien (1 klik)~~
-- ~~Szablony dzielone w zespole~~
-- ~~Tworzenie szablonow od zera (mini-grid z dniami tygodnia)~~
-- ~~Pelny CRUD (tworzenie, edycja nazwy/opisu, usuwanie)~~
-- ~~Limit 20 szablonow na zespol~~
-- ~~Przycisk "Zapisz jako szablon" na stronie grafiku (Business+)~~
 
 ### Faza 3.5 — Wiele lokalizacji (PREMIUM: Business+)
 - Zarzadzanie wieloma lokalizacjami / oddzialami

@@ -6,6 +6,9 @@ import { getPlanStatus } from "@/lib/api";
 import { AppTour } from "@/components/onboarding/AppTour";
 import { LimitExceededBanner } from "@/components/billing/LimitExceededBanner";
 import { Button } from "@/components/ui/button";
+import { LocationProvider } from "@/components/providers/LocationContext";
+import { LocationSwitcher } from "@/components/layout/LocationSwitcher";
+import { AddLocationDialog } from "@/components/locations/AddLocationDialog";
 import {
   LayoutDashboard,
   Users,
@@ -169,6 +172,16 @@ export function DashboardLayout({ children, userRole, userName, userAvatar, onLo
           <NotificationBell align="left" />
         </div>
 
+        {/* Location switcher (Business+ only) */}
+        {hasBusiness && (
+          <div className="px-3 pb-2 border-b border-brand-warm/60">
+            <p className="text-[10px] font-semibold text-brand-dark-muted uppercase tracking-wider px-3 mb-1">
+              Lokalizacja
+            </p>
+            <LocationSwitcher isAdmin={isAdmin} />
+          </div>
+        )}
+
         {/* Navigation */}
         <nav className="flex-1 px-3 py-2 space-y-5 overflow-y-auto">
           {renderSection("Menu", mainNav)}
@@ -229,6 +242,7 @@ export function DashboardLayout({ children, userRole, userName, userAvatar, onLo
       </aside>
 
       {/* Main content */}
+      <LocationProvider hasBusiness={hasBusiness}>
       <main className="flex-1 overflow-auto relative flex flex-col">
         {/* Mobile header + top nav */}
         <header className="md:hidden sticky top-0 z-40 bg-white border-b border-brand-warm shadow-sm">
@@ -237,6 +251,11 @@ export function DashboardLayout({ children, userRole, userName, userAvatar, onLo
               <Logo variant="icon" className="w-7 h-7 flex-shrink-0" />
               <span className="font-bold text-brand-dark text-sm">Staffer</span>
             </Link>
+            {hasBusiness && (
+              <div className="flex-1 mx-2 min-w-0 max-w-[160px]">
+                <LocationSwitcher isAdmin={isAdmin} compact />
+              </div>
+            )}
             <div className="flex items-center gap-1 shrink-0">
               <NotificationBell />
               <button onClick={onLogout} className="p-2 rounded-lg text-brand-dark-muted hover:text-red-500 cursor-pointer transition-colors duration-150">
@@ -285,6 +304,8 @@ export function DashboardLayout({ children, userRole, userName, userAvatar, onLo
       </main>
 
       <AppTour userRole={userRole} />
+      {hasBusiness && isAdmin && <AddLocationDialog />}
+      </LocationProvider>
     </div>
   );
 }

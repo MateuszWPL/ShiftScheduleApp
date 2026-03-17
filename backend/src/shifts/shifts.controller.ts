@@ -34,6 +34,7 @@ export class ShiftsController {
     return this.shiftsService.findAll(user.userId, {
       from: query.from,
       to: query.to,
+      locationId: query.locationId,
     });
   }
 
@@ -65,6 +66,7 @@ export class ShiftsController {
       roleName: createShiftDto.roleName,
       positionId: createShiftDto.positionId,
       status: createShiftDto.status,
+      locationId: createShiftDto.locationId,
     });
   }
 

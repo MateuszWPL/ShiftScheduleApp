@@ -19,6 +19,7 @@ import { ReportsModule } from './reports/reports.module';
 import { ExportModule } from './export/export.module';
 import { CalendarModule } from './calendar/calendar.module';
 import { TemplatesModule } from './templates/templates.module';
+import { LocationsModule } from './locations/locations.module';
 import { RequestLoggerMiddleware } from './common/middleware/request-logger.middleware';
 
 @Module({
@@ -44,6 +45,7 @@ import { RequestLoggerMiddleware } from './common/middleware/request-logger.midd
     ExportModule,
     CalendarModule,
     TemplatesModule,
+    LocationsModule,
   ],
   controllers: [AppController],
   providers: [

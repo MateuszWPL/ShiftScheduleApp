@@ -49,6 +49,8 @@ export interface Shift {
   roleName: string;
   positionId?: string | null;
   position?: Position | null;
+  locationId?: string | null;
+  location?: { id: string; name: string; address: string | null } | null;
   status: "DRAFT" | "PUBLISHED" | "COMPLETED";
   teamId: string;
   assignments?: ShiftAssignment[];
@@ -162,14 +164,16 @@ async function authenticatedFetchFormData(url: string, formData: FormData): Prom
 }
 
 export interface GetShiftsParams {
-  from?: string; // ISO date
-  to?: string;   // ISO date
+  from?: string;        // ISO date
+  to?: string;          // ISO date
+  locationId?: string;  // filter by location (Business+)
 }
 
 export async function getShifts(params?: GetShiftsParams): Promise<Shift[]> {
   const search = new URLSearchParams();
   if (params?.from) search.set("from", params.from);
   if (params?.to) search.set("to", params.to);
+  if (params?.locationId) search.set("locationId", params.locationId);
   const q = search.toString();
   const url = q ? `${API_URL}/shifts?${q}` : `${API_URL}/shifts`;
   const res = await authenticatedFetch(url);
@@ -525,6 +529,7 @@ export interface CreateShiftInput {
   roleName?: string;
   positionId?: string;
   status?: "DRAFT" | "PUBLISHED" | "COMPLETED";
+  locationId?: string;
 }
 
 export async function createShift(data: CreateShiftInput): Promise<Shift> {
@@ -1348,6 +1353,73 @@ export async function applyTemplate(id: string, targetWeekStart: string): Promis
   if (!res.ok) {
     const error = await res.json();
     throw new Error(error.message || "Błąd zastosowania szablonu");
+  }
+  return res.json();
+}
+
+// --- Lokalizacje (Business+) ---
+
+export interface Location {
+  id: string;
+  teamId: string;
+  name: string;
+  address: string | null;
+  isDefault: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export async function getLocations(): Promise<Location[]> {
+  const res = await authenticatedFetch(`${API_URL}/locations`);
+  if (!res.ok) {
+    const error = await res.json().catch(() => ({}));
+    throw new Error(error.message || "Błąd pobierania lokalizacji");
+  }
+  return res.json();
+}
+
+export async function createLocation(data: { name: string; address?: string }): Promise<Location> {
+  const res = await authenticatedFetch(`${API_URL}/locations`, {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    const error = await res.json().catch(() => ({}));
+    throw new Error(error.message || "Błąd tworzenia lokalizacji");
+  }
+  return res.json();
+}
+
+export async function updateLocation(id: string, data: { name?: string; address?: string }): Promise<Location> {
+  const res = await authenticatedFetch(`${API_URL}/locations/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    const error = await res.json().catch(() => ({}));
+    throw new Error(error.message || "Błąd aktualizacji lokalizacji");
+  }
+  return res.json();
+}
+
+export async function deleteLocation(id: string): Promise<{ deleted: boolean }> {
+  const res = await authenticatedFetch(`${API_URL}/locations/${id}`, {
+    method: "DELETE",
+  });
+  if (!res.ok) {
+    const error = await res.json().catch(() => ({}));
+    throw new Error(error.message || "Błąd usuwania lokalizacji");
+  }
+  return res.json();
+}
+
+export async function setDefaultLocation(id: string): Promise<Location> {
+  const res = await authenticatedFetch(`${API_URL}/locations/${id}/default`, {
+    method: "PATCH",
+  });
+  if (!res.ok) {
+    const error = await res.json().catch(() => ({}));
+    throw new Error(error.message || "Błąd ustawiania domyślnej lokalizacji");
   }
   return res.json();
 }

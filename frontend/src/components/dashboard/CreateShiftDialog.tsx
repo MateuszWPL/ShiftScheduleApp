@@ -14,6 +14,7 @@ import {
   type Position,
   type User,
 } from "@/lib/api";
+import { useLocation } from "@/components/providers/LocationContext";
 import { toast } from "sonner";
 import { X, Clock, Briefcase, AlertCircle } from "lucide-react";
 
@@ -47,6 +48,7 @@ export function CreateShiftDialog({
   editShift,
 }: ShiftDialogProps) {
   const queryClient = useQueryClient();
+  const { activeLocationId } = useLocation();
   const [positionId, setPositionId] = useState<string>("");
   const [customRoleName, setCustomRoleName] = useState("");
   const [shiftDate, setShiftDate] = useState("");
@@ -159,6 +161,7 @@ export function CreateShiftDialog({
         endTime: endISO,
         positionId: realPositionId,
         roleName: realPositionId ? undefined : customRoleName,
+        locationId: activeLocationId ?? undefined,
       });
       await addAssignment(shift.id, {
         userId: assignToId || undefined,

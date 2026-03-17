@@ -22,4 +22,8 @@ export class CreateShiftDto {
   @IsOptional()
   @IsEnum(ShiftStatus, { message: 'status musi być jednym z: DRAFT, PUBLISHED, COMPLETED' })
   status?: ShiftStatus;
+
+  @IsOptional()
+  @IsString()
+  locationId?: string;
 }
