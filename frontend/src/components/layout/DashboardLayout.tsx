@@ -149,6 +149,7 @@ export function DashboardLayout({ children, userRole, userName, userAvatar, onLo
   };
 
   return (
+    <LocationProvider hasBusiness={hasBusiness}>
     <div className="flex h-screen bg-brand-surface overflow-hidden">
       {/* Desktop sidebar */}
       <aside className="w-64 bg-white border-r border-brand-warm flex flex-col hidden md:flex shadow-sm">
@@ -242,7 +243,6 @@ export function DashboardLayout({ children, userRole, userName, userAvatar, onLo
       </aside>
 
       {/* Main content */}
-      <LocationProvider hasBusiness={hasBusiness}>
       <main className="flex-1 overflow-auto relative flex flex-col">
         {/* Mobile header + top nav */}
         <header className="md:hidden sticky top-0 z-40 bg-white border-b border-brand-warm shadow-sm">
@@ -305,7 +305,7 @@ export function DashboardLayout({ children, userRole, userName, userAvatar, onLo
 
       <AppTour userRole={userRole} />
       {hasBusiness && isAdmin && <AddLocationDialog />}
-      </LocationProvider>
     </div>
+    </LocationProvider>
   );
 }
