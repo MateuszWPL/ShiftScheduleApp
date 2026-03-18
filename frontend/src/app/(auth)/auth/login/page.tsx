@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { signIn } from "next-auth/react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -9,6 +9,7 @@ import { Logo } from "@/components/brand/Logo";
 import { toast } from "sonner";
 import { Mail, Lock, Eye, EyeOff, ArrowRight } from "lucide-react";
 import { authPaths } from "@/lib/app-paths";
+import { API_URL } from "@/lib/api";
 
 const GoogleIcon = () => (
   <svg className="w-5 h-5" viewBox="0 0 24 24">
@@ -19,8 +20,10 @@ const GoogleIcon = () => (
   </svg>
 );
 
-export default function LoginPage() {
-  const router = useRouter();
+function LoginContent() {
+  const searchParams = useSearchParams();
+  const inviteCode = searchParams.get("invite") || "";
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -30,6 +33,11 @@ export default function LoginPage() {
   const [resetEmail, setResetEmail] = useState("");
   const [resetSent, setResetSent] = useState(false);
   const [isResetLoading, setIsResetLoading] = useState(false);
+
+  // After successful auth, redirect to onboarding with code OR home
+  const callbackUrl = inviteCode
+    ? `${authPaths.onboarding}?code=${encodeURIComponent(inviteCode)}`
+    : "/";
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -43,7 +51,7 @@ export default function LoginPage() {
       if (result?.error) throw new Error(result.error);
       if (result?.ok) {
         toast.success("Zalogowano pomyślnie!");
-        window.location.href = "/";
+        window.location.href = callbackUrl;
       }
     } catch (error: any) {
       toast.error("Błąd logowania", {
@@ -58,7 +66,6 @@ export default function LoginPage() {
     e.preventDefault();
     setIsResetLoading(true);
     try {
-      const { API_URL } = await import("@/lib/api");
       const res = await fetch(`${API_URL}/auth/request-reset`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -76,6 +83,10 @@ export default function LoginPage() {
       setIsResetLoading(false);
     }
   };
+
+  const registerHref = inviteCode
+    ? `${authPaths.register}?invite=${encodeURIComponent(inviteCode)}`
+    : authPaths.register;
 
   if (showReset) {
     return (
@@ -139,6 +150,12 @@ export default function LoginPage() {
           <h1 className="text-2xl font-bold text-brand-dark">Witaj w Staffer</h1>
           <p className="text-sm text-brand-dark-muted mt-1">Zaloguj się do swojego panelu</p>
         </div>
+
+        {inviteCode && (
+          <div className="mb-4 px-4 py-3 bg-brand-muted/40 border border-brand/20 rounded-xl text-sm text-brand-dark text-center">
+            Zaloguj się, aby dołączyć do zespołu
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
@@ -211,7 +228,7 @@ export default function LoginPage() {
 
         <Button
           type="button"
-          onClick={() => signIn("google", { callbackUrl: "/" })}
+          onClick={() => signIn("google", { callbackUrl })}
           variant="outline"
           className="w-full gap-2 h-11 border-brand-warm hover:bg-brand-warm-light/50"
         >
@@ -221,11 +238,27 @@ export default function LoginPage() {
 
         <p className="text-sm text-center text-brand-dark-muted mt-6">
           Nie masz konta?{" "}
-          <Link href={authPaths.register} className="text-brand hover:text-brand-light font-semibold transition-colors">
+          <Link href={registerHref} className="text-brand hover:text-brand-light font-semibold transition-colors">
             Zarejestruj się
           </Link>
         </p>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="w-full max-w-md">
+          <div className="bg-white rounded-2xl shadow-xl border border-brand-warm/30 p-8 flex justify-center">
+            <div className="animate-spin h-8 w-8 border-4 border-brand-warm border-t-brand rounded-full" />
+          </div>
+        </div>
+      }
+    >
+      <LoginContent />
+    </Suspense>
   );
 }

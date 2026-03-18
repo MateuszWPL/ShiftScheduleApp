@@ -7,6 +7,7 @@ import { OnboardingChoice } from "@/components/onboarding/OnboardingChoice";
 import { CreateTeamWizard } from "@/components/onboarding/CreateTeamWizard";
 import { JoinTeamFlow } from "@/components/onboarding/JoinTeamFlow";
 import { authPaths } from "@/lib/app-paths";
+import { saveInviteCode, readInviteCode, clearInviteCode } from "@/lib/invite-storage";
 
 type OnboardingStep = "choice" | "create-team" | "join-team";
 
@@ -16,15 +17,41 @@ function OnboardingContent() {
   const searchParams = useSearchParams();
   const codeFromUrl = searchParams.get("code");
 
-  const [step, setStep] = useState<OnboardingStep>(codeFromUrl ? "join-team" : "choice");
+  // Resolve invite code: URL param takes priority, then localStorage
+  const [resolvedCode, setResolvedCode] = useState<string>("");
+  const [step, setStep] = useState<OnboardingStep>("choice");
 
   useEffect(() => {
-    if (sessionStatus === "unauthenticated") {
-      router.push(authPaths.login);
-    }
-  }, [sessionStatus, router]);
+    if (sessionStatus === "loading") return;
 
-  if (sessionStatus === "loading") {
+    if (sessionStatus === "unauthenticated") {
+      if (codeFromUrl) {
+        // Save the invite code so it survives registration + email verification
+        saveInviteCode(codeFromUrl);
+        router.replace(`${authPaths.login}?invite=${encodeURIComponent(codeFromUrl)}`);
+      } else {
+        router.replace(authPaths.login);
+      }
+      return;
+    }
+
+    // Authenticated: resolve code from URL or localStorage
+    if (codeFromUrl) {
+      setResolvedCode(codeFromUrl);
+      clearInviteCode(); // consumed from URL, no longer need LS copy
+      setStep("join-team");
+    } else {
+      const storedCode = readInviteCode();
+      if (storedCode) {
+        setResolvedCode(storedCode);
+        clearInviteCode();
+        setStep("join-team");
+      }
+      // else stay on "choice"
+    }
+  }, [sessionStatus, codeFromUrl, router]);
+
+  if (sessionStatus === "loading" || sessionStatus === "unauthenticated") {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="text-center space-y-2">
@@ -52,7 +79,7 @@ function OnboardingContent() {
   if (step === "join-team") {
     return (
       <JoinTeamFlow
-        initialCode={codeFromUrl || ""}
+        initialCode={resolvedCode}
         onBack={() => setStep("choice")}
       />
     );

@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import Link from "next/link";
 import { authPaths } from "@/lib/app-paths";
 import { API_URL } from "@/lib/api";
+import { readInviteCode } from "@/lib/invite-storage";
 import { CheckCircle2, XCircle, ArrowRight, HelpCircle } from "lucide-react";
 
 function VerifyEmailContent() {
@@ -37,6 +38,16 @@ function VerifyEmailContent() {
       setStatus("success");
       setMessage(data.message || "Email został pomyślnie zweryfikowany!");
       toast.success("Email zweryfikowany!");
+
+      // After verification, check if we have a pending invite code in localStorage
+      const storedInviteCode = readInviteCode();
+      // Redirect after a short delay so the user sees the success screen
+      setTimeout(() => {
+        if (storedInviteCode) {
+          router.push(`${authPaths.login}?invite=${encodeURIComponent(storedInviteCode)}`);
+        }
+        // If no invite code, we stay on the success screen and user clicks the button manually
+      }, 2500);
     } catch (error: any) {
       setStatus("error");
       setMessage(error.message || "Błąd weryfikacji emaila.");
@@ -56,6 +67,11 @@ function VerifyEmailContent() {
   }
 
   if (status === "success") {
+    const storedInviteCode = readInviteCode();
+    const loginHref = storedInviteCode
+      ? `${authPaths.login}?invite=${encodeURIComponent(storedInviteCode)}`
+      : authPaths.login;
+
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-brand-surface via-white to-brand-warm-light/30">
         <div className="max-w-md w-full p-8 bg-white rounded-2xl shadow-xl border border-brand-warm/30 text-center space-y-5">
@@ -66,11 +82,13 @@ function VerifyEmailContent() {
           </div>
           <h1 className="text-2xl font-bold text-brand-dark">Email zweryfikowany!</h1>
           <p className="text-sm text-brand-dark-muted">
-            Twoje konto jest już aktywne. Możesz teraz przejść do konfiguracji swojego zespołu.
+            {storedInviteCode
+              ? "Twoje konto jest aktywne. Za chwilę zostaniesz przekierowany do logowania, aby dołączyć do zespołu."
+              : "Twoje konto jest już aktywne. Możesz teraz przejść do konfiguracji swojego zespołu."}
           </p>
-          <Link href={authPaths.login}>
+          <Link href={loginHref}>
             <Button className="w-full gap-2 h-11">
-              Przejdź do Onboardingu
+              Przejdź do logowania
               <ArrowRight className="h-4 w-4" />
             </Button>
           </Link>

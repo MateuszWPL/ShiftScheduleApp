@@ -1,14 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useState, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { signIn } from "next-auth/react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { Logo } from "@/components/brand/Logo";
 import { toast } from "sonner";
-import { Mail, Lock, Eye, EyeOff, User, ArrowRight } from "lucide-react";
+import { Mail, Lock, User, Eye, EyeOff, ArrowRight, CheckCircle2, Users } from "lucide-react";
 import { authPaths } from "@/lib/app-paths";
 import { API_URL } from "@/lib/api";
-import { ResendVerificationButton } from "@/components/auth/ResendVerificationButton";
 
 const GoogleIcon = () => (
   <svg className="w-5 h-5" viewBox="0 0 24 24">
@@ -19,78 +20,83 @@ const GoogleIcon = () => (
   </svg>
 );
 
-export default function RegisterPage() {
+function RegisterContent() {
+  const searchParams = useSearchParams();
+  const inviteCode = searchParams.get("invite") || "";
+
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [termsAccepted, setTermsAccepted] = useState(false);
-  const [privacyAccepted, setPrivacyAccepted] = useState(false);
+  const [acceptTerms, setAcceptTerms] = useState(false);
+  const [acceptMarketing, setAcceptMarketing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [isRegistered, setIsRegistered] = useState(false);
+  const [registered, setRegistered] = useState(false);
+
+  // After successful auth → redirect to onboarding with invite code if present
+  const callbackUrl = inviteCode
+    ? `${authPaths.onboarding}?code=${encodeURIComponent(inviteCode)}`
+    : authPaths.onboarding;
+
+  const loginHref = inviteCode
+    ? `${authPaths.login}?invite=${encodeURIComponent(inviteCode)}`
+    : authPaths.login;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
     if (password !== confirmPassword) {
       toast.error("Hasła nie są identyczne");
       return;
     }
-
-    if (password.length < 8) {
-      toast.error("Hasło musi mieć co najmniej 8 znaków");
+    if (!acceptTerms) {
+      toast.error("Zaakceptuj regulamin, aby kontynuować");
       return;
     }
-
-    if (!termsAccepted || !privacyAccepted) {
-      toast.error("Wymagana akceptacja dokumentów", {
-        description: "Zaakceptuj Regulamin i Politykę Prywatności, aby kontynuować.",
-      });
-      return;
-    }
-
     setIsLoading(true);
     try {
       const res = await fetch(`${API_URL}/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, name, password }),
+        body: JSON.stringify({ name, email, password }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Błąd rejestracji");
-
-      toast.success("Konto utworzone!", {
-        description: "Sprawdź email w celu weryfikacji.",
-      });
-      setIsRegistered(true);
+      setRegistered(true);
+      toast.success("Konto zostało utworzone! Sprawdź skrzynkę email.");
     } catch (error: any) {
-      toast.error("Błąd rejestracji", {
-        description: error.message || "Spróbuj ponownie później.",
-      });
+      toast.error("Błąd rejestracji", { description: error.message });
     } finally {
       setIsLoading(false);
     }
   };
 
-  if (isRegistered) {
+  if (registered) {
     return (
       <div className="w-full max-w-md">
-        <div className="bg-white rounded-2xl shadow-xl border border-brand-warm/30 p-8 text-center">
-          <div className="w-14 h-14 rounded-full bg-brand-muted flex items-center justify-center mx-auto mb-4">
-            <Mail className="h-7 w-7 text-brand" />
+        <div className="bg-white rounded-2xl shadow-xl border border-brand-warm/30 p-8 text-center space-y-5">
+          <div className="w-16 h-16 rounded-full bg-emerald-50 flex items-center justify-center mx-auto">
+            <CheckCircle2 className="h-8 w-8 text-emerald-500" />
           </div>
-          <h2 className="text-xl font-bold text-brand-dark mb-2">Sprawdź swoją skrzynkę!</h2>
-          <p className="text-sm text-brand-dark-muted mb-6">
-            Wysłaliśmy email weryfikacyjny na adres <strong>{email}</strong>.
-            Kliknij link w emailu aby zweryfikować konto.
+          <h2 className="text-2xl font-bold text-brand-dark">Sprawdź email</h2>
+          <p className="text-sm text-brand-dark-muted">
+            Wysłaliśmy link weryfikacyjny na adres{" "}
+            <strong className="text-brand-dark">{email}</strong>.
+            <br />
+            Kliknij w link, aby aktywować konto.
           </p>
-          <ResendVerificationButton email={email} />
-          <div className="mt-6">
-            <Link href={authPaths.login}>
-              <Button variant="outline" className="w-full">Przejdź do logowania</Button>
-            </Link>
-          </div>
+          {inviteCode && (
+            <div className="px-4 py-3 bg-brand-muted/40 border border-brand/20 rounded-xl text-sm text-brand-dark">
+              <Users className="inline h-4 w-4 mr-1.5 text-brand" />
+              Po weryfikacji emaila zostaniesz automatycznie przekierowany do procesu dołączenia do zespołu.
+            </div>
+          )}
+          <p className="text-xs text-brand-dark-muted/70">
+            Nie widzisz maila? Sprawdź folder spam.
+          </p>
+          <Link href={loginHref}>
+            <Button variant="outline" className="w-full">Przejdź do logowania</Button>
+          </Link>
         </div>
       </div>
     );
@@ -99,11 +105,38 @@ export default function RegisterPage() {
   return (
     <div className="w-full max-w-md">
       <div className="bg-white rounded-2xl shadow-xl border border-brand-warm/30 p-8">
+        <div className="flex justify-center mb-4">
+          <div className="w-14 h-14 rounded-2xl bg-brand-muted flex items-center justify-center">
+            <Logo variant="icon" className="h-8 w-8" />
+          </div>
+        </div>
+
         <div className="text-center mb-6">
-          <h1 className="text-2xl font-bold text-brand-dark">Załóż konto firmowe</h1>
-          <p className="text-sm text-brand-dark-muted mt-1">
-            Dołącz do nowoczesnego zarządzania zespołem Staffer.pl
-          </p>
+          <h1 className="text-2xl font-bold text-brand-dark">Utwórz konto</h1>
+          <p className="text-sm text-brand-dark-muted mt-1">Zacznij zarządzać swoim zespołem</p>
+        </div>
+
+        {inviteCode && (
+          <div className="mb-4 px-4 py-3 bg-brand-muted/40 border border-brand/20 rounded-xl text-sm text-brand-dark flex items-center gap-2">
+            <Users className="h-4 w-4 text-brand flex-shrink-0" />
+            <span>Rejestrujesz się z zaproszeniem do zespołu. Po weryfikacji emaila zostaniesz do niego dołączony.</span>
+          </div>
+        )}
+
+        <Button
+          type="button"
+          onClick={() => signIn("google", { callbackUrl })}
+          variant="outline"
+          className="w-full gap-2 h-11 border-brand-warm hover:bg-brand-warm-light/50 mb-4"
+        >
+          <GoogleIcon />
+          Zarejestruj przez Google
+        </Button>
+
+        <div className="relative flex py-3 items-center mb-4">
+          <div className="flex-grow border-t border-brand-warm" />
+          <span className="flex-shrink mx-4 text-brand-dark-muted text-xs uppercase tracking-wider">lub email</span>
+          <div className="flex-grow border-t border-brand-warm" />
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -116,8 +149,6 @@ export default function RegisterPage() {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required
-                minLength={2}
-                maxLength={50}
                 className="w-full pl-10 pr-4 py-2.5 border border-brand-warm rounded-lg focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand transition-all"
                 placeholder="Jan Kowalski"
               />
@@ -125,7 +156,7 @@ export default function RegisterPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-brand-dark mb-1.5">Firmowy adres e-mail</label>
+            <label className="block text-sm font-medium text-brand-dark mb-1.5">Email</label>
             <div className="relative">
               <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-brand-dark-muted/50" />
               <input
@@ -134,113 +165,106 @@ export default function RegisterPage() {
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 className="w-full pl-10 pr-4 py-2.5 border border-brand-warm rounded-lg focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand transition-all"
-                placeholder="nazwa@firma.pl"
+                placeholder="twoj@email.pl"
               />
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-sm font-medium text-brand-dark mb-1.5">Hasło</label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-brand-dark-muted/50" />
-                <input
-                  type={showPassword ? "text" : "password"}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  minLength={8}
-                  className="w-full pl-10 pr-4 py-2.5 border border-brand-warm rounded-lg focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand transition-all"
-                  placeholder="••••••••"
-                />
-              </div>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-brand-dark mb-1.5">Powtórz hasło</label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-brand-dark-muted/50" />
-                <input
-                  type={showPassword ? "text" : "password"}
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  required
-                  minLength={8}
-                  className="w-full pl-10 pr-4 py-2.5 border border-brand-warm rounded-lg focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand transition-all"
-                  placeholder="••••••••"
-                />
-              </div>
+          <div>
+            <label className="block text-sm font-medium text-brand-dark mb-1.5">Hasło</label>
+            <div className="relative">
+              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-brand-dark-muted/50" />
+              <input
+                type={showPassword ? "text" : "password"}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                minLength={8}
+                className="w-full pl-10 pr-10 py-2.5 border border-brand-warm rounded-lg focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand transition-all"
+                placeholder="Minimum 8 znaków"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-brand-dark-muted/50 hover:text-brand-dark-muted transition-colors"
+              >
+                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
             </div>
           </div>
 
-          <div className="space-y-2.5 pt-1">
-            <label className="flex items-start gap-2.5 cursor-pointer">
+          <div>
+            <label className="block text-sm font-medium text-brand-dark mb-1.5">Potwierdź hasło</label>
+            <div className="relative">
+              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-brand-dark-muted/50" />
+              <input
+                type={showPassword ? "text" : "password"}
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                required
+                className="w-full pl-10 pr-4 py-2.5 border border-brand-warm rounded-lg focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand transition-all"
+                placeholder="Powtórz hasło"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-2.5">
+            <label className="flex items-start gap-2 cursor-pointer">
               <input
                 type="checkbox"
-                checked={termsAccepted}
-                onChange={(e) => setTermsAccepted(e.target.checked)}
-                className="mt-0.5 h-4 w-4 rounded border-brand-warm text-brand focus:ring-brand flex-shrink-0 cursor-pointer accent-brand"
+                checked={acceptTerms}
+                onChange={(e) => setAcceptTerms(e.target.checked)}
+                className="mt-0.5 h-4 w-4 rounded border-brand-warm text-brand focus:ring-brand accent-brand cursor-pointer flex-shrink-0"
               />
-              <span className="text-xs text-brand-dark-muted leading-relaxed">
+              <span className="text-sm text-brand-dark-muted">
                 Akceptuję{" "}
-                <a href="/regulamin" target="_blank" rel="noopener noreferrer" className="text-brand hover:text-brand-light font-medium hover:underline" onClick={(e) => e.stopPropagation()}>
-                  Regulamin
-                </a>{" "}
-                oraz{" "}
-                <a href="/polityka-prywatnosci" target="_blank" rel="noopener noreferrer" className="text-brand hover:text-brand-light font-medium hover:underline" onClick={(e) => e.stopPropagation()}>
-                  Politykę Prywatności
-                </a>
+                <Link href="/terms" className="text-brand hover:underline">Regulamin</Link>
+                {" "}i{" "}
+                <Link href="/privacy" className="text-brand hover:underline">Politykę prywatności</Link>
               </span>
             </label>
-
-            <label className="flex items-start gap-2.5 cursor-pointer">
+            <label className="flex items-start gap-2 cursor-pointer">
               <input
                 type="checkbox"
-                checked={privacyAccepted}
-                onChange={(e) => setPrivacyAccepted(e.target.checked)}
-                className="mt-0.5 h-4 w-4 rounded border-brand-warm text-brand focus:ring-brand flex-shrink-0 cursor-pointer accent-brand"
+                checked={acceptMarketing}
+                onChange={(e) => setAcceptMarketing(e.target.checked)}
+                className="mt-0.5 h-4 w-4 rounded border-brand-warm text-brand focus:ring-brand accent-brand cursor-pointer flex-shrink-0"
               />
-              <span className="text-xs text-brand-dark-muted leading-relaxed">
-                Wyrażam zgodę na przetwarzanie moich danych osobowych zgodnie z{" "}
-                <a href="/polityka-prywatnosci" target="_blank" rel="noopener noreferrer" className="text-brand hover:text-brand-light font-medium hover:underline" onClick={(e) => e.stopPropagation()}>
-                  RODO
-                </a>
+              <span className="text-sm text-brand-dark-muted">
+                Chcę otrzymywać informacje o nowościach (opcjonalne)
               </span>
             </label>
           </div>
 
-          <Button
-            type="submit"
-            className="w-full gap-2 h-11"
-            disabled={isLoading || !termsAccepted || !privacyAccepted}
-          >
+          <Button type="submit" className="w-full gap-2 h-11" disabled={isLoading}>
             {isLoading ? "Tworzenie konta..." : "Utwórz konto"}
             <ArrowRight className="h-4 w-4" />
           </Button>
         </form>
 
-        <div className="relative flex py-4 items-center">
-          <div className="flex-grow border-t border-brand-warm" />
-          <span className="flex-shrink mx-4 text-brand-dark-muted text-xs uppercase tracking-wider">lub kontynuuj z</span>
-          <div className="flex-grow border-t border-brand-warm" />
-        </div>
-
-        <Button
-          type="button"
-          onClick={() => signIn("google", { callbackUrl: "/" })}
-          variant="outline"
-          className="w-full gap-2 h-11 border-brand-warm hover:bg-brand-warm-light/50"
-        >
-          <GoogleIcon />
-          Google
-        </Button>
-
         <p className="text-sm text-center text-brand-dark-muted mt-6">
           Masz już konto?{" "}
-          <Link href={authPaths.login} className="text-brand hover:text-brand-light font-semibold transition-colors">
+          <Link href={loginHref} className="text-brand hover:text-brand-light font-semibold transition-colors">
             Zaloguj się
           </Link>
         </p>
       </div>
     </div>
+  );
+}
+
+export default function RegisterPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="w-full max-w-md">
+          <div className="bg-white rounded-2xl shadow-xl border border-brand-warm/30 p-8 flex justify-center">
+            <div className="animate-spin h-8 w-8 border-4 border-brand-warm border-t-brand rounded-full" />
+          </div>
+        </div>
+      }
+    >
+      <RegisterContent />
+    </Suspense>
   );
 }

@@ -11,7 +11,6 @@ import {
   ArrowRight,
   KeyRound,
   Clock,
-  Link2,
   Shield,
   Heart,
   Info,
@@ -30,6 +29,7 @@ export function JoinTeamFlow({ initialCode, onBack }: Props) {
   const [code, setCode] = useState(initialCode);
   const [pendingTeamName, setPendingTeamName] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
+  const autoSubmitRef = useRef(false);
 
   useEffect(() => {
     if (step === "enter-code") {
@@ -53,6 +53,19 @@ export function JoinTeamFlow({ initialCode, onBack }: Props) {
       toast.error("Błąd dołączania", { description: err.message });
     },
   });
+
+  // Auto-submit when initialCode is pre-filled (arrived via invite link)
+  useEffect(() => {
+    if (initialCode && !autoSubmitRef.current && !joinMut.isPending) {
+      autoSubmitRef.current = true;
+      // Small delay so user sees the screen with the pre-filled code before joining
+      const timer = setTimeout(() => {
+        joinMut.mutate();
+      }, 800);
+      return () => clearTimeout(timer);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialCode]);
 
   if (step === "pending") {
     return (
@@ -105,11 +118,12 @@ export function JoinTeamFlow({ initialCode, onBack }: Props) {
           </div>
           <h2 className="text-xl font-bold text-brand-dark">Dołącz do zespołu</h2>
           <p className="text-sm text-brand-dark-muted mt-1">
-            Użyj linku zaproszenia lub wpisz kod otrzymany od Managera, aby uzyskać dostęp do panelu.
+            {initialCode
+              ? "Znaleziono kod zaproszenia. Dołączanie do zespołu..."
+              : "Wpisz kod otrzymany od Managera, aby uzyskać dostęp do panelu."}
           </p>
         </div>
 
-        {/* Code input */}
         <div>
           <input
             ref={inputRef}
@@ -117,7 +131,8 @@ export function JoinTeamFlow({ initialCode, onBack }: Props) {
             value={code}
             onChange={(e) => setCode(e.target.value)}
             maxLength={20}
-            className="w-full text-center text-xl font-mono font-bold tracking-[0.15em] px-4 py-3 border-2 border-brand-warm rounded-xl focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand transition-all"
+            disabled={joinMut.isPending}
+            className="w-full text-center text-xl font-mono font-bold tracking-[0.15em] px-4 py-3 border-2 border-brand-warm rounded-xl focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand transition-all disabled:opacity-60 disabled:cursor-not-allowed"
             placeholder="Wpisz kod zaproszenia"
             onKeyDown={(e) => e.key === "Enter" && code.trim() && joinMut.mutate()}
           />
@@ -131,17 +146,6 @@ export function JoinTeamFlow({ initialCode, onBack }: Props) {
           {joinMut.isPending ? "Dołączanie..." : "Dołącz do zespołu"}
           <ArrowRight className="h-4 w-4" />
         </Button>
-
-        <div className="relative flex py-1 items-center">
-          <div className="flex-grow border-t border-brand-warm" />
-          <span className="flex-shrink mx-4 text-brand-dark-muted text-xs uppercase">lub</span>
-          <div className="flex-grow border-t border-brand-warm" />
-        </div>
-
-        <button className="w-full flex items-center justify-center gap-2 p-2.5 border border-brand-warm rounded-xl text-sm font-medium text-brand-dark hover:bg-brand-warm-light/50 transition-colors">
-          <Link2 className="h-4 w-4 text-brand" />
-          Użyj linku zaproszenia
-        </button>
 
         <p className="text-xs text-center text-brand-dark-muted">
           Nie otrzymałeś kodu?{" "}
