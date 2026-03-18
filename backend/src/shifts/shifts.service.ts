@@ -50,12 +50,12 @@ export class ShiftsService {
     }
   }
 
-  /** Lista zmian zespołu (grafik). Opcjonalny filtr dat from/to i locationId.
+  /** Lista zmian zespołu (grafik). Opcjonalny filtr dat from/to. 
    *  Pracownicy widzą tylko PUBLISHED/COMPLETED. Manager/Owner widzi też DRAFT.
    */
   async findAll(
     userId: string,
-    query?: { from?: string; to?: string; locationId?: string },
+    query?: { from?: string; to?: string },
   ) {
     const activeMembership = await this.prisma.teamMembership.findFirst({
       where: { userId, status: MembershipStatus.ACTIVE },
@@ -84,16 +84,10 @@ export class ShiftsService {
       where.startTime = { ...where.startTime, lte: new Date(query.to) };
     }
 
-    // Filtr po lokalizacji (Business+). Brak locationId = pokaż wszystkie.
-    if (query?.locationId) {
-      where.locationId = query.locationId;
-    }
-
     return this.prisma.shift.findMany({
       where,
       include: {
         position: true,
-        location: true,
         assignments: {
           include: { user: true },
         },
@@ -325,7 +319,7 @@ export class ShiftsService {
   /** Tworzenie zmiany (bez przypisań). Przypisania dodaje się przez addAssignment. */
   async create(
     userId: string,
-    data: { startTime: Date; endTime: Date; roleName?: string; positionId?: string; status?: ShiftStatus; locationId?: string },
+    data: { startTime: Date; endTime: Date; roleName?: string; positionId?: string; status?: ShiftStatus },
   ) {
     const membership = await this.prisma.teamMembership.findFirst({
       where: { userId, status: MembershipStatus.ACTIVE },
@@ -356,29 +350,17 @@ export class ShiftsService {
       throw new BadRequestException('Podaj stanowisko (positionId) lub nazwę roli (roleName).');
     }
 
-    // Validate locationId belongs to the team (if provided)
-    let resolvedLocationId: string | null = null;
-    if (data.locationId) {
-      const location = await this.prisma.location.findFirst({
-        where: { id: data.locationId, teamId: membership.teamId },
-      });
-      if (!location) throw new BadRequestException('Lokalizacja nie istnieje.');
-      resolvedLocationId = location.id;
-    }
-
     return this.prisma.shift.create({
       data: {
         startTime: data.startTime,
         endTime: data.endTime,
         roleName: resolvedRoleName,
         positionId: resolvedPositionId,
-        locationId: resolvedLocationId,
         status: data.status ?? ShiftStatus.DRAFT,
         teamId: membership.teamId,
       },
       include: {
         position: true,
-        location: true,
         assignments: { include: { user: true } },
       },
     });

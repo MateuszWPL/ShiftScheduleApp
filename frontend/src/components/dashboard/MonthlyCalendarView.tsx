@@ -2,7 +2,6 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { getShifts, type Shift } from "@/lib/api";
-import { useLocation } from "@/components/providers/LocationContext";
 
 function toLocalDateKey(d: Date): string {
   const y = d.getFullYear();
@@ -51,11 +50,10 @@ export function MonthlyCalendarView({ monthDate, onDayClick }: MonthlyCalendarVi
   const monthEnd = getMonthEnd(monthDate);
   const from = monthStart.toISOString();
   const to = monthEnd.toISOString();
-  const { activeLocationId } = useLocation();
 
   const { data: shifts = [], isLoading } = useQuery({
-    queryKey: ["shifts", from, to, activeLocationId],
-    queryFn: () => getShifts({ from, to, locationId: activeLocationId ?? undefined }),
+    queryKey: ["shifts", from, to],
+    queryFn: () => getShifts({ from, to }),
   });
 
   const shiftsByDate = new Map<string, Shift[]>();

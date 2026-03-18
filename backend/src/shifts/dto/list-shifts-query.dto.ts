@@ -1,4 +1,4 @@
-import { IsOptional, IsDateString, IsString } from 'class-validator';
+import { IsOptional, IsDateString } from 'class-validator';
 
 export class ListShiftsQueryDto {
   /** Początek okresu grafiku (ISO date) */
@@ -10,9 +10,4 @@ export class ListShiftsQueryDto {
   @IsOptional()
   @IsDateString({}, { message: 'to musi być datą w formacie ISO' })
   to?: string;
-
-  /** Filtr po lokalizacji (Business+) */
-  @IsOptional()
-  @IsString()
-  locationId?: string;
 }
