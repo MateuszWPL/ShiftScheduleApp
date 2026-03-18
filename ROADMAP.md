@@ -203,8 +203,6 @@ ShiftScheduleApp/
 
 ### Znane ograniczenia:
 - **Stripe w trybie sandbox** — platnosci testowe, nie produkcyjne
-- **Brak dokumentow prawnych** — szablony przygotowane (docs/legal/), wymagaja weryfikacji prawnika i wdrozenia w UI
-- **Email logo** — skonfigurowane przez zmienna EMAIL_LOGO_URL (wymaga ustawienia produkcyjnego URL)
 - **Landing page** — w przejsciu na WordPress, tymczasowo niedostepna
 
 ---
@@ -234,9 +232,6 @@ ShiftScheduleApp/
   - [ ] Opcjonalnie: weryfikacja przez prawnika przed skalowaniem do platnych klientow
 
 - [x] ~~**Czyszczenie hardcoded URLs** — zamienione na zmienne srodowiskowe (NEXT_PUBLIC_API_URL, FRONTEND_URL)~~
-
-- [ ] **Email logo** — ustawic zmienna EMAIL_LOGO_URL na produkcyjny URL logo (szablony przygotowane)
-
 - [x] ~~**FRONTEND_URL wymuszone** — backend rzuca blad w produkcji gdy brak FRONTEND_URL (email, billing, calendar, cloudinary)~~
 
 ### WYSOKIE (przed skalowaniem):
@@ -284,13 +279,6 @@ Rejestracja -> FREE
   |
   └── Ponowna subskrypcja po cancel -> BEZ trialu (trialUsed = true)
 ```
-
-### Do zaimplementowania:
-- [x] ~~`changePlan()` — walidacja targetLevel > currentLevel (blokada downgrade) — backend + toast w UI~~
-- [x] ~~Obsluga `past_due` w UI (banner + CTA do aktualizacji karty)~~
-- [x] ~~Blokada akcji (tworzenie zmian, publikacja) gdy limitExceeded~~
-- [x] ~~Toast przy probie zaproszenia pracownika ponad limit (PendingList + baner + CTA upgrade)~~
-
 ---
 
 ## Plany rozwoju (przyszlosc)
@@ -319,6 +307,14 @@ Rejestracja -> FREE
 
 ---
 
+## Nowe założenia
+
+-- Nowa ścieżka zakładania konta - najpierw po kliknieciu CTA przekierowuje nas do rejestracji lub logowania w zależnosci od cta, potem jest ewentualna weryfikacja maila (jeżeli nie przez google), i po zweryfikowaniu maila mamy cta Przejdz do onboardingu (po google od razu przekierowuje), strona oboardinu na w zaleznosci co wybierzemy, jezeli wybieramy załoz wlasna firme to mamy 4 kroki (1. nazwa, 2. zaproś przez email, tutaj mozna wpisac rózne maile pracowników, max 5, obok link do zaproszenia, a ponizej kod zaproszenia, 3. od razu ustawiamy godziny otwarcia restauracji czyli mamy wypisane pn-nd i mozemy zaznaczyc dni i wybrać daną godzine, 4. tutaj dodajemy stanowiska, kolory itp ). W tych stepach jest progress bar. Jeżeli wybierzemy ścieżkę dołącz do zespołu to widok wpisania kodu a potem oczekiwanie na akceptację. 
+
+-- Kolejną ważną zmianą jest insturkcja po programie. Może zamiast robić te podświetlanie zakłądek itp , lepiej jest zrobić nieduże okienko które można zamknąć i tam np kilka kroków do wykonania 1. Zaproś użytkowników, 2. Skonfiguruj stanowiska 3. Pierwsza zmiana 4. Opublikuj grafik (tutaj potrzebuje twojej pomocy jakie kroki byłyby najlepsze), i tez np jak coś jest zrobione tto jestt "tick" i wyszarzone a jezeli nie to np jestesmy na drugim kroku to wyswietla nam sie cta Przejdz do stanowisk. Dodatkowo jest też progress bar.
+
+
+---
 ## Dokumentacja dodatkowa
 
 | Plik | Opis |

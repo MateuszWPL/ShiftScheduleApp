@@ -3,7 +3,7 @@ import { SkipThrottle } from '@nestjs/throttler';
 import { PositionsService } from './positions.service';
 import { JwtAuthGuard } from '../auth/auth.guard';
 import { CurrentUser } from '../auth/decorators/user.decorator';
-import { CreatePositionDto, UpdatePositionDto, AssignPositionsDto } from './dto/position.dto';
+import { CreatePositionDto, UpdatePositionDto, AssignPositionsDto, BatchCreatePositionsDto } from './dto/position.dto';
 
 @Controller('positions')
 @UseGuards(JwtAuthGuard)
@@ -19,6 +19,11 @@ export class PositionsController {
   @Post()
   createPosition(@CurrentUser() user: any, @Body() dto: CreatePositionDto) {
     return this.positionsService.createPosition(user.userId, dto);
+  }
+
+  @Post('batch')
+  batchCreatePositions(@CurrentUser() user: any, @Body() dto: BatchCreatePositionsDto) {
+    return this.positionsService.batchCreatePositions(user.userId, dto.positions);
   }
 
   @Patch(':id')

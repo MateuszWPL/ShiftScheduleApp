@@ -3,10 +3,16 @@ import {
   IsOptional,
   IsInt,
   IsBoolean,
+  IsArray,
   Min,
   Max,
   MaxLength,
+  ValidateNested,
+  Matches,
+  ArrayMinSize,
+  ArrayMaxSize,
 } from 'class-validator';
+import { Type } from 'class-transformer';
 
 export class UpdateTeamSettingsDto {
   @IsOptional()
@@ -64,4 +70,39 @@ export class UpdateTeamNameDto {
   @IsString()
   @MaxLength(100, { message: 'Nazwa zespołu może mieć maks. 100 znaków' })
   name: string;
+}
+
+export class BusinessHoursDayDto {
+  @IsInt()
+  @Min(0)
+  @Max(6)
+  dayOfWeek: number;
+
+  @IsBoolean()
+  isOpen: boolean;
+
+  @IsString()
+  @Matches(/^([01]\d|2[0-3]):[0-5]\d$/, { message: 'openTime musi być w formacie HH:mm' })
+  openTime: string;
+
+  @IsString()
+  @Matches(/^([01]\d|2[0-3]):[0-5]\d$/, { message: 'closeTime musi być w formacie HH:mm' })
+  closeTime: string;
+}
+
+export class InviteByEmailDto {
+  @IsArray()
+  @ArrayMinSize(1, { message: 'Podaj przynajmniej 1 email' })
+  @ArrayMaxSize(5, { message: 'Maksymalnie 5 emaili na raz' })
+  @IsString({ each: true })
+  emails: string[];
+}
+
+export class UpdateBusinessHoursDto {
+  @IsArray()
+  @ArrayMinSize(7, { message: 'Wymagane 7 dni tygodnia' })
+  @ArrayMaxSize(7, { message: 'Wymagane 7 dni tygodnia' })
+  @ValidateNested({ each: true })
+  @Type(() => BusinessHoursDayDto)
+  days: BusinessHoursDayDto[];
 }

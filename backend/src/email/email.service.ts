@@ -912,6 +912,50 @@ export class EmailService {
     }
   }
 
+  async sendTeamInvitationEmail(
+    email: string,
+    inviterName: string,
+    teamName: string,
+    inviteCode: string,
+  ) {
+    const inviteUrl = `${this.frontendUrl}/auth/onboarding?code=${inviteCode}`;
+
+    const content = `
+      <h1 style="color: #10B77F; font-size: 22px; margin: 0 0 12px;">Zaproszenie do zespołu</h1>
+      <p style="margin: 0 0 12px; line-height: 1.6;">
+        <strong>${inviterName}</strong> zaprasza Cię do zespołu <strong>${teamName}</strong> w Staffer.pl.
+      </p>
+      <p style="margin: 0 0 20px; line-height: 1.6; color: #555; font-size: 14px;">
+        Staffer.pl to narzędzie do zarządzania grafikiem zmian. Dołącz do zespołu, aby przeglądać swój grafik,
+        zgłaszać dostępność i wymieniać się zmianami.
+      </p>
+      <p style="text-align: center; margin: 24px 0;">
+        <a href="${inviteUrl}"
+           style="background-color: #10B77F; color: white; padding: 14px 28px;
+                  text-decoration: none; border-radius: 8px; font-weight: 600; display: inline-block;">
+          Dołącz do zespołu
+        </a>
+      </p>
+      <p style="margin: 16px 0 8px; font-size: 14px; color: #333; font-weight: 600;">Kod zaproszenia:</p>
+      <div style="background: #f3f4f6; padding: 16px; border-radius: 8px; text-align: center; margin: 0 0 20px;">
+        <code style="font-size: 24px; font-weight: 700; letter-spacing: 0.15em; color: #0F172A;">${inviteCode}</code>
+      </div>
+      <p style="margin: 0; font-size: 12px; color: #777;">
+        Jeśli nie spodziewałeś się tego zaproszenia, zignoruj tę wiadomość.
+      </p>
+    `;
+
+    const text = `${inviterName} zaprasza Cię do zespołu ${teamName} w Staffer.pl.\n\nDołącz do zespołu: ${inviteUrl}\n\nKod zaproszenia: ${inviteCode}\n\nStaffer.pl`;
+
+    await this.send(
+      email,
+      `Zaproszenie do zespołu ${teamName} - Staffer.pl`,
+      this.wrapEmail(content, false),
+      text,
+      'Team invitation email',
+    );
+  }
+
   /** Email: payment failed — notify team owner */
   async sendPaymentFailedEmail(
     email: string,

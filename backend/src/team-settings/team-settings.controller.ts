@@ -1,6 +1,7 @@
 import {
   Controller,
   Get,
+  Put,
   Patch,
   Post,
   Body,
@@ -12,6 +13,8 @@ import { TeamSettingsService } from './team-settings.service';
 import {
   UpdateTeamSettingsDto,
   UpdateTeamNameDto,
+  UpdateBusinessHoursDto,
+  InviteByEmailDto,
 } from './dto/update-team-settings.dto';
 
 @Controller('team-settings')
@@ -43,5 +46,31 @@ export class TeamSettingsController {
   @Post('regenerate-invite')
   regenerateInviteCode(@CurrentUser() user: any) {
     return this.teamSettingsService.regenerateInviteCode(user.userId);
+  }
+
+  @Get('business-hours')
+  getBusinessHours(@CurrentUser() user: any) {
+    return this.teamSettingsService.getBusinessHours(user.userId);
+  }
+
+  @Put('business-hours')
+  updateBusinessHours(
+    @CurrentUser() user: any,
+    @Body() dto: UpdateBusinessHoursDto,
+  ) {
+    return this.teamSettingsService.updateBusinessHours(user.userId, dto);
+  }
+
+  @Post('complete-onboarding')
+  completeOnboarding(@CurrentUser() user: any) {
+    return this.teamSettingsService.completeOnboarding(user.userId);
+  }
+
+  @Post('invite-by-email')
+  inviteByEmail(
+    @CurrentUser() user: any,
+    @Body() dto: InviteByEmailDto,
+  ) {
+    return this.teamSettingsService.inviteByEmail(user.userId, dto.emails);
   }
 }

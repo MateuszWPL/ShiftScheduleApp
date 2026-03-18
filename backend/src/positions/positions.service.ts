@@ -84,6 +84,34 @@ export class PositionsService {
     });
   }
 
+  async batchCreatePositions(userId: string, positions: { name: string; color?: string }[]) {
+    const membership = await this.requireManager(userId);
+    const teamId = membership.teamId;
+
+    const created: any[] = [];
+    const skipped: string[] = [];
+
+    for (const pos of positions) {
+      const existing = await this.prisma.position.findUnique({
+        where: { teamId_name: { teamId, name: pos.name } },
+      });
+      if (existing) {
+        skipped.push(pos.name);
+        continue;
+      }
+      const position = await this.prisma.position.create({
+        data: {
+          teamId,
+          name: pos.name,
+          color: pos.color || '#10B77F',
+        },
+      });
+      created.push(position);
+    }
+
+    return { created, skipped };
+  }
+
   async deletePosition(userId: string, positionId: string) {
     const membership = await this.requireManager(userId);
 

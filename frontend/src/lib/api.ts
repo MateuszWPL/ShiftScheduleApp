@@ -398,6 +398,71 @@ export async function joinTeam(code: string) {
   return res.json();
 }
 
+// ── Onboarding API ──────────────────────────────────
+
+export interface BusinessHoursDay {
+  dayOfWeek: number;
+  isOpen: boolean;
+  openTime: string;
+  closeTime: string;
+}
+
+export async function getBusinessHours(): Promise<BusinessHoursDay[]> {
+  const res = await authenticatedFetch(`${API_URL}/team-settings/business-hours`);
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.message || "Błąd pobierania godzin");
+  }
+  return res.json();
+}
+
+export async function updateBusinessHours(days: BusinessHoursDay[]) {
+  const res = await authenticatedFetch(`${API_URL}/team-settings/business-hours`, {
+    method: "PUT",
+    body: JSON.stringify({ days }),
+  });
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.message || "Błąd zapisywania godzin");
+  }
+  return res.json();
+}
+
+export async function inviteByEmail(emails: string[]) {
+  const res = await authenticatedFetch(`${API_URL}/team-settings/invite-by-email`, {
+    method: "POST",
+    body: JSON.stringify({ emails }),
+  });
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.message || "Błąd wysyłania zaproszeń");
+  }
+  return res.json();
+}
+
+export async function batchCreatePositions(positions: { name: string; color?: string }[]) {
+  const res = await authenticatedFetch(`${API_URL}/positions/batch`, {
+    method: "POST",
+    body: JSON.stringify({ positions }),
+  });
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.message || "Błąd tworzenia stanowisk");
+  }
+  return res.json();
+}
+
+export async function completeOnboarding() {
+  const res = await authenticatedFetch(`${API_URL}/team-settings/complete-onboarding`, {
+    method: "POST",
+  });
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.message || "Błąd ukończenia onboardingu");
+  }
+  return res.json();
+}
+
 export async function getTeamMembers(): Promise<User[]> {
   const res = await authenticatedFetch(`${API_URL}/shifts/team/members`);
   if (!res.ok) {

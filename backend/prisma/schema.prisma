@@ -43,20 +43,22 @@ model User {
 }
 
 model Team {
-  id                 String             @id @default(uuid())
-  name               String
-  createdAt          DateTime          @default(now())
-  inviteCode         String             @unique
-  shifts             Shift[]
-  positions          Position[]
-  availabilitySlots  AvailabilitySlot[]
-  memberships        TeamMembership[]
-  notifications      Notification[]
-  announcements      Announcement[]
-  settings           TeamSettings?
-  subscription       Subscription?
-  users              User[]
-  scheduleTemplates  ScheduleTemplate[]
+  id                    String             @id @default(uuid())
+  name                  String
+  createdAt             DateTime           @default(now())
+  inviteCode            String             @unique
+  onboardingCompleted   Boolean            @default(false)
+  shifts                Shift[]
+  positions             Position[]
+  availabilitySlots     AvailabilitySlot[]
+  memberships           TeamMembership[]
+  notifications         Notification[]
+  announcements         Announcement[]
+  settings              TeamSettings?
+  subscription          Subscription?
+  users                 User[]
+  scheduleTemplates     ScheduleTemplate[]
+  businessHours         BusinessHours[]
 }
 
 /// Publiczny feed kalendarza iCal dla użytkownika (link do subskrypcji)
@@ -126,6 +128,20 @@ model TeamSettings {
   notifyAnnouncements   Boolean  @default(true)
   updatedAt             DateTime @updatedAt
   team                  Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+}
+
+/// Godziny otwarcia firmy per dzień tygodnia
+model BusinessHours {
+  id        String  @id @default(uuid())
+  teamId    String
+  dayOfWeek Int     // 0=poniedziałek, 1=wtorek, ..., 6=niedziela
+  isOpen    Boolean @default(true)
+  openTime  String  @default("08:00")
+  closeTime String  @default("22:00")
+  team      Team    @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  @@unique([teamId, dayOfWeek])
+  @@index([teamId])
 }
 
 /// Stanowiska zdefiniowane na poziomie zespołu (np. Kelner, Barista, Kucharz)

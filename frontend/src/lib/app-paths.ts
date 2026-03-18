@@ -5,6 +5,8 @@
  */
 export const APP_BASE = "/app";
 
+export const AUTH_BASE = "/auth";
+
 export const paths = {
   home: APP_BASE,
   panel: `${APP_BASE}/panel`,
@@ -19,4 +21,10 @@ export const paths = {
   reports: `${APP_BASE}/reports`,
   export: `${APP_BASE}/export`,
   templates: `${APP_BASE}/templates`,
+} as const;
+
+export const authPaths = {
+  login: `${AUTH_BASE}/login`,
+  register: `${AUTH_BASE}/register`,
+  onboarding: `${AUTH_BASE}/onboarding`,
 } as const;
