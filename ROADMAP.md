@@ -178,7 +178,7 @@ ShiftScheduleApp/
 - Wymuszenie FRONTEND_URL, CLOUDINARY_*, STRIPE_WEBHOOK_SECRET w produkcji (blad przy braku)
 
 ### UI/UX
-- Paleta kolorow brand: #FF8400, #8FACDB, #F9DFC6, #0B0829
+- Paleta kolorow brand: #10B77F (zielony), #0F172A (ciemny slate) — zaktualizowana do green theme
 - Responsive design — mobile bottom navigation, sticky kolumny
 - Mikro-interakcje (hovers, transitions, active:scale, touch-manipulation)
 - Spojny design system (shadcn + brand + semantic colors)
@@ -222,14 +222,16 @@ ShiftScheduleApp/
   - [ ] Skonfigurowac retry schedule dla nieudanych platnosci (Settings -> Billing)
   - [ ] Przetestowac pelny flow: checkout -> trial -> platnosc -> cancel
 
-- [ ] **Dokumenty prawne (RODO)** — szablony przygotowane w `docs/legal/`:
-  - [x] ~~Szablon polityki prywatnosci (docs/legal/PRIVACY_POLICY.md)~~
-  - [x] ~~Szablon regulaminu (docs/legal/TERMS_OF_SERVICE.md)~~
-  - [x] ~~Szablon polityki cookies (docs/legal/COOKIE_POLICY.md)~~
-  - [ ] Weryfikacja i dostosowanie przez prawnika
-  - [ ] Wdrozenie w UI (strony /polityka-prywatnosci, /regulamin)
-  - [ ] Cookie banner (komponent)
-  - [ ] Klauzula zgody przy rejestracji
+- [ ] **Dokumenty prawne (RODO)** — wdrozone, do weryfikacji przez prawnika przed launchem z platnymi klientami:
+  - [x] ~~Polityka prywatnosci (docs/legal/PRIVACY_POLICY.md + /polityka-prywatnosci)~~
+  - [x] ~~Regulamin (docs/legal/TERMS_OF_SERVICE.md + /regulamin)~~
+  - [x] ~~Polityka cookies (docs/legal/COOKIE_POLICY.md + /polityka-cookies)~~
+  - [x] ~~Dane administratora: Mateusz Woronowicz, biuro@staffer.pl~~
+  - [x] ~~Wdrozenie w UI (strony /polityka-prywatnosci, /regulamin, /polityka-cookies)~~
+  - [x] ~~Cookie banner (komponent CookieBanner, localStorage)~~
+  - [x] ~~Klauzula zgody przy rejestracji (2 checkboxy — Regulamin + Polityka Prywatnosci)~~
+  - [x] ~~Linki prawne w stopce sidebaru (DashboardLayout)~~
+  - [ ] Opcjonalnie: weryfikacja przez prawnika przed skalowaniem do platnych klientow
 
 - [x] ~~**Czyszczenie hardcoded URLs** — zamienione na zmienne srodowiskowe (NEXT_PUBLIC_API_URL, FRONTEND_URL)~~
 
@@ -284,34 +286,19 @@ Rejestracja -> FREE
 ```
 
 ### Do zaimplementowania:
-- [ ] `changePlan()` — walidacja targetLevel > currentLevel (blokada downgrade)
+- [x] ~~`changePlan()` — walidacja targetLevel > currentLevel (blokada downgrade) — backend + toast w UI~~
 - [x] ~~Obsluga `past_due` w UI (banner + CTA do aktualizacji karty)~~
 - [x] ~~Blokada akcji (tworzenie zmian, publikacja) gdy limitExceeded~~
-- [ ] Toast przy probie zaproszenia pracownika ponad limit
+- [x] ~~Toast przy probie zaproszenia pracownika ponad limit (PendingList + baner + CTA upgrade)~~
 
 ---
 
 ## Plany rozwoju (przyszlosc)
 
-### Faza 3.5 — Wiele lokalizacji (PREMIUM: Business+)
-- Zarzadzanie wieloma lokalizacjami / oddzialami
-- Osobne grafiki per lokalizacja
-- Przenoszenie pracownikow miedzy lokalizacjami
-- Dashboard zbiorczy
-
-### Faza 3.6 — Zaawansowane role i uprawnienia (PREMIUM: Business+)
-- Role niestandardowe (np. "Starszy kelner", "Kierownik zmiany")
-- Granularne uprawnienia: kto moze publikowac, kto edytowac
-- Hierarchia rol
-
 ### Faza 3.9 — Zaawansowane powiadomienia (PREMIUM: Business+)
 - Push notifications (PWA / Web Push)
 - Przypomnienia o zmianie (np. 1h przed)
 - Niestandardowe reguly powiadomien
-
-### Faza 3.10 — Audit Log (PREMIUM: Business+)
-- Historia wszystkich zmian w systemie (kto, co, kiedy)
-- Filtrowanie i eksport logow
 
 ### Daleka przyszlosc
 - **Aplikacja mobilna** (React Native / Expo)

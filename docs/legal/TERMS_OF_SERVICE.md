@@ -1,115 +1,150 @@
-# Regulamin Uzytkowania — Staffer.pl
+# Regulamin Usługi — Staffer.pl
 
-> **UWAGA:** To jest szablon do dostosowania przez prawnika przed wdrozeniem.
-> Ostatnia aktualizacja: [DATA]
+**Ostatnia aktualizacja: 18 marca 2026**
 
-## 1. Postanowienia ogolne
+## 1. Postanowienia ogólne
 
-1.1. Niniejszy regulamin okresla zasady korzystania z serwisu Staffer.pl (dalej "Serwis"), dostepnego pod adresem app.staffer.pl.
+1.1. Niniejszy Regulamin określa zasady korzystania z serwisu Staffer.pl (dalej „Serwis"), dostępnego pod adresem **app.staffer.pl**.
 
-1.2. Wlascicielem i operatorem Serwisu jest:
-- **Nazwa firmy:** [PELNA NAZWA FIRMY]
-- **Adres:** [ADRES SIEDZIBY]
-- **NIP:** [NIP]
-- **Email:** [EMAIL_KONTAKTOWY]
+1.2. Właścicielem i operatorem Serwisu jest:
+- **Mateusz Woronowicz**
+- **E-mail:** biuro@staffer.pl
 
-1.3. Serwis sluzy do zarzadzania grafikami zmian, zespolami pracowniczymi oraz powiazanymi funkcjami dla firm i organizacji.
+Usługa świadczona jest przez osobę fizyczną w ramach działalności nierejestrowanej.
+
+1.3. Serwis służy do zarządzania grafikami zmian, zespołami pracowniczymi oraz powiązanymi funkcjami dla firm i organizacji (B2B SaaS).
+
+1.4. Korzystanie z Serwisu oznacza akceptację niniejszego Regulaminu oraz [Polityki Prywatności](/polityka-prywatnosci).
 
 ## 2. Definicje
 
-- **Uzytkownik** — osoba korzystajaca z Serwisu
-- **Wlasciciel zespolu (Owner)** — osoba zakladajaca zespol w Serwisie, odpowiedzialna za platnosci
-- **Manager** — osoba z uprawnieniami do zarzadzania grafikiem i zespolem
-- **Pracownik (Employee)** — czlonek zespolu z dostepem do grafiku i wlasnych danych
-- **Subskrypcja** — platna usluga dostepna w planach Starter i Business
-- **Trial** — 14-dniowy darmowy okres probny przy pierwszym zakupie subskrypcji
+- **Użytkownik** — każda osoba fizyczna korzystająca z Serwisu, która zaakceptowała Regulamin
+- **Właściciel zespołu (Owner)** — Użytkownik zakładający zespół w Serwisie, odpowiedzialny za płatności i zarządzanie
+- **Manager** — Użytkownik z uprawnieniami do zarządzania grafikiem i zespołem, nadanymi przez Właściciela
+- **Pracownik (Employee)** — Użytkownik będący członkiem zespołu z dostępem do grafiku i własnych danych
+- **Konto** — indywidualne konto Użytkownika w Serwisie
+- **Zespół** — jednostka organizacyjna w Serwisie, gromadząca Użytkowników i dane
+- **Subskrypcja** — płatna usługa dostępna w planach Starter+ i Business+
+- **Trial** — 14-dniowy bezpłatny okres próbny przy pierwszym zakupie subskrypcji Starter+
 
 ## 3. Rejestracja i konto
 
-3.1. Rejestracja wymaga podania adresu email i hasla lub zalogowania przez Google OAuth.
+3.1. Rejestracja wymaga podania adresu e-mail i hasła lub zalogowania przez Google OAuth.
 
-3.2. Uzytkownik zobowiazuje sie do podania prawdziwych danych.
+3.2. Użytkownik zobowiązuje się do podania prawdziwych danych i utrzymywania ich aktualności.
 
-3.3. Uzytkownik jest odpowiedzialny za bezpieczenstwo swojego hasla i konta.
+3.3. Hasło musi mieć co najmniej 8 znaków. Użytkownik jest odpowiedzialny za poufność hasła i wszelkie działania podjęte z jego konta.
 
-3.4. Jedno konto moze nalezec do jednego zespolu. Wlasciciel zespolu moze zapraszac nowych czlonkow za pomoca kodu zaproszenia.
+3.4. Jedno konto może należeć do jednego aktywnego zespołu.
 
-## 4. Plany i platnosci
+3.5. Adres e-mail podany przy rejestracji wymaga weryfikacji przed uzyskaniem pełnego dostępu.
 
-4.1. Serwis oferuje nastepujace plany:
+3.6. Operator może zablokować lub usunąć konto w przypadku naruszenia Regulaminu.
 
-| Plan | Cena | Limit pracownikow | Opis |
-|------|------|--------------------|------|
-| FREE | 0 zl | 5 | Podstawowe funkcje |
-| STARTER | 29 zl/mies | 15 | Raporty, eksport, kalendarz |
-| BUSINESS | 79 zl/mies | Bez limitu | Wszystkie funkcje |
+## 4. Plany cenowe i płatności
 
-4.2. Platnosci sa przetwarzane przez Stripe Inc. Akceptujemy karty platnicze.
+4.1. Serwis oferuje następujące plany:
 
-4.3. Przy pierwszym zakupie subskrypcji przysluguje 14-dniowy darmowy trial. Trial jest jednorazowy na zespol.
+| Plan | Cena | Limit pracowników | Funkcje |
+|------|------|-------------------|---------|
+| **Darmowy (FREE)** | 0 zł | Do 5 | Grafik tygodniowy i miesięczny, giełda zmian, ogłoszenia, powiadomienia e-mail |
+| **Starter+** | 29 zł / mies. | Do 15 | + Raporty, eksport CSV, Google Calendar / iCal |
+| **Business+** | 79 zł / mies. | Bez limitu | + Szablony grafiku, wszystkie funkcje |
 
-4.4. Subskrypcja jest automatycznie odnawiana co miesiac. Uzytkownik moze anulowac subskrypcje w dowolnym momencie — dostep do platnych funkcji zachowany do konca oplaconego okresu.
+4.2. Płatności są przetwarzane przez **Stripe Inc.** Akceptujemy karty płatnicze Visa, Mastercard i inne obsługiwane przez Stripe.
 
-4.5. W przypadku nieudanej platnosci Stripe automatycznie podejmuje proby ponownego pobrania. Po wyczerpaniu prob subskrypcja jest anulowana, a zespol wraca na plan FREE.
+4.3. Przy pierwszym zakupie subskrypcji **Starter+** przysługuje **14-dniowy bezpłatny trial**. Trial jest jednorazowy na zespół (flaga `trialUsed`). Plan Business+ nie obejmuje okresu próbnego.
 
-4.6. Obnizenie planu (downgrade) nie jest mozliwe bezposrednio. Aby zmienic plan na nizszy, nalezy anulowac obecna subskrypcje i wykupic nowa.
+4.4. Subskrypcja jest automatycznie odnawiana co miesiąc. Użytkownik może anulować subskrypcję w dowolnym momencie przez Portal Stripe — dostęp do płatnych funkcji pozostaje aktywny do końca opłaconego okresu.
 
-## 5. Zasady korzystania
+4.5. W przypadku nieudanej płatności Stripe automatycznie podejmuje próby ponownego pobrania. Po wyczerpaniu prób subskrypcja jest anulowana, a zespół automatycznie wraca na plan Darmowy.
 
-5.1. Uzytkownik zobowiazuje sie do:
-- Korzystania z Serwisu zgodnie z prawem i regulaminem
-- Niepodejmowania prob nieautoryzowanego dostepu do danych innych uzytkownikow
-- Niestosowania automatycznych narzedzi do masowego pobierania danych
-- Nierozpowszechniania tresci niezgodnych z prawem
+4.6. **Obniżenie planu (downgrade) nie jest możliwe bezpośrednio.** Aby przejść na niższy plan, należy anulować obecną subskrypcję przez Portal Stripe. Po zakończeniu opłaconego okresu plan zmieni się automatycznie na Darmowy.
 
-5.2. Wlasciciel zespolu jest odpowiedzialny za:
-- Poprawnosc danych wprowadzanych do systemu
-- Przestrzeganie prawa pracy przy planowaniu grafiku
-- Informowanie pracownikow o korzystaniu z Serwisu
+4.7. **Upgrade** (przejście na wyższy plan) jest możliwy w każdym momencie — rozliczenie następuje proporcjonalnie (proration).
 
-## 6. Odpowiedzialnosc
+4.8. Ceny podane są w złotych polskich i zawierają podatek VAT (o ile ma zastosowanie).
 
-6.1. Serwis jest udostepniany "tak jak jest" (as is). Operator doklada starannosci, aby Serwis dzialal poprawnie, ale nie gwarantuje nieprzerwanej dostepnosci.
+## 5. Limity i ograniczenia funkcji
 
-6.2. Operator nie ponosi odpowiedzialnosci za:
-- Skutki blednego planowania grafiku przez uzytkownika
-- Przerwy w dzialaniu wynikajace z konserwacji lub sil wyzszych
-- Dzialania stron trzecich (Stripe, Google, dostawcy hostingu)
+5.1. Przekroczenie limitu pracowników dla aktywnego planu blokuje tworzenie nowych zmian i publikację grafiku, jednak nie usuwa istniejących danych.
 
-6.3. Odpowiedzialnosc operatora jest ograniczona do kwoty uiszczonych oplat za ostatnie 12 miesiecy.
+5.2. Funkcje oznaczone jako „Starter+" lub „Business+" wymagają aktywnej subskrypcji odpowiedniego planu lub aktywnego okresu próbnego (trial).
 
-## 7. Dane osobowe
+5.3. Bezpłatny okres próbny (trial) przysługuje jednorazowo na zespół.
 
-7.1. Przetwarzanie danych osobowych odbywa sie zgodnie z [Polityka Prywatnosci](PRIVACY_POLICY.md).
+## 6. Zasady korzystania
 
-7.2. Wlasciciel zespolu pelni role wspoladministratora danych pracownikow wprowadzonych do systemu. Szczegoly wspoladministrowania okreslone sa w osobnej umowie (do uzgodnienia).
+6.1. Użytkownik zobowiązuje się do:
+- Korzystania z Serwisu zgodnie z prawem i niniejszym Regulaminem
+- Niepodejmowania prób nieautoryzowanego dostępu do danych innych Użytkowników
+- Niestosowania automatycznych narzędzi do masowego pobierania danych (scraping)
+- Nierozpowszechniania treści niezgodnych z prawem lub szkodliwych
+- Niezakłócania działania infrastruktury Serwisu
 
-## 8. Wlasnosc intelektualna
+6.2. Właściciel zespołu jest odpowiedzialny za:
+- Poprawność danych wprowadzanych do systemu
+- Przestrzeganie przepisów prawa pracy (Kodeks Pracy, dyrektywy UE) przy planowaniu grafiku
+- Poinformowanie pracowników o korzystaniu z Serwisu i przetwarzaniu ich danych
 
-8.1. Wszelkie prawa do Serwisu (kod, design, marka) naleza do operatora.
+6.3. Operator zastrzega sobie prawo do zawieszenia lub usunięcia konta naruszającego Regulamin, bez uprzedniego powiadomienia w przypadku rażących naruszeń.
 
-8.2. Dane wprowadzone przez uzytkownika pozostaja jego wlasnoscia. Uzytkownik udziela operatorowi licencji na przetwarzanie tych danych w celu swiadczenia uslugi.
+## 7. Dostępność i jakość usługi
 
-## 9. Usuniecie konta
+7.1. Operator dołoży starań, aby Serwis był dostępny nieprzerwanie. Nie gwarantuje jednak dostępności na poziomie 100% (SLA).
 
-9.1. Uzytkownik moze w dowolnym momencie zazadac usuniecia konta, kontaktujac sie na [EMAIL_KONTAKTOWY].
+7.2. Planowane przerwy serwisowe będą, w miarę możliwości, ogłaszane z wyprzedzeniem.
 
-9.2. Wlasciciel zespolu moze usunac zespol — powoduje to usuniecie wszystkich danych zespolu (grafiki, zmiany, dostepnosc).
+7.3. Operator zastrzega sobie prawo do zmiany, ograniczenia lub zakończenia świadczenia wybranych funkcji Serwisu z powiadomieniem z co najmniej 14-dniowym wyprzedzeniem.
 
-9.3. Po usunieciu konta dane sa trwale usuwane w ciagu 30 dni, z wyjatkiem danych wymaganych prawnie (np. dokumentacja platnosci — 5 lat).
+## 8. Odpowiedzialność
 
-## 10. Zmiany regulaminu
+8.1. Serwis jest udostępniany w stanie „takim, jakim jest" (as is). Operator dołoży należytej staranności, ale nie gwarantuje braku błędów ani ciągłości działania.
 
-10.1. Operator zastrzega sobie prawo do zmian regulaminu.
+8.2. Operator nie ponosi odpowiedzialności za:
+- Skutki błędnego planowania grafiku przez Użytkownika
+- Przerwy wynikające z awarii dostawców zewnętrznych (Stripe, Google, Vercel, Railway, Neon)
+- Utratę danych spowodowaną działaniami Użytkownika
+- Szkody pośrednie, utracone korzyści ani straty wynikające z niemożności korzystania z Serwisu
 
-10.2. O istotnych zmianach uzytkownik zostanie powiadomiony z co najmniej 14-dniowym wyprzedzeniem za posrednictwem aplikacji lub emaila.
+8.3. Odpowiedzialność Operatora z tytułu korzystania z Serwisu jest ograniczona do kwoty opłat uiszczonych przez Użytkownika w ciągu ostatnich 12 miesięcy.
 
-10.3. Dalsze korzystanie z Serwisu po zmianie regulaminu oznacza akceptacje nowych warunkow.
+## 9. Własność intelektualna
 
-## 11. Postanowienia koncowe
+9.1. Wszelkie prawa do Serwisu (kod źródłowy, design, marka Staffer, logo) należą do Operatora i są chronione przepisami o własności intelektualnej.
 
-11.1. Regulamin podlega prawu polskiemu.
+9.2. Dane wprowadzone przez Użytkownika (grafiki, dane pracowników, ogłoszenia) pozostają własnością Użytkownika. Użytkownik udziela Operatorowi niewyłącznej licencji na przetwarzanie tych danych wyłącznie w celu świadczenia usługi.
 
-11.2. Spory rozstrzygane beda przez sad wlasciwy dla siedziby operatora.
+9.3. Użytkownik nie nabywa żadnych praw do kodu, designu ani marki Serwisu.
 
-11.3. W sprawach nieuregulowanych niniejszym regulaminem zastosowanie maja przepisy Kodeksu cywilnego oraz ustawy o swiadczeniu uslug droga elektroniczna.
+## 10. Usunięcie konta i danych
+
+10.1. Użytkownik może w dowolnym momencie zażądać usunięcia konta, kontaktując się pod adresem: **biuro@staffer.pl**.
+
+10.2. Właściciel zespołu może usunąć zespół — powoduje to trwałe usunięcie wszystkich danych zespołu (grafiki, zmiany, dostępność, ogłoszenia).
+
+10.3. Po usunięciu konta dane osobowe są trwale usuwane w ciągu 30 dni, z wyjątkiem:
+- Danych wymaganych przepisami podatkowymi i księgowymi (do 5 lat)
+- Zanonimizowanych danych statystycznych
+
+## 11. Zmiany Regulaminu
+
+11.1. Operator zastrzega sobie prawo do zmiany Regulaminu.
+
+11.2. O istotnych zmianach Użytkownik zostanie powiadomiony z co najmniej **14-dniowym wyprzedzeniem** za pośrednictwem aplikacji lub e-maila.
+
+11.3. Dalsze korzystanie z Serwisu po wejściu w życie zmian oznacza ich akceptację.
+
+11.4. W przypadku braku akceptacji zmian Użytkownik ma prawo usunąć konto przed ich wejściem w życie.
+
+## 12. Postanowienia końcowe
+
+12.1. Regulamin podlega prawu polskiemu.
+
+12.2. Spory wynikające z korzystania z Serwisu będą rozstrzygane przez sąd właściwy miejscowo dla Operatora.
+
+12.3. Jeżeli Użytkownik jest konsumentem w rozumieniu Kodeksu cywilnego, przysługują mu wszelkie prawa przewidziane dla konsumentów na mocy prawa polskiego i unijnego, niezależnie od postanowień niniejszego Regulaminu.
+
+12.4. W sprawach nieuregulowanych niniejszym Regulaminem zastosowanie mają przepisy Kodeksu cywilnego, ustawy o świadczeniu usług drogą elektroniczną oraz innych właściwych przepisów prawa polskiego i unijnego.
+
+12.5. Kontakt w sprawach dotyczących Regulaminu: **biuro@staffer.pl**

@@ -1,116 +1,125 @@
-# Polityka Prywatnosci — Staffer.pl
+# Polityka Prywatności — Staffer.pl
 
-> **UWAGA:** To jest szablon do dostosowania przez prawnika przed wdrozeniem.
-> Ostatnia aktualizacja: [DATA]
+**Ostatnia aktualizacja: 18 marca 2026**
 
-## 1. Administrator danych
+## 1. Administrator danych osobowych
 
 Administratorem Twoich danych osobowych jest:
 
-- **Nazwa firmy:** [PELNA NAZWA FIRMY]
-- **Adres:** [ADRES SIEDZIBY]
-- **NIP:** [NIP]
-- **Email kontaktowy:** [EMAIL_KONTAKTOWY]
+- **Imię i nazwisko:** Mateusz Woronowicz
+- **Email kontaktowy:** biuro@staffer.pl
+- **Serwis:** Staffer.pl, dostępny pod adresem app.staffer.pl
+
+Usługa świadczona jest przez osobę fizyczną w ramach działalności nierejestrowanej na podstawie art. 5 ustawy Prawo przedsiębiorców.
 
 ## 2. Jakie dane zbieramy
 
-### Dane podane przez uzytkownika:
-- Imie i nazwisko
-- Adres email
-- Zdjecie profilowe (avatar)
+### Dane podane przez użytkownika:
+- Imię i nazwisko
+- Adres e-mail
+- Hasło (przechowywane wyłącznie w formie zahaszowanej — bcrypt)
+- Zdjęcie profilowe / avatar (opcjonalnie, za pośrednictwem Cloudinary)
 - Numer telefonu (opcjonalnie)
-- Umiejetnosci / kwalifikacje (opcjonalnie)
+- Umiejętności / kwalifikacje (opcjonalnie)
 - Notatki profilu (opcjonalnie)
+- Stawka godzinowa (podawana przez managera, nie przez pracownika)
 
-### Dane dotyczace zespolu:
-- Nazwa firmy / zespolu
-- Kod zaproszenia do zespolu
-- Stanowiska pracownikow
-- Stawka godzinowa (podana przez managera)
-- Grafik zmian i dostepnosc
+### Dane dotyczące zespołu:
+- Nazwa firmy / zespołu
+- Kod zaproszenia do zespołu
+- Stanowiska pracowników i ich kolory
+- Grafik zmian, przypisania, dostępność
 
 ### Dane techniczne (zbierane automatycznie):
-- Adres IP
-- Typ przegladarki i urzadzenia
-- Dane sesji (cookies, tokeny JWT)
-- Logi bledow (Sentry — bez danych osobowych)
+- Adres IP (w logach serwera i rate limiting — przechowywany max. 30 dni)
+- Typ przeglądarki i urządzenia
+- Dane sesji (cookies JWT, next-auth tokens)
+- Logi błędów — przekazywane do Sentry bez treści danych osobowych
 
-### Dane platnosci:
-- Platnosci sa przetwarzane przez Stripe Inc. Nie przechowujemy numerow kart ani danych platniczych na naszych serwerach.
+### Dane płatności:
+- Płatności są przetwarzane wyłącznie przez Stripe Inc. Nie przechowujemy numerów kart ani danych płatniczych na naszych serwerach. Otrzymujemy jedynie potwierdzenie transakcji i identyfikatory Stripe.
 
 ## 3. Cele i podstawy prawne przetwarzania
 
 | Cel | Podstawa prawna (RODO) | Okres przechowywania |
 |-----|----------------------|---------------------|
-| Swiadczenie uslugi (konto, grafik, zespol) | Art. 6 ust. 1 lit. b — wykonanie umowy | Przez czas trwania konta |
-| Obsluga platnosci | Art. 6 ust. 1 lit. b — wykonanie umowy | Zgodnie z przepisami ksiegowymi (5 lat) |
-| Komunikacja email (powiadomienia, grafik) | Art. 6 ust. 1 lit. f — uzasadniony interes | Do momentu rezygnacji z powiadomien |
-| Bezpieczenstwo (logi, rate limiting) | Art. 6 ust. 1 lit. f — uzasadniony interes | 30 dni |
-| Marketing (jesli wyrazono zgode) | Art. 6 ust. 1 lit. a — zgoda | Do cofniecia zgody |
+| Świadczenie usługi (konto, grafik, zespół) | Art. 6 ust. 1 lit. b — wykonanie umowy | Przez czas trwania konta |
+| Obsługa płatności | Art. 6 ust. 1 lit. b — wykonanie umowy | Zgodnie z przepisami księgowymi (5 lat) |
+| Powiadomienia e-mail (grafik, zmiany) | Art. 6 ust. 1 lit. f — uzasadniony interes | Do momentu rezygnacji z powiadomień |
+| Bezpieczeństwo (logi, rate limiting) | Art. 6 ust. 1 lit. f — uzasadniony interes | 30 dni |
+| Obsługa zgłoszeń i kontaktów | Art. 6 ust. 1 lit. f — uzasadniony interes | 12 miesięcy |
 
-## 4. Udostepnianie danych
+Nie przetwarzamy danych w celach marketingowych bez wyraźnej zgody.
 
-Twoje dane moga byc udostepniane nastepujacym podmiotom:
+## 4. Udostępnianie danych — podmioty przetwarzające
 
-| Podmiot | Cel | Lokalizacja |
-|---------|-----|-------------|
-| **Stripe Inc.** | Przetwarzanie platnosci | USA (Privacy Shield / SCC) |
-| **Resend Inc.** | Wysylka emaili transakcyjnych | USA (SCC) |
-| **Cloudinary Ltd.** | Przechowywanie zdjec (avatary) | USA/EU |
-| **Vercel Inc.** | Hosting aplikacji frontend | USA/EU |
-| **Railway Corp.** | Hosting backendu | USA |
-| **Neon Inc.** | Hosting bazy danych | USA/EU |
-| **Sentry (Functional Software)** | Monitoring bledow | USA (SCC) |
-| **Google LLC** | Logowanie OAuth, synchronizacja kalendarza | USA (SCC) |
+Twoje dane mogą być przekazywane wyłącznie następującym podmiotom, wyłącznie w zakresie niezbędnym do świadczenia usługi:
 
-Dane sa przekazywane poza EOG na podstawie Standardowych Klauzul Umownych (SCC) lub decyzji o adekwatnosci.
+| Podmiot | Cel | Kraj | Podstawa przekazania |
+|---------|-----|------|----------------------|
+| **Stripe Inc.** | Przetwarzanie płatności | USA | SCC (art. 46 RODO) |
+| **Resend Inc.** | Wysyłka e-maili transakcyjnych | USA | SCC |
+| **Cloudinary Ltd.** | Przechowywanie zdjęć (avatary) | USA / EU | SCC |
+| **Vercel Inc.** | Hosting aplikacji frontendowej | USA / EU | SCC |
+| **Railway Corp.** | Hosting backendu API | USA | SCC |
+| **Neon Inc.** | Hosting bazy danych PostgreSQL | USA / EU | SCC |
+| **Sentry (Functional Software Inc.)** | Monitoring błędów (bez danych osobowych) | USA | SCC |
+| **Google LLC** | Logowanie OAuth, synchronizacja kalendarza | USA | SCC |
+
+Dane są przekazywane poza Europejski Obszar Gospodarczy wyłącznie na podstawie Standardowych Klauzul Umownych (SCC) przyjętych przez Komisję Europejską.
+
+Nie sprzedajemy, nie wynajmujemy ani nie udostępniamy danych podmiotom trzecim w celach marketingowych.
 
 ## 5. Twoje prawa
 
-Na podstawie RODO przysluguja Ci nastepujace prawa:
+Na podstawie RODO (Rozporządzenie UE 2016/679) przysługują Ci następujące prawa:
 
-- **Prawo dostepu** — mozesz zadac informacji o swoich danych
-- **Prawo do sprostowania** — mozesz poprawic swoje dane w profilu
-- **Prawo do usuniecia** — mozesz zadac usuniecia konta i danych
-- **Prawo do ograniczenia przetwarzania**
-- **Prawo do przenoszenia danych** — mozesz wyeksportowac swoje dane (CSV)
-- **Prawo do sprzeciwu** — wobec przetwarzania na podstawie uzasadnionego interesu
-- **Prawo do cofniecia zgody** — w kazdym momencie, bez wplywu na zgodnosc przetwarzania przed cofnieciem
+- **Prawo dostępu** (art. 15) — możesz żądać informacji o swoich danych
+- **Prawo do sprostowania** (art. 16) — możesz poprawić swoje dane w profilu lub przez kontakt e-mail
+- **Prawo do usunięcia** (art. 17) — możesz żądać usunięcia konta i wszystkich danych
+- **Prawo do ograniczenia przetwarzania** (art. 18)
+- **Prawo do przenoszenia danych** (art. 20) — możesz wyeksportować swoje dane (CSV) z poziomu aplikacji
+- **Prawo do sprzeciwu** (art. 21) — wobec przetwarzania na podstawie uzasadnionego interesu
+- **Prawo do cofnięcia zgody** (art. 7 ust. 3) — w każdym momencie, bez wpływu na zgodność przetwarzania przed cofnięciem
 
-Aby skorzystac z tych praw, napisz na: [EMAIL_KONTAKTOWY]
+Aby skorzystać z tych praw, napisz na: **biuro@staffer.pl**. Odpowiemy w ciągu 30 dni.
 
-## 6. Bezpieczenstwo danych
+Masz prawo wnieść skargę do **Prezesa Urzędu Ochrony Danych Osobowych (UODO)**, ul. Stawki 2, 00-193 Warszawa, www.uodo.gov.pl.
 
-Stosujemy nastepujace srodki bezpieczenstwa:
-- Szyfrowanie transmisji (TLS/HTTPS)
-- Hashowanie hasel (bcrypt)
-- Tokeny JWT z ograniczonym czasem zycia
-- Ochrona przed atakami (Helmet, CORS, rate limiting, CSP)
-- Walidacja danych wejsciowych
-- Monitoring bledow (Sentry)
-- Regularne backupy bazy danych
+## 6. Bezpieczeństwo danych
+
+Stosujemy następujące środki bezpieczeństwa:
+- Szyfrowanie transmisji (TLS 1.2+/HTTPS)
+- Hashowanie haseł (bcrypt, min. cost 10)
+- Tokeny JWT z ograniczonym czasem życia i mechanizmem unieważniania (tokenVersion)
+- Ochrona przed atakami (Helmet, CORS whitelist, rate limiting, CSP, X-Frame-Options)
+- Walidacja i sanitizacja danych wejściowych (class-validator)
+- Monitoring błędów (Sentry, bez stack trace w produkcji)
+- Regularne backupy bazy danych (Neon PITR + pg_dump)
+- Stripe webhook signature verification
 
 ## 7. Pliki cookies
 
-Uzywamy nastepujacych cookies:
+Używamy wyłącznie niezbędnych plików cookies:
 
 | Nazwa | Typ | Cel | Wygasanie |
 |-------|-----|-----|-----------|
-| `next-auth.session-token` | Niezbedny | Sesja uzytkownika | Sesja |
-| `next-auth.csrf-token` | Niezbedny | Ochrona CSRF | Sesja |
+| `next-auth.session-token` | Niezbędny | Sesja zalogowanego użytkownika | Sesja przeglądarki |
+| `next-auth.csrf-token` | Niezbędny | Ochrona przed atakami CSRF | Sesja przeglądarki |
+| `next-auth.callback-url` | Niezbędny | Przekierowanie po zalogowaniu | Sesja przeglądarki |
 
-Nie uzywamy cookies marketingowych ani analitycznych stron trzecich.
+Nie używamy cookies analitycznych, marketingowych ani śledzących. Szczegóły w [Polityce Cookies](/polityka-cookies).
 
-Szczegoly w [Polityce Cookies](COOKIE_POLICY.md).
+## 8. Dzieci
 
-## 8. Zmiany polityki
+Serwis jest przeznaczony wyłącznie dla osób pełnoletnich lub osób, które ukończyły 16 lat i uzyskały zgodę rodzica/opiekuna prawnego. Nie zbieramy świadomie danych dzieci poniżej 16 roku życia.
 
-O istotnych zmianach polityki prywatnosci poinformujemy za posrednictwem aplikacji lub emailem z co najmniej 14-dniowym wyprzedzeniem.
+## 9. Zmiany polityki prywatności
 
-## 9. Kontakt
+O istotnych zmianach polityki prywatności poinformujemy za pośrednictwem aplikacji lub e-mailem z co najmniej **14-dniowym wyprzedzeniem**. Data ostatniej aktualizacji widnieje na górze dokumentu.
 
-W sprawach dotyczacych ochrony danych osobowych prosimy o kontakt:
-- Email: [EMAIL_KONTAKTOWY]
-- Adres: [ADRES_FIRMY]
+## 10. Kontakt
 
-Masz prawo wniesc skarge do Prezesa Urzedu Ochrony Danych Osobowych (UODO), ul. Stawki 2, 00-193 Warszawa.
+W sprawach dotyczących ochrony danych osobowych:
+- **E-mail:** biuro@staffer.pl
+- Odpowiadamy w ciągu 30 dni roboczych.

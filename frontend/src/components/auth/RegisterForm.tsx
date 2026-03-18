@@ -39,6 +39,8 @@ export function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
   const [name, setName] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [termsAccepted, setTermsAccepted] = useState(false);
+  const [privacyAccepted, setPrivacyAccepted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isRegistered, setIsRegistered] = useState(false);
 
@@ -52,6 +54,13 @@ export function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
 
     if (password.length < 8) {
       toast.error("Hasło musi mieć co najmniej 8 znaków");
+      return;
+    }
+
+    if (!termsAccepted || !privacyAccepted) {
+      toast.error("Wymagana akceptacja dokumentów", {
+        description: "Zaakceptuj Regulamin i Politykę Prywatności, aby kontynuować.",
+      });
       return;
     }
 
@@ -182,7 +191,60 @@ export function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
         />
       </div>
 
-      <Button type="submit" className="w-full" disabled={isLoading}>
+      {/* Consent checkboxes */}
+      <div className="space-y-2.5 py-1">
+        <label className="flex items-start gap-2.5 cursor-pointer group">
+          <input
+            type="checkbox"
+            checked={termsAccepted}
+            onChange={(e) => setTermsAccepted(e.target.checked)}
+            className="mt-0.5 h-4 w-4 rounded border-brand-warm text-brand focus:ring-brand flex-shrink-0 cursor-pointer accent-brand"
+          />
+          <span className="text-xs text-brand-dark-muted leading-relaxed">
+            Akceptuję{" "}
+            <a
+              href="/regulamin"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-brand hover:text-brand-light font-medium hover:underline underline-offset-2"
+              onClick={(e) => e.stopPropagation()}
+            >
+              Regulamin
+            </a>{" "}
+            serwisu Staffer.pl *
+          </span>
+        </label>
+
+        <label className="flex items-start gap-2.5 cursor-pointer group">
+          <input
+            type="checkbox"
+            checked={privacyAccepted}
+            onChange={(e) => setPrivacyAccepted(e.target.checked)}
+            className="mt-0.5 h-4 w-4 rounded border-brand-warm text-brand focus:ring-brand flex-shrink-0 cursor-pointer accent-brand"
+          />
+          <span className="text-xs text-brand-dark-muted leading-relaxed">
+            Zapoznałem/am się z{" "}
+            <a
+              href="/polityka-prywatnosci"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-brand hover:text-brand-light font-medium hover:underline underline-offset-2"
+              onClick={(e) => e.stopPropagation()}
+            >
+              Polityką Prywatności
+            </a>{" "}
+            i wyrażam zgodę na przetwarzanie moich danych osobowych *
+          </span>
+        </label>
+
+        <p className="text-[10px] text-brand-dark-soft">* Pola wymagane</p>
+      </div>
+
+      <Button
+        type="submit"
+        className="w-full"
+        disabled={isLoading || !termsAccepted || !privacyAccepted}
+      >
         {isLoading ? "Rejestrowanie..." : "Zarejestruj się"}
       </Button>
 

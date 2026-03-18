@@ -226,6 +226,30 @@ export function DashboardLayout({ children, userRole, userName, userAvatar, onLo
             </button>
           </div>
         )}
+
+        {/* Legal links */}
+        <div className="px-5 py-2.5 border-t border-brand-warm/60">
+          <div className="flex items-center gap-3 flex-wrap">
+            <Link
+              href="/regulamin"
+              className="text-[10px] text-brand-dark-soft hover:text-brand-dark transition-colors"
+            >
+              Regulamin
+            </Link>
+            <Link
+              href="/polityka-prywatnosci"
+              className="text-[10px] text-brand-dark-soft hover:text-brand-dark transition-colors"
+            >
+              Prywatność
+            </Link>
+            <Link
+              href="/polityka-cookies"
+              className="text-[10px] text-brand-dark-soft hover:text-brand-dark transition-colors"
+            >
+              Cookies
+            </Link>
+          </div>
+        </div>
       </aside>
 
       {/* Main content */}

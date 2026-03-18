@@ -221,31 +221,48 @@ export default function BillingPage() {
   };
 
   /* ── CTA logic per card ── */
+  const handleDowngradeBlocked = () => {
+    toast.info("Zmiana na niższy plan jest niedostępna", {
+      description:
+        "Aby przejść na niższy plan, anuluj bieżącą subskrypcję w Portalu Stripe. " +
+        "Po zakończeniu opłaconego okresu Twój plan zostanie automatycznie zmieniony na Darmowy.",
+      action: hasStripeCustomer
+        ? { label: "Otwórz Portal Stripe", onClick: handlePortal }
+        : undefined,
+      duration: 6000,
+    });
+  };
+
   const getCardCta = (plan: PlanDef) => {
     const isCurrentPlan = plan.id === currentPlan;
     const isHigher = plan.level > currentLevel;
 
     if (isCurrentPlan) {
-      return { label: "Aktualny plan", disabled: true, action: () => {} };
+      return { label: "Aktualny plan", disabled: true, action: () => {}, isDowngrade: false };
     }
     if (isHigher) {
       if (!isActiveSub) {
-        // No active subscription — go through Stripe Checkout
         return {
           label: plan.id === "business" ? "Ulepsz do Business+" : "Wypróbuj 14 dni za darmo",
           disabled: false,
           action: () => handleUpgrade(plan.id),
+          isDowngrade: false,
         };
       }
-      // Active subscription — redirect to Stripe Portal (user confirms change there)
       return {
         label: `Ulepsz do ${plan.name}`,
         disabled: false,
         action: handlePortal,
+        isDowngrade: false,
       };
     }
-    // Lower plan — downgrade zablokowany
-    return { label: plan.name, disabled: true, action: () => {} };
+    // Lower plan — downgrade zablokowany, ale klikalny żeby pokazać toast
+    return {
+      label: "Niedostępny",
+      disabled: true,
+      action: () => {},
+      isDowngrade: true,
+    };
   };
 
   const memberCount = planStatus?.memberCount ?? 0;
@@ -440,23 +457,33 @@ export default function BillingPage() {
                   </ul>
 
                   {/* CTA */}
-                  <Button
-                    onClick={cta.action}
-                    disabled={cta.disabled}
-                    className={`w-full gap-1.5 text-xs font-semibold transition-all duration-200 ${
-                      cta.disabled
-                        ? "bg-brand-warm/60 text-brand-dark-soft cursor-default border-0"
-                        : `${plan.ctaClass} hover:scale-[1.02] active:scale-[0.98]`
-                    }`}
-                    variant={cta.disabled ? "ghost" : "default"}
+                  <div
+                    onClick={cta.isDowngrade ? handleDowngradeBlocked : undefined}
+                    title={cta.isDowngrade ? "Kliknij, aby dowiedzieć się więcej" : undefined}
+                    className={cta.isDowngrade ? "cursor-pointer" : undefined}
                   >
-                    {cta.disabled ? (
-                      <Check className="h-3.5 w-3.5" />
-                    ) : (
-                      <ArrowRight className="h-3.5 w-3.5" />
-                    )}
-                    {cta.label}
-                  </Button>
+                    <Button
+                      onClick={!cta.isDowngrade ? cta.action : undefined}
+                      disabled={cta.disabled && !cta.isDowngrade}
+                      className={`w-full gap-1.5 text-xs font-semibold transition-all duration-200 pointer-events-none ${
+                        cta.isDowngrade
+                          ? "bg-brand-warm/40 text-brand-dark-soft border-0 opacity-60"
+                          : cta.disabled
+                            ? "bg-brand-warm/60 text-brand-dark-soft cursor-default border-0"
+                            : `${plan.ctaClass} hover:scale-[1.02] active:scale-[0.98]`
+                      }`}
+                      variant={cta.disabled || cta.isDowngrade ? "ghost" : "default"}
+                    >
+                      {cta.isDowngrade ? (
+                        <ArrowRight className="h-3.5 w-3.5 rotate-90" />
+                      ) : cta.disabled ? (
+                        <Check className="h-3.5 w-3.5" />
+                      ) : (
+                        <ArrowRight className="h-3.5 w-3.5" />
+                      )}
+                      {cta.label}
+                    </Button>
+                  </div>
                 </div>
               );
             })}

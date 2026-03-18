@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google"; // Zakładam domyślne fonty z Nexta
+import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import QueryProvider from "@/components/providers/QueryProvider";
 import AuthProvider from "@/components/providers/AuthProvider";
 import { Toaster } from "sonner";
+import { CookieBanner } from "@/components/CookieBanner";
 
 export const metadata: Metadata = {
   title: {
@@ -31,6 +32,7 @@ export default function RootLayout({
             <Toaster position="top-right" richColors />
           </QueryProvider>
         </AuthProvider>
+        <CookieBanner />
       </body>
     </html>
   );
