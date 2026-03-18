@@ -55,7 +55,7 @@ export class PositionsService {
       data: {
         teamId: membership.teamId,
         name: data.name,
-        color: data.color || '#8FACDB',
+        color: data.color || '#10B77F',
       },
     });
   }
@@ -157,7 +157,7 @@ export class PositionsService {
     let linked = 0;
 
     const colors = [
-      '#8FACDB', '#FF8400', '#6B8E23', '#E74C3C', '#9B59B6',
+      '#10B77F', '#0F172A', '#6B8E23', '#E74C3C', '#9B59B6',
       '#1ABC9C', '#F39C12', '#3498DB', '#E67E22', '#2ECC71',
     ];
 

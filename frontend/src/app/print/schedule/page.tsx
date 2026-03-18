@@ -136,7 +136,7 @@ function PrintScheduleContent() {
           </p>
         </div>
         <div className="text-xs text-gray-500">
-          Wygenerowano z systemu ShiftSchedule
+          Wygenerowano z systemu Staffer.pl
         </div>
       </div>
 

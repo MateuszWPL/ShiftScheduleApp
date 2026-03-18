@@ -26,7 +26,7 @@ export class EmailService {
   }
 
   private get emailLogoUrl(): string {
-    return process.env.EMAIL_LOGO_URL || 'https://dummyimage.com/160x48/8FACDB/ffffff&text=Staffer.pl';
+    return process.env.EMAIL_LOGO_URL || 'https://dummyimage.com/160x48/10B77F/ffffff&text=Staffer.pl';
   }
 
   /** Reusable email footer with unsubscribe hint */
@@ -34,7 +34,7 @@ export class EmailService {
     const unsub = unsubscribeNote
       ? `<p style="text-align: center; color: #9ca3af; font-size: 11px; margin-top: 8px;">
            Aby zmienić preferencje powiadomień email, przejdź do
-           <a href="${this.frontendUrl}/settings" style="color: #8FACDB;">Ustawień</a>
+           <a href="${this.frontendUrl}/settings" style="color: #10B77F;">Ustawień</a>
            w aplikacji.
          </p>`
       : '';
@@ -101,7 +101,7 @@ export class EmailService {
       .join('');
 
     const content = `
-      <h1 style="color: #FF8400; font-size: 22px; margin: 0 0 12px;">Nowy grafik opublikowany</h1>
+      <h1 style="color: #10B77F; font-size: 22px; margin: 0 0 12px;">Nowy grafik opublikowany</h1>
       <p style="margin: 0 0 12px; line-height: 1.6;">
         Cześć ${name}, został opublikowany nowy grafik z <strong>${shifts.length}</strong> zmian${shifts.length === 1 ? 'ą' : shifts.length < 5 ? 'ami' : 'ami'} dla Ciebie:
       </p>
@@ -117,7 +117,7 @@ export class EmailService {
       </table>
       <p style="text-align: center; margin: 24px 0;">
         <a href="${this.frontendUrl}/grafik"
-           style="background-color: #FF8400; color: white; padding: 14px 28px;
+           style="background-color: #10B77F; color: white; padding: 14px 28px;
                   text-decoration: none; border-radius: 8px; font-weight: 600; display: inline-block;">
           Zobacz grafik
         </a>
@@ -145,17 +145,17 @@ export class EmailService {
     time: string,
   ) {
     const content = `
-      <h1 style="color: #FF8400; font-size: 22px; margin: 0 0 12px;">Nowa zmiana</h1>
+      <h1 style="color: #10B77F; font-size: 22px; margin: 0 0 12px;">Nowa zmiana</h1>
       <p style="margin: 0 0 12px; line-height: 1.6;">
         Cześć ${name}, zostałeś przypisany do nowej zmiany:
       </p>
-      <div style="background: #f3f4f6; border-left: 4px solid #FF8400; padding: 16px; margin: 20px 0; border-radius: 8px;">
+      <div style="background: #f3f4f6; border-left: 4px solid #10B77F; padding: 16px; margin: 20px 0; border-radius: 8px;">
         <p style="margin: 0 0 4px; font-weight: 600; color: #333; font-size: 16px;">${roleName}</p>
         <p style="margin: 0; color: #555; font-size: 14px;">${date} &middot; ${time}</p>
       </div>
       <p style="text-align: center; margin: 24px 0;">
         <a href="${this.frontendUrl}/grafik"
-           style="background-color: #FF8400; color: white; padding: 14px 28px;
+           style="background-color: #10B77F; color: white; padding: 14px 28px;
                   text-decoration: none; border-radius: 8px; font-weight: 600; display: inline-block;">
           Zobacz grafik
         </a>
@@ -193,7 +193,7 @@ export class EmailService {
       </div>
       <p style="text-align: center; margin: 24px 0;">
         <a href="${this.frontendUrl}/announcements"
-           style="background-color: #FF8400; color: white; padding: 14px 28px;
+           style="background-color: #10B77F; color: white; padding: 14px 28px;
                   text-decoration: none; border-radius: 8px; font-weight: 600; display: inline-block;">
           Zobacz ogłoszenia
         </a>
@@ -236,13 +236,13 @@ export class EmailService {
             <img src="${this.emailLogoUrl}" alt="Staffer.pl" style="max-width: 160px; height: auto;" />
           </div>
           <div style="background: #ffffff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 28px;">
-            <h1 style="color: #FF8400; font-size: 22px; margin: 0 0 12px;">Witaj ${name}!</h1>
+            <h1 style="color: #10B77F; font-size: 22px; margin: 0 0 12px;">Witaj ${name}!</h1>
             <p style="margin: 0 0 12px; line-height: 1.6;">
               Dziękujemy za rejestrację w Staffer.pl. Aby dokończyć proces, potwierdź swój adres e-mail.
             </p>
             <p style="text-align: center; margin: 24px 0;">
               <a href="${verificationUrl}"
-                 style="background-color: #FF8400; color: white; padding: 14px 28px;
+                 style="background-color: #10B77F; color: white; padding: 14px 28px;
                         text-decoration: none; border-radius: 8px; font-weight: 600; display: inline-block;">
                 Zweryfikuj email
               </a>
@@ -330,11 +330,11 @@ export class EmailService {
             <img src="${this.emailLogoUrl}" alt="Staffer.pl" style="max-width: 160px; height: auto;" />
           </div>
           <div style="background: #ffffff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 28px;">
-            <h1 style="color: #FF8400; font-size: 22px; margin: 0 0 12px;">Witaj ${managerName}!</h1>
+            <h1 style="color: #10B77F; font-size: 22px; margin: 0 0 12px;">Witaj ${managerName}!</h1>
             <p style="margin: 0 0 12px; line-height: 1.6;">
               Otrzymałeś nowe zgłoszenie do dołączenia do zespołu <strong>${teamName}</strong>.
             </p>
-            <div style="background: #f3f4f6; border-left: 4px solid #FF8400; padding: 16px; margin: 20px 0; border-radius: 8px;">
+            <div style="background: #f3f4f6; border-left: 4px solid #10B77F; padding: 16px; margin: 20px 0; border-radius: 8px;">
               <p style="margin: 0 0 8px; font-weight: 600; color: #333;">Zgłoszenie od:</p>
               <p style="margin: 0; color: #555;">
                 <strong>${applicantName}</strong><br />
@@ -343,7 +343,7 @@ export class EmailService {
             </div>
             <p style="text-align: center; margin: 24px 0;">
               <a href="${dashboardUrl}"
-                 style="background-color: #FF8400; color: white; padding: 14px 28px;
+                 style="background-color: #10B77F; color: white; padding: 14px 28px;
                         text-decoration: none; border-radius: 8px; font-weight: 600; display: inline-block;">
                 Przejdź do panelu zarządzania
               </a>
@@ -413,13 +413,13 @@ export class EmailService {
             <img src="${this.emailLogoUrl}" alt="Staffer.pl" style="max-width: 160px; height: auto;" />
           </div>
           <div style="background: #ffffff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 28px;">
-            <h1 style="color: #FF8400; font-size: 22px; margin: 0 0 12px;">Witaj ${name}!</h1>
+            <h1 style="color: #10B77F; font-size: 22px; margin: 0 0 12px;">Witaj ${name}!</h1>
             <p style="margin: 0 0 12px; line-height: 1.6;">
               Otrzymaliśmy prośbę o reset hasła do Twojego konta w Staffer.pl. Jeśli to Ty, kliknij poniższy przycisk, aby ustawić nowe hasło.
             </p>
             <p style="text-align: center; margin: 24px 0;">
               <a href="${resetUrl}"
-                 style="background-color: #FF8400; color: white; padding: 14px 28px;
+                 style="background-color: #10B77F; color: white; padding: 14px 28px;
                         text-decoration: none; border-radius: 8px; font-weight: 600; display: inline-block;">
                 Zresetuj hasło
               </a>
@@ -518,7 +518,7 @@ export class EmailService {
             </div>
             <p style="text-align: center; margin: 24px 0;">
               <a href="${dashboardUrl}"
-                 style="background-color: #FF8400; color: white; padding: 14px 28px;
+                 style="background-color: #10B77F; color: white; padding: 14px 28px;
                         text-decoration: none; border-radius: 8px; font-weight: 600; display: inline-block;">
                 Przejdź do panelu
               </a>
@@ -590,7 +590,7 @@ export class EmailService {
             <img src="${this.emailLogoUrl}" alt="Staffer.pl" style="max-width: 160px; height: auto;" />
           </div>
           <div style="background: #ffffff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 28px;">
-            <h1 style="color: #FF8400; font-size: 22px; margin: 0 0 12px;">Witaj ${userName}!</h1>
+            <h1 style="color: #10B77F; font-size: 22px; margin: 0 0 12px;">Witaj ${userName}!</h1>
             <p style="margin: 0 0 12px; line-height: 1.6;">
               Niestety, Twoje zgłoszenie do zespołu <strong>${teamName}</strong> zostało odrzucone.
             </p>
@@ -601,7 +601,7 @@ export class EmailService {
             </div>
             <p style="text-align: center; margin: 24px 0;">
               <a href="${dashboardUrl}"
-                 style="background-color: #FF8400; color: white; padding: 14px 28px;
+                 style="background-color: #10B77F; color: white; padding: 14px 28px;
                         text-decoration: none; border-radius: 8px; font-weight: 600; display: inline-block;">
                 Przejdź do panelu
               </a>
@@ -680,7 +680,7 @@ export class EmailService {
             </div>
             <p style="text-align: center; margin: 24px 0;">
               <a href="${dashboardUrl}"
-                 style="background-color: #FF8400; color: white; padding: 14px 28px;
+                 style="background-color: #10B77F; color: white; padding: 14px 28px;
                         text-decoration: none; border-radius: 8px; font-weight: 600; display: inline-block;">
                 Przejdź do panelu zarządzania
               </a>
@@ -770,7 +770,7 @@ export class EmailService {
             </div>
             <p style="text-align: center; margin: 24px 0;">
               <a href="${dashboardUrl}"
-                 style="background-color: #FF8400; color: white; padding: 14px 28px;
+                 style="background-color: #10B77F; color: white; padding: 14px 28px;
                         text-decoration: none; border-radius: 8px; font-weight: 600; display: inline-block;">
                 Przejdź do panelu
               </a>
@@ -860,7 +860,7 @@ export class EmailService {
             </div>
             <p style="text-align: center; margin: 24px 0;">
               <a href="${dashboardUrl}"
-                 style="background-color: #FF8400; color: white; padding: 14px 28px;
+                 style="background-color: #10B77F; color: white; padding: 14px 28px;
                         text-decoration: none; border-radius: 8px; font-weight: 600; display: inline-block;">
                 Zaloguj się i rozpocznij
               </a>
@@ -932,7 +932,7 @@ export class EmailService {
       </div>
       <p style="text-align: center; margin: 24px 0;">
         <a href="${this.frontendUrl}/app/billing"
-           style="background-color: #FF8400; color: white; padding: 14px 28px;
+           style="background-color: #10B77F; color: white; padding: 14px 28px;
                   text-decoration: none; border-radius: 8px; font-weight: 600; display: inline-block;">
           Zarządzaj subskrypcją
         </a>

@@ -4,19 +4,14 @@ interface LogoProps {
   variant?: "full" | "icon";
   className?: string;
   showPl?: boolean;
-  /** Dla ciemnego tła — tekst biały */
   inverted?: boolean;
 }
 
-/**
- * Logo Staffer – ikona z dwoma nachodzącymi kwadratami (niebieski + pomarańczowy)
- * oraz tekst "staffer". Kolory z palety: #8FACDB, #FF8400, #0B0829
- */
 export function Logo({ variant = "full", className = "", showPl = true, inverted = false }: LogoProps) {
   const icon = (
     <>
-      <rect x="0" y="0" width="28" height="28" rx="8" fill="#8FACDB" />
-      <rect x="12" y="12" width="28" height="28" rx="8" fill="#FF8400" />
+      <rect x="0" y="0" width="28" height="28" rx="8" fill="#10B77F" fillOpacity="0.4" />
+      <rect x="12" y="12" width="28" height="28" rx="8" fill="#10B77F" />
     </>
   );
 
@@ -39,11 +34,11 @@ export function Logo({ variant = "full", className = "", showPl = true, inverted
       <text
         x="48"
         y="28"
-        fill={inverted ? "#ffffff" : "#0B0829"}
+        fill={inverted ? "#ffffff" : "#0F172A"}
         fontSize="22"
-        fontWeight="700"
-        fontFamily="var(--font-geist-sans), system-ui, sans-serif"
-        letterSpacing="-0.02em"
+        fontWeight="800"
+        fontFamily="'Inter', var(--font-geist-sans), system-ui, sans-serif"
+        letterSpacing="-0.03em"
       >
         staffer{showPl && ".pl"}
       </text>

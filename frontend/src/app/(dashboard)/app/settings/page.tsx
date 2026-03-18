@@ -50,7 +50,7 @@ const TABS: { id: TabId; label: string; icon: React.ReactNode }[] = [
 ];
 
 const POSITION_COLORS = [
-  "#8FACDB", "#FF8400", "#6B8E23", "#E74C3C", "#9B59B6",
+  "#10B77F", "#0F172A", "#6B8E23", "#E74C3C", "#9B59B6",
   "#1ABC9C", "#F39C12", "#3498DB", "#E67E22", "#2ECC71",
   "#E91E63", "#00BCD4", "#795548", "#607D8B",
 ];
