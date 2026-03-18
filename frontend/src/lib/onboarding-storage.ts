@@ -2,6 +2,7 @@ const KEY_WIZARD_SKIPPED = "shiftapp_onboarding_wizard_skipped";
 const KEY_WIZARD_DONE = "shiftapp_onboarding_wizard_done";
 const KEY_TOUR_SKIPPED = "shiftapp_app_tour_skipped";
 const KEY_TOUR_DONE = "shiftapp_app_tour_done";
+const KEY_CHECKLIST_DISMISSED = "shiftapp_setup_checklist_dismissed";
 
 export function getOnboardingWizardSkipped(): boolean {
   if (typeof window === "undefined") return false;
@@ -41,4 +42,14 @@ export function getAppTourDone(): boolean {
 export function setAppTourDone(): void {
   if (typeof window === "undefined") return;
   localStorage.setItem(KEY_TOUR_DONE, "1");
+}
+
+export function getSetupChecklistDismissed(): boolean {
+  if (typeof window === "undefined") return false;
+  return localStorage.getItem(KEY_CHECKLIST_DISMISSED) === "1";
+}
+
+export function setSetupChecklistDismissed(): void {
+  if (typeof window === "undefined") return;
+  localStorage.setItem(KEY_CHECKLIST_DISMISSED, "1");
 }

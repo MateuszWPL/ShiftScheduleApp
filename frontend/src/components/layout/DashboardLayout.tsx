@@ -4,6 +4,7 @@ import { usePathname } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { getPlanStatus } from "@/lib/api";
 import { AppTour } from "@/components/onboarding/AppTour";
+import { OnboardingChecklist } from "@/components/onboarding/OnboardingChecklist";
 import { LimitExceededBanner } from "@/components/billing/LimitExceededBanner";
 import { Button } from "@/components/ui/button";
 import {
@@ -309,6 +310,7 @@ export function DashboardLayout({ children, userRole, userName, userAvatar, onLo
       </main>
 
       <AppTour userRole={userRole} />
+      <OnboardingChecklist userRole={userRole} />
     </div>
   );
 }
