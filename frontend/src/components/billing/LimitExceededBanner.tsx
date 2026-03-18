@@ -14,7 +14,7 @@ import { useDashboardUser } from "@/components/providers/DashboardUserContext";
  */
 export function LimitExceededBanner() {
   const { dbUser } = useDashboardUser();
-  const isOwner = dbUser?.role === "OWNER";
+  const isAdmin = dbUser?.role === "ADMIN";
 
   const { data: planStatus } = useQuery({
     queryKey: ["plan-status"],
@@ -45,7 +45,7 @@ export function LimitExceededBanner() {
             zablokowane.
           </p>
           <div className="flex items-center gap-3 mt-2">
-            {isOwner && (
+            {isAdmin && (
               <Link
                 href={paths.billing}
                 className="inline-flex items-center gap-1 text-xs font-semibold text-brand hover:text-brand-light transition-colors"

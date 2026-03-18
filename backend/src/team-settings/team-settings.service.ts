@@ -90,13 +90,9 @@ export class TeamSettingsService {
     return this.getSettings(userId);
   }
 
-  /** Regenerate invite code (OWNER only) */
+  /** Regenerate invite code (ADMIN only) */
   async regenerateInviteCode(userId: string) {
     const membership = await this.requireAdmin(userId);
-
-    if (membership.role !== Role.OWNER) {
-      throw new ForbiddenException('Tylko właściciel może regenerować kod zaproszenia');
-    }
 
     const newCode = nanoid(12);
 
@@ -196,7 +192,7 @@ export class TeamSettingsService {
       try {
         await this.emailService.sendTeamInvitationEmail(
           email,
-          user?.name || 'Manager',
+          user?.name || 'Administrator',
           team.name,
           team.inviteCode,
         );
@@ -227,11 +223,8 @@ export class TeamSettingsService {
 
     if (!membership) throw new ForbiddenException('Brak aktywnego zespołu');
 
-    if (
-      membership.role !== Role.OWNER &&
-      membership.role !== Role.MANAGER
-    ) {
-      throw new ForbiddenException('Tylko właściciel lub menedżer ma dostęp do ustawień');
+    if (membership.role !== Role.ADMIN) {
+      throw new ForbiddenException('Tylko Administrator ma dostęp do ustawień');
     }
 
     return membership;

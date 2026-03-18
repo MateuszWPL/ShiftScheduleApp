@@ -51,7 +51,7 @@ export class ShiftsService {
   }
 
   /** Lista zmian zespołu (grafik). Opcjonalny filtr dat from/to. 
-   *  Pracownicy widzą tylko PUBLISHED/COMPLETED. Manager/Owner widzi też DRAFT.
+   *  Pracownicy widzą tylko PUBLISHED/COMPLETED. Admin widzi też DRAFT.
    */
   async findAll(
     userId: string,
@@ -65,14 +65,14 @@ export class ShiftsService {
       return [];
     }
 
-    const isManager = activeMembership.role === Role.OWNER || activeMembership.role === Role.MANAGER;
+    const isAdmin = activeMembership.role === Role.ADMIN;
 
     const where: Record<string, any> = {
       teamId: activeMembership.teamId,
     };
 
     // Employees only see published/completed shifts (not drafts)
-    if (!isManager) {
+    if (!isAdmin) {
       where.status = { in: [ShiftStatus.PUBLISHED, ShiftStatus.COMPLETED] };
     }
 
@@ -97,7 +97,7 @@ export class ShiftsService {
   }
 
   /** Podsumowanie okresu: godziny per pracownik, ostrzeżenia (maxHours, brak dostępności) */
-  async getSummary(userId: string, from: string, to: string, callerRole: string = 'OWNER') {
+  async getSummary(userId: string, from: string, to: string, callerRole: string = 'ADMIN') {
     const membership = await this.prisma.teamMembership.findFirst({
       where: { userId, status: MembershipStatus.ACTIVE },
     });
@@ -105,7 +105,7 @@ export class ShiftsService {
       throw new BadRequestException('Brak aktywnego zespołu.');
     }
 
-    const isAdmin = callerRole === 'OWNER' || callerRole === 'MANAGER';
+    const isAdmin = callerRole === 'ADMIN';
     const fromDate = new Date(from);
     const toDate = new Date(to);
 
@@ -228,7 +228,7 @@ export class ShiftsService {
     return shift;
   }
 
-  /** Aktualizacja zmiany (godziny, rola, status) – Owner/Manager. */
+  /** Aktualizacja zmiany (godziny, rola, status) – Admin. */
   async updateShift(
     requesterId: string,
     shiftId: string,
@@ -240,8 +240,8 @@ export class ShiftsService {
     if (!membership) {
       throw new BadRequestException('Brak aktywnego członkostwa.');
     }
-    if (membership.role !== Role.OWNER && membership.role !== Role.MANAGER) {
-      throw new ForbiddenException('Tylko Owner/Manager może edytować zmiany.');
+    if (membership.role !== Role.ADMIN) {
+      throw new ForbiddenException('Tylko Administrator może edytować zmiany.');
     }
     const shift = await this.prisma.shift.findFirst({
       where: { id: shiftId, teamId: membership.teamId },
@@ -277,7 +277,7 @@ export class ShiftsService {
     });
   }
 
-  /** Usunięcie zmiany (Owner/Manager). */
+  /** Usunięcie zmiany (Admin). */
   async deleteShift(requesterId: string, shiftId: string) {
     const membership = await this.prisma.teamMembership.findFirst({
       where: { userId: requesterId, status: MembershipStatus.ACTIVE },
@@ -285,8 +285,8 @@ export class ShiftsService {
     if (!membership) {
       throw new BadRequestException('Brak aktywnego członkostwa.');
     }
-    if (membership.role !== Role.OWNER && membership.role !== Role.MANAGER) {
-      throw new ForbiddenException('Tylko Owner/Manager może usuwać zmiany.');
+    if (membership.role !== Role.ADMIN) {
+      throw new ForbiddenException('Tylko Administrator może usuwać zmiany.');
     }
 
     const shift = await this.prisma.shift.findFirst({
@@ -329,8 +329,8 @@ export class ShiftsService {
       throw new BadRequestException('Musisz należeć do zespołu (ACTIVE), żeby tworzyć zmiany.');
     }
 
-    if (membership.role !== Role.OWNER && membership.role !== Role.MANAGER) {
-      throw new ForbiddenException('Tylko Owner lub Manager może tworzyć zmiany.');
+    if (membership.role !== Role.ADMIN) {
+      throw new ForbiddenException('Tylko Administrator może tworzyć zmiany.');
     }
 
     await this.ensureTeamNotLimitExceeded(membership.teamId);
@@ -407,8 +407,8 @@ export class ShiftsService {
     if (!membership) {
       throw new BadRequestException('Brak aktywnego członkostwa.');
     }
-    if (membership.role !== Role.OWNER && membership.role !== Role.MANAGER) {
-      throw new ForbiddenException('Tylko Owner/Manager może dodawać przypisania.');
+    if (membership.role !== Role.ADMIN) {
+      throw new ForbiddenException('Tylko Administrator może dodawać przypisania.');
     }
 
     const shift = await this.prisma.shift.findFirst({
@@ -486,7 +486,7 @@ export class ShiftsService {
     return created;
   }
 
-  /** Usunięcie przypisania (tylko Owner/Manager). */
+  /** Usunięcie przypisania (tylko Admin). */
   async removeAssignment(requesterId: string, assignmentId: string) {
     const membership = await this.prisma.teamMembership.findFirst({
       where: { userId: requesterId, status: MembershipStatus.ACTIVE },
@@ -494,8 +494,8 @@ export class ShiftsService {
     if (!membership) {
       throw new BadRequestException('Brak aktywnego członkostwa.');
     }
-    if (membership.role !== Role.OWNER && membership.role !== Role.MANAGER) {
-      throw new ForbiddenException('Tylko Owner/Manager może usuwać przypisania.');
+    if (membership.role !== Role.ADMIN) {
+      throw new ForbiddenException('Tylko Administrator może usuwać przypisania.');
     }
 
     const assignment = await this.prisma.shiftAssignment.findFirst({
@@ -510,7 +510,7 @@ export class ShiftsService {
     return { success: true };
   }
 
-  /** Edycja przypisania (Owner/Manager): zmiana użytkownika lub ustawienie giełdy. */
+  /** Edycja przypisania (Admin): zmiana użytkownika lub ustawienie giełdy. */
   async updateAssignment(
     requesterId: string,
     assignmentId: string,
@@ -522,8 +522,8 @@ export class ShiftsService {
     if (!membership) {
       throw new BadRequestException('Brak aktywnego członkostwa.');
     }
-    if (membership.role !== Role.OWNER && membership.role !== Role.MANAGER) {
-      throw new ForbiddenException('Tylko Owner/Manager może edytować przypisania.');
+    if (membership.role !== Role.ADMIN) {
+      throw new ForbiddenException('Tylko Administrator może edytować przypisania.');
     }
 
     const assignment = await this.prisma.shiftAssignment.findFirst({
@@ -707,8 +707,8 @@ export class ShiftsService {
     if (!membership) {
       throw new BadRequestException('Brak aktywnego członkostwa.');
     }
-    if (membership.role !== Role.OWNER && membership.role !== Role.MANAGER) {
-      throw new ForbiddenException('Tylko Owner/Manager może publikować grafik.');
+    if (membership.role !== Role.ADMIN) {
+      throw new ForbiddenException('Tylko Administrator może publikować grafik.');
     }
 
     await this.ensureTeamNotLimitExceeded(membership.teamId);
@@ -766,7 +766,7 @@ export class ShiftsService {
       }
     }
 
-    // Publish shifts (even with warnings — manager decides)
+    // Publish shifts (even with warnings — admin decides)
     const result = await this.prisma.shift.updateMany({
       where: {
         id: { in: shiftIds },
@@ -805,7 +805,7 @@ export class ShiftsService {
     targetWeekStart: string,
     structureOnly: boolean,
   ) {
-    const membership = await this.requireManager(requesterId);
+    const membership = await this.requireAdmin(requesterId);
     const sourceShifts = await this.getWeekShifts(membership.teamId, sourceWeekStart);
 
     return sourceShifts.map((shift) => ({
@@ -832,7 +832,7 @@ export class ShiftsService {
     targetWeekStart: string,
     structureOnly: boolean,
   ) {
-    const membership = await this.requireManager(requesterId);
+    const membership = await this.requireAdmin(requesterId);
 
     // Verify target week is empty (prevent accidental duplicates)
     const targetShifts = await this.getWeekShifts(membership.teamId, targetWeekStart);
@@ -914,15 +914,15 @@ export class ShiftsService {
     return new Date(target.getTime() + diffMs);
   }
 
-  private async requireManager(userId: string) {
+  private async requireAdmin(userId: string) {
     const membership = await this.prisma.teamMembership.findFirst({
       where: { userId, status: MembershipStatus.ACTIVE },
     });
     if (!membership) {
       throw new BadRequestException('Brak aktywnego członkostwa.');
     }
-    if (membership.role !== Role.OWNER && membership.role !== Role.MANAGER) {
-      throw new ForbiddenException('Tylko Owner/Manager może wykonać tę operację.');
+    if (membership.role !== Role.ADMIN) {
+      throw new ForbiddenException('Tylko Administrator może wykonać tę operację.');
     }
     return membership;
   }
@@ -1074,7 +1074,7 @@ export class ShiftsService {
           userId,
           teamId: team.id,
           status: MembershipStatus.ACTIVE,
-          role: Role.OWNER,
+          role: Role.ADMIN,
           approvedAt: new Date(),
           approvedBy: userId,
         },
@@ -1084,7 +1084,7 @@ export class ShiftsService {
         where: { id: userId },
         data: {
           teamId: team.id,
-          role: Role.OWNER,
+          role: Role.ADMIN,
         },
         include: { team: true },
       });
@@ -1095,7 +1095,7 @@ export class ShiftsService {
         this.emailService
           .sendWelcomeEmailOwner(
             result.user.email,
-            result.user.name || 'Właścicielu',
+            result.user.name || 'Administratorze',
             result.team.name,
           )
           .catch(() => {});
@@ -1160,7 +1160,7 @@ export class ShiftsService {
       where: {
         teamId: team.id,
         status: MembershipStatus.ACTIVE,
-        role: { in: [Role.OWNER, Role.MANAGER] },
+        role: Role.ADMIN,
       },
       include: {
         user: {
@@ -1177,7 +1177,7 @@ export class ShiftsService {
         this.emailService
           .sendJoinRequestNotification(
             membership.user.email,
-            membership.user.name || 'Menedżerze',
+            membership.user.name || 'Administratorze',
             applicant.name || 'Użytkownik',
             applicant.email,
             team.name,
@@ -1275,8 +1275,8 @@ export class ShiftsService {
       throw new BadRequestException('Brak aktywnego członkostwa.');
     }
 
-    if (requesterMembership.role !== Role.OWNER && requesterMembership.role !== Role.MANAGER) {
-      throw new ForbiddenException('Brak uprawnień. Tylko Owner/Manager może to robić.');
+    if (requesterMembership.role !== Role.ADMIN) {
+      throw new ForbiddenException('Brak uprawnień. Tylko Administrator może to robić.');
     }
 
     const targetMembership = await this.prisma.teamMembership.findFirst({
@@ -1321,8 +1321,8 @@ export class ShiftsService {
     if (!requesterMembership) {
       throw new BadRequestException('Brak aktywnego członkostwa.');
     }
-    if (requesterMembership.role !== Role.OWNER && requesterMembership.role !== Role.MANAGER) {
-      throw new ForbiddenException('Brak uprawnień. Tylko Owner/Manager może to robić.');
+    if (requesterMembership.role !== Role.ADMIN) {
+      throw new ForbiddenException('Brak uprawnień. Tylko Administrator może to robić.');
     }
 
     return this.prisma.teamMembership.findMany({
@@ -1343,8 +1343,8 @@ export class ShiftsService {
     if (!requesterMembership) {
       throw new BadRequestException('Brak aktywnego członkostwa.');
     }
-    if (requesterMembership.role !== Role.OWNER && requesterMembership.role !== Role.MANAGER) {
-      throw new ForbiddenException('Brak uprawnień. Tylko Owner/Manager może to robić.');
+    if (requesterMembership.role !== Role.ADMIN) {
+      throw new ForbiddenException('Brak uprawnień. Tylko Administrator może to robić.');
     }
 
     const membership = await this.prisma.teamMembership.findUnique({
@@ -1438,8 +1438,8 @@ export class ShiftsService {
     if (!requesterMembership) {
       throw new BadRequestException('Brak aktywnego członkostwa.');
     }
-    if (requesterMembership.role !== Role.OWNER && requesterMembership.role !== Role.MANAGER) {
-      throw new ForbiddenException('Brak uprawnień. Tylko Owner/Manager może to robić.');
+    if (requesterMembership.role !== Role.ADMIN) {
+      throw new ForbiddenException('Brak uprawnień. Tylko Administrator może to robić.');
     }
 
     const membership = await this.prisma.teamMembership.findUnique({

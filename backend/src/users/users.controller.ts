@@ -21,7 +21,7 @@ export class UsersController {
 
   @Post('shadow-profile')
   @UseGuards(RolesGuard)
-  @Roles('OWNER', 'MANAGER')
+  @Roles('ADMIN')
   async createShadowProfile(
     @Body() createDto: CreateShadowProfileDto,
     @CurrentUser() user: CurrentUserType,

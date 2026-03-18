@@ -29,7 +29,7 @@ const BASE_STEPS = [
   { id: "podsumowanie", target: "[data-tour='nav-podsumowanie']", href: "/podsumowanie", title: "Podsumowanie", content: "Godziny przepracowane, podsumowanie tygodnia i miesięczny widok." },
   { id: "zespol", target: "[data-tour='nav-team']", href: "/team", title: "Pracownicy", content: "Lista zespołu, zarządzanie pracownikami i przypisywanie stanowisk." },
   { id: "profil", target: "[data-tour='nav-profile']", href: "/profile", title: "Mój Profil", content: "Edytuj swoje dane, zdjęcie i ustawienia." },
-  { id: "ustawienia", target: "[data-tour='nav-settings']", href: "/settings", title: "Ustawienia", content: "Zarządzaj firmą, stanowiskami, zaproszeniami i preferencjami grafiku.", show: (role: string) => role === "OWNER" || role === "MANAGER" },
+  { id: "ustawienia", target: "[data-tour='nav-settings']", href: "/settings", title: "Ustawienia", content: "Zarządzaj firmą, stanowiskami, zaproszeniami i preferencjami grafiku.", show: (role: string) => role === "ADMIN" },
 ];
 
 function getTourSteps(userRole: string) {

@@ -344,7 +344,7 @@ export interface User {
   id: string;
   name: string;
   email: string | null;
-  role: "OWNER" | "MANAGER" | "EMPLOYEE";
+  role: "ADMIN" | "EMPLOYEE";
   phoneNumber?: string | null;
   skills: string[];
   avatarUrl?: string | null;
@@ -358,7 +358,7 @@ export interface User {
 export interface PublicUser {
   id: string;
   name: string;
-  role: "OWNER" | "MANAGER" | "EMPLOYEE";
+  role: "ADMIN" | "EMPLOYEE";
   skills: string[];
   avatarUrl?: string | null;
   status?: "ACTIVE" | "UNCLAIMED";

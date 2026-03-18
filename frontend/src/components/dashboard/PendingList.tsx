@@ -16,8 +16,7 @@ interface Props {
 export function PendingList({ currentUserRole }: Props) {
   const { data: session } = useSession();
   const queryClient = useQueryClient();
-  const isAdmin = currentUserRole === "OWNER" || currentUserRole === "MANAGER";
-  const isOwner = currentUserRole === "OWNER";
+  const isAdmin = currentUserRole === "ADMIN";
 
   const { data: pending, isLoading } = useQuery({
     queryKey: ["pending-members"],
@@ -50,7 +49,7 @@ export function PendingList({ currentUserRole }: Props) {
         description: `Plan ${planLabel} pozwala na maksymalnie ${limit} ${
           limit === 1 ? "pracownika" : limit < 5 ? "pracowników" : "pracowników"
         }. Ulepsz plan, aby zatwierdzić ${item.user.name || "nowego pracownika"}.`,
-        action: isOwner
+        action: isAdmin
           ? {
               label: "Ulepsz plan",
               onClick: () => {
@@ -79,7 +78,7 @@ export function PendingList({ currentUserRole }: Props) {
     onError: (err: Error) => {
       toast.error("Błąd akceptacji", {
         description: err.message,
-        action: isOwner && err.message.toLowerCase().includes("limit")
+        action: isAdmin && err.message.toLowerCase().includes("limit")
           ? { label: "Ulepsz plan", onClick: () => { window.location.href = paths.billing; } }
           : undefined,
         duration: 7000,
@@ -121,7 +120,7 @@ export function PendingList({ currentUserRole }: Props) {
             <span className="text-brand-dark-muted">
               Nie możesz zatwierdzić nowych zgłoszeń.
             </span>{" "}
-            {isOwner && (
+            {isAdmin && (
               <Link href={paths.billing} className="inline-flex items-center gap-0.5 font-semibold text-brand hover:underline">
                 <Crown className="h-3 w-3" />
                 Ulepsz plan

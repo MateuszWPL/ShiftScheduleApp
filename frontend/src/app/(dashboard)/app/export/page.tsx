@@ -128,7 +128,7 @@ function ExportCard({
 
 export default function ExportPage() {
   const { dbUser } = useDashboardUser();
-  const isAdmin = dbUser?.role === "OWNER" || dbUser?.role === "MANAGER";
+  const isAdmin = dbUser?.role === "ADMIN";
   const [range, setRange] = useState("this-month");
   const [loadingSchedule, setLoadingSchedule] = useState(false);
   const [loadingHours, setLoadingHours] = useState(false);

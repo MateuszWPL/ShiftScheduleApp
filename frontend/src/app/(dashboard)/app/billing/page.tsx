@@ -141,24 +141,24 @@ export default function BillingPage() {
   const searchParams = useSearchParams();
   const queryClient = useQueryClient();
 
-  const isOwner = dbUser?.role === "OWNER";
+  const isAdmin = dbUser?.role === "ADMIN";
 
   useEffect(() => {
-    if (dbUser && !isOwner) {
+    if (dbUser && !isAdmin) {
       router.replace(paths.home);
     }
-  }, [dbUser, isOwner, router]);
+  }, [dbUser, isAdmin, router]);
 
   const { data: subscription, isLoading } = useQuery({
     queryKey: ["subscription"],
     queryFn: getSubscription,
-    enabled: isOwner,
+    enabled: isAdmin,
   });
 
   const { data: planStatus } = useQuery({
     queryKey: ["plan-status"],
     queryFn: getPlanStatus,
-    enabled: isOwner,
+    enabled: isAdmin,
   });
 
   useEffect(() => {
@@ -176,7 +176,7 @@ export default function BillingPage() {
     }
   }, [searchParams, queryClient, router]);
 
-  if (!isOwner) {
+  if (!isAdmin) {
     return (
       <div className="flex items-center justify-center min-h-[300px] text-brand-dark-muted">
         Przekierowuję...

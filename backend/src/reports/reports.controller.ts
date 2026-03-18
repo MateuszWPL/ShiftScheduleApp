@@ -34,7 +34,7 @@ export class ReportsController {
     @Query() query: ReportQueryDto,
   ) {
     if (user.role === 'EMPLOYEE') {
-      throw new ForbiddenException('Raport kosztów jest dostępny tylko dla właściciela i menedżera.');
+      throw new ForbiddenException('Raport kosztów jest dostępny tylko dla Administratora.');
     }
     return this.reportsService.getCostsReport(user.userId, query.from, query.to);
   }

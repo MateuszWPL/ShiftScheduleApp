@@ -347,17 +347,15 @@ export default function ProfilePage() {
           <div>
             <p className="text-[11px] sm:text-xs font-medium text-brand-dark-muted uppercase tracking-wider">Rola w zespole</p>
             <p className="text-sm sm:text-base font-semibold text-brand-dark mt-1">
-              {user.role === "OWNER" ? "Właściciel" : user.role === "MANAGER" ? "Menedżer" : "Pracownik"}
+              {user.role === "ADMIN" ? "Administrator" : "Pracownik"}
             </p>
           </div>
           <div className={`px-3 py-1 rounded-full text-xs font-medium ${
-            user.role === "OWNER"
+            user.role === "ADMIN"
               ? "bg-amber-50 text-amber-700 border border-amber-200"
-              : user.role === "MANAGER"
-              ? "bg-blue-50 text-blue-700 border border-blue-200"
               : "bg-green-50 text-green-700 border border-green-200"
           }`}>
-            {user.role === "OWNER" ? "Owner" : user.role === "MANAGER" ? "Manager" : "Employee"}
+            {user.role === "ADMIN" ? "Admin" : "Employee"}
           </div>
         </div>
       </div>

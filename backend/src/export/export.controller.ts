@@ -51,7 +51,7 @@ export class ExportController {
     @CurrentUser() user: { userId: string; role: string },
   ): Promise<StreamableFile> {
     if (user.role === 'EMPLOYEE') {
-      throw new ForbiddenException('Eksport listy pracowników jest dostępny tylko dla właściciela i menedżera.');
+      throw new ForbiddenException('Eksport listy pracowników jest dostępny tylko dla Administratora.');
     }
     const csv = await this.exportService.exportEmployeesCsv(user.userId);
     const today = new Date().toISOString().slice(0, 10);

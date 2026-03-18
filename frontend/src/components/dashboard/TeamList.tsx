@@ -27,7 +27,7 @@ export function TeamList({ currentUserId, currentUserRole }: Props) {
 
   if (isLoading) return <div className="p-4 text-sm text-brand-dark-muted">Ładowanie zespołu...</div>;
 
-  const isBoss = currentUserRole === 'OWNER' || currentUserRole === 'MANAGER';
+  const isBoss = currentUserRole === 'ADMIN';
 
   return (
     <>
@@ -43,7 +43,7 @@ export function TeamList({ currentUserId, currentUserRole }: Props) {
               <div>
                 <div className="flex items-center gap-2">
                   <p className="text-sm font-bold text-brand-dark">{member.name}</p>
-                  <Badge variant={member.role === 'OWNER' ? 'default' : 'secondary'} className="text-[10px] h-5">
+                  <Badge variant={member.role === 'ADMIN' ? 'default' : 'secondary'} className="text-[10px] h-5">
                     {member.role}
                   </Badge>
                 </div>

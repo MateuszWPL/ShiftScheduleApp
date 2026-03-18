@@ -18,7 +18,7 @@ function getWeekMonday(d: Date): Date {
 
 export default function PodsumowaniePage() {
   const { dbUser } = useDashboardUser();
-  const isAdmin = dbUser?.role === "OWNER" || dbUser?.role === "MANAGER";
+  const isAdmin = dbUser?.role === "ADMIN";
   const [viewMode, setViewMode] = useState<"week" | "month">("week");
   const [weekStart, setWeekStart] = useState(() => getWeekMonday(new Date()));
   const [monthDate, setMonthDate] = useState(() => new Date());

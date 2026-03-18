@@ -84,7 +84,7 @@ export function JoinTeamFlow({ initialCode, onBack }: Props) {
               {pendingTeamName && (
                 <span className="font-semibold text-brand-dark">&ldquo;{pendingTeamName}&rdquo;</span>
               )}{" "}
-              została wysłana. Powiadomimy Cię, gdy Manager ją zaakceptuje.
+              została wysłana. Powiadomimy Cię, gdy Administrator ją zaakceptuje.
             </p>
           </div>
 
@@ -120,7 +120,7 @@ export function JoinTeamFlow({ initialCode, onBack }: Props) {
           <p className="text-sm text-brand-dark-muted mt-1">
             {initialCode
               ? "Znaleziono kod zaproszenia. Dołączanie do zespołu..."
-              : "Wpisz kod otrzymany od Managera, aby uzyskać dostęp do panelu."}
+              : "Wpisz kod otrzymany od Administratora, aby uzyskać dostęp do panelu."}
           </p>
         </div>
 

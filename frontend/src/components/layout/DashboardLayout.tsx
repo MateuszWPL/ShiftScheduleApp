@@ -80,9 +80,8 @@ function NavLink({
 
 export function DashboardLayout({ children, userRole, userName, userAvatar, onLogout }: Props) {
   const pathname = usePathname();
-  const roleLabel = userRole === "OWNER" ? "Właściciel" : userRole === "MANAGER" ? "Menedżer" : "Pracownik";
-  const isAdmin = userRole === "OWNER" || userRole === "MANAGER";
-  const isOwner = userRole === "OWNER";
+  const roleLabel = userRole === "ADMIN" ? "Administrator" : "Pracownik";
+  const isAdmin = userRole === "ADMIN";
 
   const { data: planStatus } = useQuery({
     queryKey: ["plan-status"],
@@ -186,7 +185,7 @@ export function DashboardLayout({ children, userRole, userName, userAvatar, onLo
         </div>
 
         {/* Ulepsz do Pro / Zarządzaj planem */}
-        {isOwner && (
+        {isAdmin && (
           <div className="border-t border-brand-warm p-3">
             <Link
               href={paths.billing}
@@ -279,7 +278,7 @@ export function DashboardLayout({ children, userRole, userName, userAvatar, onLo
                 ...(userRole === "EMPLOYEE" ? [{ href: paths.dostepnosc, icon: <CalendarCheck className="h-4 w-4 shrink-0" />, label: "Dostępn.", tourId: "nav-dostepnosc" }] : []),
                 { href: paths.team, icon: <Users className="h-4 w-4 shrink-0" />, label: "Zespół", tourId: "nav-team" },
                 { href: paths.profile, icon: <User className="h-4 w-4 shrink-0" />, label: "Profil", tourId: "nav-profile" },
-                ...(isOwner ? [{ href: paths.billing, icon: <Crown className="h-4 w-4 shrink-0" />, label: hasStarter ? "Zarządzaj planem" : "Ulepsz plan", tourId: "nav-billing" }] : []),
+                ...(isAdmin ? [{ href: paths.billing, icon: <Crown className="h-4 w-4 shrink-0" />, label: hasStarter ? "Zarządzaj planem" : "Ulepsz plan", tourId: "nav-billing" }] : []),
                 ...(isAdmin ? [{ href: paths.settings, icon: <Settings className="h-4 w-4 shrink-0" />, label: "Ustawienia", tourId: "nav-settings" }] : []),
               ].map((item) => (
                 <Link

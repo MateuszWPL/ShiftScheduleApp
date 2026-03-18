@@ -58,12 +58,12 @@ export class ReportsService {
   }
 
   private isAdmin(role: string): boolean {
-    return role === 'OWNER' || role === 'MANAGER';
+    return role === 'ADMIN';
   }
 
   // ── Raport godzin pracy ─────────────────────────────────────
 
-  async getHoursReport(userId: string, from: string, to: string, callerRole: string = 'OWNER') {
+  async getHoursReport(userId: string, from: string, to: string, callerRole: string = 'ADMIN') {
     const teamId = await this.getTeamId(userId);
     const fromDate = new Date(from);
     const toDate = new Date(to);
@@ -174,7 +174,7 @@ export class ReportsService {
 
   // ── Raport zgodności z Kodeksem Pracy ───────────────────────
 
-  async getComplianceReport(userId: string, from: string, to: string, callerRole: string = 'OWNER') {
+  async getComplianceReport(userId: string, from: string, to: string, callerRole: string = 'ADMIN') {
     const teamId = await this.getTeamId(userId);
     const fromDate = new Date(from);
     const toDate = new Date(to);

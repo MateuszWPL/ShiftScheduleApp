@@ -34,7 +34,7 @@ export function PendingView({ userName, onLogout }: Props) {
                 Twoja prośba o dołączenie została wysłana
               </p>
               <p className="text-xs text-brand-dark-muted mt-1">
-                Manager otrzyma powiadomienie i wkrótce rozpatrzy Twoją prośbę. 
+                Administrator otrzyma powiadomienie i wkrótce rozpatrzy Twoją prośbę. 
                 Gdy zostaniesz zaakceptowany, otrzymasz dostęp do grafiku zmian.
               </p>
             </div>

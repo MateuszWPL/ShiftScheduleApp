@@ -31,8 +31,7 @@ export class UsersService {
       },
     });
 
-    // Jeśli użytkownik jest OWNER lub MANAGER, zwróć pełne dane
-    if (userRole === 'OWNER' || userRole === 'MANAGER') {
+    if (userRole === 'ADMIN') {
       return users.map((user: any) => ({
         id: user.id,
         email: user.email,
@@ -75,8 +74,7 @@ export class UsersService {
       throw new ForbiddenException('Brak dostępu do tego użytkownika');
     }
 
-    // Jeśli requester jest OWNER lub MANAGER, zwróć pełne dane
-    if (requesterRole === 'OWNER' || requesterRole === 'MANAGER') {
+    if (requesterRole === 'ADMIN') {
       const u = user as any;
       return {
         id: u.id,

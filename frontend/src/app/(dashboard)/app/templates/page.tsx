@@ -60,7 +60,7 @@ const MAX_TEMPLATES = 20;
 
 export default function TemplatesPage() {
   const { dbUser } = useDashboardUser();
-  const isAdmin = dbUser?.role === "OWNER" || dbUser?.role === "MANAGER";
+  const isAdmin = dbUser?.role === "ADMIN";
 
   const { data: planStatus } = useQuery({
     queryKey: ["plan-status"],
@@ -124,7 +124,7 @@ export default function TemplatesPage() {
           Szablony grafiku
         </h2>
         <p className="text-sm text-brand-dark-muted max-w-sm">
-          Szablony są dostępne tylko dla właścicieli i menedżerów.
+          Szablony są dostępne tylko dla administratorów.
         </p>
       </div>
     );

@@ -45,12 +45,12 @@ export class ExportService {
   }
 
   private isAdmin(role: string): boolean {
-    return role === 'OWNER' || role === 'MANAGER';
+    return role === 'ADMIN';
   }
 
   // ── Eksport grafiku do CSV ───────────────────────────────────
 
-  async exportScheduleCsv(userId: string, from: string, to: string, callerRole: string = 'OWNER'): Promise<string> {
+  async exportScheduleCsv(userId: string, from: string, to: string, callerRole: string = 'ADMIN'): Promise<string> {
     const teamId = await this.getTeamId(userId);
     const fromDate = new Date(from);
     const toDate = new Date(to);
@@ -112,7 +112,7 @@ export class ExportService {
 
   // ── Eksport raportu godzin do CSV ────────────────────────────
 
-  async exportHoursCsv(userId: string, from: string, to: string, callerRole: string = 'OWNER'): Promise<string> {
+  async exportHoursCsv(userId: string, from: string, to: string, callerRole: string = 'ADMIN'): Promise<string> {
     const teamId = await this.getTeamId(userId);
     const fromDate = new Date(from);
     const toDate = new Date(to);
@@ -237,8 +237,7 @@ export class ExportService {
     ]);
 
     const roleLabels: Record<string, string> = {
-      OWNER: 'Właściciel',
-      MANAGER: 'Menedżer',
+      ADMIN: 'Administrator',
       EMPLOYEE: 'Pracownik',
     };
 

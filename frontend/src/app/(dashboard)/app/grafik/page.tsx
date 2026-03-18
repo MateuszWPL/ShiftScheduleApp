@@ -409,7 +409,7 @@ export default function GrafikPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
-  const isAdmin = dbUser?.role === "OWNER" || dbUser?.role === "MANAGER";
+  const isAdmin = dbUser?.role === "ADMIN";
 
   const handleCellClick = (employeeId: string, dateKey: string) => {
     setEditShift(null);

@@ -20,19 +20,16 @@ export class TemplatesService {
 
   constructor(private readonly prisma: PrismaService) {}
 
-  private async requireManager(userId: string) {
+  private async requireAdmin(userId: string) {
     const membership = await this.prisma.teamMembership.findFirst({
       where: { userId, status: MembershipStatus.ACTIVE },
     });
     if (!membership) {
       throw new ForbiddenException('Brak aktywnego członkostwa w zespole.');
     }
-    if (
-      membership.role !== Role.OWNER &&
-      membership.role !== Role.MANAGER
-    ) {
+    if (membership.role !== Role.ADMIN) {
       throw new ForbiddenException(
-        'Tylko Owner lub Manager może zarządzać szablonami.',
+        'Tylko Administrator może zarządzać szablonami.',
       );
     }
     return membership;
@@ -50,7 +47,7 @@ export class TemplatesService {
   }
 
   async getAll(userId: string) {
-    const membership = await this.requireManager(userId);
+    const membership = await this.requireAdmin(userId);
 
     return this.prisma.scheduleTemplate.findMany({
       where: { teamId: membership.teamId },
@@ -63,7 +60,7 @@ export class TemplatesService {
   }
 
   async getOne(userId: string, templateId: string) {
-    const membership = await this.requireManager(userId);
+    const membership = await this.requireAdmin(userId);
 
     const template = await this.prisma.scheduleTemplate.findUnique({
       where: { id: templateId },
@@ -86,7 +83,7 @@ export class TemplatesService {
   }
 
   async create(userId: string, dto: CreateTemplateDto) {
-    const membership = await this.requireManager(userId);
+    const membership = await this.requireAdmin(userId);
     await this.ensureTemplateLimit(membership.teamId);
 
     const template = await this.prisma.scheduleTemplate.create({
@@ -121,7 +118,7 @@ export class TemplatesService {
   }
 
   async createFromWeek(userId: string, dto: CreateTemplateFromWeekDto) {
-    const membership = await this.requireManager(userId);
+    const membership = await this.requireAdmin(userId);
     await this.ensureTemplateLimit(membership.teamId);
 
     const from = new Date(dto.weekStart);
@@ -182,7 +179,7 @@ export class TemplatesService {
   }
 
   async update(userId: string, templateId: string, dto: UpdateTemplateDto) {
-    const membership = await this.requireManager(userId);
+    const membership = await this.requireAdmin(userId);
 
     const template = await this.prisma.scheduleTemplate.findUnique({
       where: { id: templateId },
@@ -237,7 +234,7 @@ export class TemplatesService {
   }
 
   async remove(userId: string, templateId: string) {
-    const membership = await this.requireManager(userId);
+    const membership = await this.requireAdmin(userId);
 
     const template = await this.prisma.scheduleTemplate.findUnique({
       where: { id: templateId },
@@ -257,7 +254,7 @@ export class TemplatesService {
   }
 
   async apply(userId: string, templateId: string, dto: ApplyTemplateDto) {
-    const membership = await this.requireManager(userId);
+    const membership = await this.requireAdmin(userId);
 
     const template = await this.prisma.scheduleTemplate.findUnique({
       where: { id: templateId },

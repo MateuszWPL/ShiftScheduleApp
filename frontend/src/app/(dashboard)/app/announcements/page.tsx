@@ -77,7 +77,7 @@ export default function AnnouncementsPage() {
   const [priority, setPriority] = useState<"NORMAL" | "IMPORTANT" | "URGENT">("NORMAL");
   const [expiresIn, setExpiresIn] = useState("");
 
-  const isAdmin = dbUser?.role === "OWNER" || dbUser?.role === "MANAGER";
+  const isAdmin = dbUser?.role === "ADMIN";
 
   const { data: announcements = [], isLoading } = useQuery({
     queryKey: ["announcements"],

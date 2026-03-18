@@ -287,7 +287,7 @@ export function ScheduleGrid({
   const grid = buildGrid(filteredShifts, employeesOnly, weekDays);
   const isLoading = membersLoading || shiftsLoading;
   const canUseMarketplace = currentUserRole === "EMPLOYEE";
-  const isAdmin = currentUserRole === "OWNER" || currentUserRole === "MANAGER";
+  const isAdmin = currentUserRole === "ADMIN";
 
   const draftCount = filteredShifts.filter((s) => s.status === "DRAFT").length;
 

@@ -60,17 +60,14 @@ export class AnnouncementsService {
     }));
   }
 
-  /** Create a new announcement (OWNER/MANAGER only) */
+  /** Create a new announcement (ADMIN only) */
   async createAnnouncement(userId: string, dto: CreateAnnouncementDto) {
     const membership = await this.getActiveMembership(userId);
     if (!membership) throw new ForbiddenException('Brak aktywnego zespołu');
 
-    if (
-      membership.role !== Role.OWNER &&
-      membership.role !== Role.MANAGER
-    ) {
+    if (membership.role !== Role.ADMIN) {
       throw new ForbiddenException(
-        'Tylko właściciel lub menedżer może tworzyć ogłoszenia',
+        'Tylko Administrator może tworzyć ogłoszenia',
       );
     }
 
@@ -129,17 +126,14 @@ export class AnnouncementsService {
     };
   }
 
-  /** Delete an announcement (OWNER/MANAGER only, must be from same team) */
+  /** Delete an announcement (ADMIN only, must be from same team) */
   async deleteAnnouncement(userId: string, announcementId: string) {
     const membership = await this.getActiveMembership(userId);
     if (!membership) throw new ForbiddenException('Brak aktywnego zespołu');
 
-    if (
-      membership.role !== Role.OWNER &&
-      membership.role !== Role.MANAGER
-    ) {
+    if (membership.role !== Role.ADMIN) {
       throw new ForbiddenException(
-        'Tylko właściciel lub menedżer może usuwać ogłoszenia',
+        'Tylko Administrator może usuwać ogłoszenia',
       );
     }
 

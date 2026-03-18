@@ -11,13 +11,13 @@ import { MembershipStatus, Role } from '@prisma/client';
 export class PositionsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  private async requireManager(userId: string) {
+  private async requireAdmin(userId: string) {
     const membership = await this.prisma.teamMembership.findFirst({
       where: { userId, status: MembershipStatus.ACTIVE },
     });
     if (!membership) throw new BadRequestException('Brak aktywnego zespołu.');
-    if (membership.role !== Role.OWNER && membership.role !== Role.MANAGER) {
-      throw new ForbiddenException('Tylko Owner/Manager może zarządzać stanowiskami.');
+    if (membership.role !== Role.ADMIN) {
+      throw new ForbiddenException('Tylko Administrator może zarządzać stanowiskami.');
     }
     return membership;
   }
@@ -42,7 +42,7 @@ export class PositionsService {
   }
 
   async createPosition(userId: string, data: { name: string; color?: string }) {
-    const membership = await this.requireManager(userId);
+    const membership = await this.requireAdmin(userId);
 
     const existing = await this.prisma.position.findUnique({
       where: { teamId_name: { teamId: membership.teamId, name: data.name } },
@@ -61,7 +61,7 @@ export class PositionsService {
   }
 
   async updatePosition(userId: string, positionId: string, data: { name?: string; color?: string }) {
-    const membership = await this.requireManager(userId);
+    const membership = await this.requireAdmin(userId);
 
     const position = await this.prisma.position.findFirst({
       where: { id: positionId, teamId: membership.teamId },
@@ -85,7 +85,7 @@ export class PositionsService {
   }
 
   async batchCreatePositions(userId: string, positions: { name: string; color?: string }[]) {
-    const membership = await this.requireManager(userId);
+    const membership = await this.requireAdmin(userId);
     const teamId = membership.teamId;
 
     const created: any[] = [];
@@ -113,7 +113,7 @@ export class PositionsService {
   }
 
   async deletePosition(userId: string, positionId: string) {
-    const membership = await this.requireManager(userId);
+    const membership = await this.requireAdmin(userId);
 
     const position = await this.prisma.position.findFirst({
       where: { id: positionId, teamId: membership.teamId },
@@ -125,7 +125,7 @@ export class PositionsService {
   }
 
   async assignPositionsToEmployee(userId: string, targetUserId: string, positionIds: string[]) {
-    const membership = await this.requireManager(userId);
+    const membership = await this.requireAdmin(userId);
 
     const targetMembership = await this.prisma.teamMembership.findFirst({
       where: { userId: targetUserId, teamId: membership.teamId, status: MembershipStatus.ACTIVE },
@@ -172,7 +172,7 @@ export class PositionsService {
 
   /** One-time: auto-create positions from existing shift roleNames and link them */
   async migrateFromRoleNames(userId: string) {
-    const membership = await this.requireManager(userId);
+    const membership = await this.requireAdmin(userId);
     const teamId = membership.teamId;
 
     const shifts = await this.prisma.shift.findMany({

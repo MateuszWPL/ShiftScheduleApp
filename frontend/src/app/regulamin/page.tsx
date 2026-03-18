@@ -38,8 +38,7 @@ export default function RegulaminPage() {
       <h2>2. Definicje</h2>
       <ul>
         <li><strong>Użytkownik</strong> — każda osoba fizyczna korzystająca z Serwisu, która zaakceptowała Regulamin</li>
-        <li><strong>Właściciel zespołu (Owner)</strong> — Użytkownik zakładający zespół, odpowiedzialny za płatności i zarządzanie</li>
-        <li><strong>Manager</strong> — Użytkownik z uprawnieniami do zarządzania grafikiem i zespołem</li>
+        <li><strong>Administrator (Admin)</strong> — Użytkownik zakładający zespół lub posiadający uprawnienia do zarządzania grafikiem, zespołem i płatnościami</li>
         <li><strong>Pracownik (Employee)</strong> — członek zespołu z dostępem do grafiku i własnych danych</li>
         <li><strong>Konto</strong> — indywidualne konto Użytkownika w Serwisie</li>
         <li><strong>Zespół</strong> — jednostka organizacyjna gromadząca Użytkowników i dane</li>
@@ -143,7 +142,7 @@ export default function RegulaminPage() {
         <li>Nierozpowszechniania treści niezgodnych z prawem</li>
         <li>Niezakłócania działania infrastruktury Serwisu</li>
       </ul>
-      <p>Właściciel zespołu jest odpowiedzialny za:</p>
+      <p>Administrator zespołu jest odpowiedzialny za:</p>
       <ul>
         <li>Poprawność danych wprowadzanych do systemu</li>
         <li>Przestrzeganie przepisów prawa pracy przy planowaniu grafiku</li>
@@ -195,7 +194,7 @@ export default function RegulaminPage() {
         <a href="mailto:biuro@staffer.pl">biuro@staffer.pl</a>.
       </p>
       <p>
-        Właściciel zespołu może usunąć zespół — powoduje to trwałe usunięcie wszystkich danych
+        Administrator zespołu może usunąć zespół — powoduje to trwałe usunięcie wszystkich danych
         zespołu (grafiki, zmiany, dostępność, ogłoszenia).
       </p>
       <p>

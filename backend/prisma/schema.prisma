@@ -334,8 +334,7 @@ model ScheduleTemplateShift {
 }
 
 enum Role {
-  OWNER
-  MANAGER
+  ADMIN
   EMPLOYEE
 }
 

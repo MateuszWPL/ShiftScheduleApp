@@ -119,8 +119,7 @@ export default function SettingsPage() {
   const [editPosName, setEditPosName] = useState("");
   const [editPosColor, setEditPosColor] = useState("");
 
-  const isAdmin = dbUser?.role === "OWNER" || dbUser?.role === "MANAGER";
-  const isOwner = dbUser?.role === "OWNER";
+  const isAdmin = dbUser?.role === "ADMIN";
 
   useEffect(() => {
     if (tabParam && ["company", "positions", "invite", "notifications", "schedule"].includes(tabParam)) {
@@ -532,7 +531,7 @@ export default function SettingsPage() {
               </div>
             </div>
 
-            {isOwner && (
+            {isAdmin && (
               <div className="pt-4 border-t border-brand-warm">
                 <div className="flex items-start gap-2.5 p-3.5 rounded-xl bg-amber-50/50 border border-amber-200/40 mb-4">
                   <Info className="h-4 w-4 text-amber-500 flex-shrink-0 mt-0.5" />
@@ -556,11 +555,11 @@ export default function SettingsPage() {
               </div>
             )}
 
-            {!isOwner && (
+            {!isAdmin && (
               <div className="flex items-start gap-2.5 p-3.5 rounded-xl bg-brand-blue-muted/30 border border-brand-blue/10">
                 <Shield className="h-4 w-4 text-brand-blue flex-shrink-0 mt-0.5" />
                 <p className="text-xs text-brand-dark-muted">
-                  Tylko właściciel zespołu może regenerować kod zaproszenia.
+                  Tylko administrator zespołu może regenerować kod zaproszenia.
                 </p>
               </div>
             )}

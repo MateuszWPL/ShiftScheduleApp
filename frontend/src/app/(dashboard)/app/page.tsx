@@ -95,18 +95,18 @@ export default function PulpitPage() {
   const { data: teamSettings } = useQuery({
     queryKey: ["team-settings"],
     queryFn: getTeamSettings,
-    enabled: !!dbUser && (dbUser?.role === "OWNER" || dbUser?.role === "MANAGER"),
+    enabled: !!dbUser && dbUser?.role === "ADMIN",
     retry: false,
   });
 
   const { data: teamMembers = [] } = useQuery({
     queryKey: ["team-members"],
     queryFn: getTeamMembers,
-    enabled: !!dbUser && (dbUser?.role === "OWNER" || dbUser?.role === "MANAGER"),
+    enabled: !!dbUser && dbUser?.role === "ADMIN",
     retry: false,
   });
 
-  const isAdmin = dbUser?.role === "OWNER" || dbUser?.role === "MANAGER";
+  const isAdmin = dbUser?.role === "ADMIN";
   const isFirstRun =
     isAdmin &&
     !getOnboardingWizardSkipped() &&
@@ -389,7 +389,7 @@ export default function PulpitPage() {
               <div className="flex-1 min-w-0">
                 <p className="font-semibold text-brand-dark text-sm truncate">{displayUser?.name}</p>
                 <p className="text-xs text-brand-dark-muted">
-                  {dbUser.role === "OWNER" ? "Właściciel" : dbUser.role === "MANAGER" ? "Menedżer" : "Pracownik"}
+                  {dbUser.role === "ADMIN" ? "Administrator" : "Pracownik"}
                 </p>
               </div>
               <Button
@@ -413,7 +413,7 @@ export default function PulpitPage() {
           </div>
 
           {/* Invite code (owner only) */}
-          {dbUser?.role === "OWNER" && dbUser?.team?.inviteCode && (
+          {dbUser?.role === "ADMIN" && dbUser?.team?.inviteCode && (
             <div className="bg-white rounded-xl border border-brand-warm p-5">
               <p className="text-[10px] font-semibold text-brand-dark-soft uppercase tracking-wider mb-2">
                 Kod zaproszenia

@@ -26,7 +26,7 @@ export default function TeamPage() {
   });
 
   const user = currentUser || dbUser;
-  const isAdmin = user && (user.role === "OWNER" || user.role === "MANAGER");
+  const isAdmin = user && user.role === "ADMIN";
 
   if (isLoading) {
     return (
@@ -83,8 +83,7 @@ export default function TeamPage() {
           const isPrivateData = "hourlyRate" in member;
 
           const roleBadge = {
-            OWNER: { label: "Właściciel", bg: "bg-brand-muted text-brand" },
-            MANAGER: { label: "Menedżer", bg: "bg-brand-blue-muted text-brand-blue" },
+            ADMIN: { label: "Administrator", bg: "bg-brand-muted text-brand" },
             EMPLOYEE: { label: "Pracownik", bg: "bg-brand-warm-light text-brand-dark-muted" },
           }[member.role] || { label: member.role, bg: "bg-gray-100 text-gray-600" };
 

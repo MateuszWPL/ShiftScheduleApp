@@ -133,8 +133,8 @@ export class AvailabilityService {
 
   async findTeamSlots(requesterId: string, from?: string, to?: string) {
     const membership = await this.getMembership(requesterId);
-    if (membership.role !== Role.OWNER && membership.role !== Role.MANAGER) {
-      throw new ForbiddenException('Tylko Owner lub Manager może przeglądać dostępności zespołu.');
+    if (membership.role !== Role.ADMIN) {
+      throw new ForbiddenException('Tylko Administrator może przeglądać dostępności zespołu.');
     }
 
     if (!from || !to) {

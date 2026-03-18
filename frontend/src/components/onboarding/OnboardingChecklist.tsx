@@ -50,7 +50,7 @@ export function OnboardingChecklist({ userRole }: Props) {
   const [dismissed, setDismissed] = useState(false);
   const [mounted, setMounted] = useState(false);
 
-  const isAdmin = userRole === "OWNER" || userRole === "MANAGER";
+  const isAdmin = userRole === "ADMIN";
 
   useEffect(() => {
     setMounted(true);

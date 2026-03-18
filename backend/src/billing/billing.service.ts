@@ -58,13 +58,13 @@ export class BillingService {
     return this.stripe;
   }
 
-  private async requireOwner(userId: string) {
+  private async requireAdmin(userId: string) {
     const membership = await this.prisma.teamMembership.findFirst({
       where: { userId, status: MembershipStatus.ACTIVE },
     });
     if (!membership) throw new ForbiddenException('Brak aktywnego zespołu');
-    if (membership.role !== Role.OWNER) {
-      throw new ForbiddenException('Tylko właściciel może zarządzać płatnościami');
+    if (membership.role !== Role.ADMIN) {
+      throw new ForbiddenException('Tylko Administrator może zarządzać płatnościami');
     }
     return membership;
   }
@@ -74,17 +74,6 @@ export class BillingService {
       where: { userId, status: MembershipStatus.ACTIVE },
     });
     if (!membership) throw new ForbiddenException('Brak aktywnego zespołu');
-    return membership;
-  }
-
-  private async requireAdmin(userId: string) {
-    const membership = await this.prisma.teamMembership.findFirst({
-      where: { userId, status: MembershipStatus.ACTIVE },
-    });
-    if (!membership) throw new ForbiddenException('Brak aktywnego zespołu');
-    if (membership.role !== Role.OWNER && membership.role !== Role.MANAGER) {
-      throw new ForbiddenException('Brak dostępu do rozliczeń');
-    }
     return membership;
   }
 
@@ -161,9 +150,9 @@ export class BillingService {
     };
   }
 
-  /** Szczegóły subskrypcji — tylko OWNER (billing, portal) */
+  /** Szczegóły subskrypcji — tylko ADMIN (billing, portal) */
   async getSubscription(userId: string) {
-    const membership = await this.requireOwner(userId);
+    const membership = await this.requireAdmin(userId);
     const sub = await this.prisma.subscription.findUnique({
       where: { teamId: membership.teamId },
     });
@@ -176,7 +165,7 @@ export class BillingService {
   }
 
   async createCheckoutSession(userId: string, dto: CreateCheckoutSessionDto) {
-    const membership = await this.requireOwner(userId);
+    const membership = await this.requireAdmin(userId);
     const stripe = this.ensureStripe();
     const allowedPrices = [
       process.env.STRIPE_PRICE_STARTER,
@@ -225,11 +214,11 @@ export class BillingService {
 
     let customerId = sub?.stripeCustomerId;
     if (!customerId) {
-      const owner = await this.prisma.user.findFirst({
-        where: { teamId: membership.teamId, role: Role.OWNER },
+      const admin = await this.prisma.user.findFirst({
+        where: { teamId: membership.teamId, role: Role.ADMIN },
       });
       const customer = await stripe.customers.create({
-        email: owner?.email ?? undefined,
+        email: admin?.email ?? undefined,
         metadata: { teamId: membership.teamId },
       });
       customerId = customer.id;
@@ -278,7 +267,7 @@ export class BillingService {
 
   /** Zmiana planu (tylko upgrade) — aktualizacja subskrypcji Stripe */
   async changePlan(userId: string, dto: ChangePlanDto) {
-    const membership = await this.requireOwner(userId);
+    const membership = await this.requireAdmin(userId);
     const sub = await this.prisma.subscription.findUnique({
       where: { teamId: membership.teamId },
     });
@@ -358,7 +347,7 @@ export class BillingService {
   }
 
   async createPortalSession(userId: string) {
-    const membership = await this.requireOwner(userId);
+    const membership = await this.requireAdmin(userId);
     const sub = await this.prisma.subscription.findUnique({
       where: { teamId: membership.teamId },
     });
@@ -556,7 +545,6 @@ export class BillingService {
       case 'invoice.payment_failed': {
         const invoice = event.data.object as Stripe.Invoice;
         this.logger.warn(`Invoice payment failed: ${invoice.id} for customer ${invoice.customer}`);
-        // Znajdź zespół i wyślij email do ownera
         try {
           const customerId = invoice.customer as string;
           if (customerId) {
@@ -565,17 +553,21 @@ export class BillingService {
               include: { team: true },
             });
             if (sub) {
-              const owner = await tx.user.findFirst({
-                where: { teamId: sub.teamId, role: Role.OWNER },
+              const admins = await tx.user.findMany({
+                where: { teamId: sub.teamId, role: Role.ADMIN },
               });
-              if (owner?.email) {
-                await this.emailService.sendPaymentFailedEmail(
-                  owner.email,
-                  owner.name,
-                  sub.team.name,
-                  invoice.id,
-                );
-              }
+              await Promise.all(
+                admins
+                  .filter((a) => a.email)
+                  .map((a) =>
+                    this.emailService.sendPaymentFailedEmail(
+                      a.email!,
+                      a.name,
+                      sub.team.name,
+                      invoice.id,
+                    ),
+                  ),
+              );
             }
           }
         } catch (err) {

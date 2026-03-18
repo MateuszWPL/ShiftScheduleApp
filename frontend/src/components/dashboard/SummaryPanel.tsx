@@ -15,7 +15,7 @@ interface SummaryPanelProps {
 
 export function SummaryPanel({ from, to, periodLabel }: SummaryPanelProps) {
   const { dbUser } = useDashboardUser();
-  const isAdmin = dbUser?.role === "OWNER" || dbUser?.role === "MANAGER";
+  const isAdmin = dbUser?.role === "ADMIN";
 
   const { data, isLoading } = useQuery({
     queryKey: ["schedule-summary", from, to],

@@ -128,7 +128,7 @@ function HoursBar({ value, max, color }: { value: number; max: number; color: st
 
 export default function ReportsPage() {
   const { dbUser } = useDashboardUser();
-  const isAdmin = dbUser?.role === "OWNER" || dbUser?.role === "MANAGER";
+  const isAdmin = dbUser?.role === "ADMIN";
   const [tab, setTab] = useState<Tab>("hours");
   const [range, setRange] = useState("this-month");
 
